@@ -61,7 +61,6 @@ static void radio_event_gpio_toggle_init(void)
     nrf_gpio_cfg_output(PIN_DBG_RADIO_EVT_DISABLED);
     nrf_gpio_cfg_output(PIN_DBG_RADIO_EVT_READY);
     nrf_gpio_cfg_output(PIN_DBG_RADIO_EVT_FRAMESTART);
-    nrf_gpio_cfg_output(PIN_DBG_RADIO_EVT_EDEND);
 
     nrf_gpiote_task_configure(GPIOTE_DBG_RADIO_EVT_END,
                               PIN_DBG_RADIO_EVT_END,
@@ -79,16 +78,11 @@ static void radio_event_gpio_toggle_init(void)
                               PIN_DBG_RADIO_EVT_FRAMESTART,
                               NRF_GPIOTE_POLARITY_TOGGLE,
                               NRF_GPIOTE_INITIAL_VALUE_HIGH);
-    nrf_gpiote_task_configure(GPIOTE_DBG_RADIO_EVT_EDEND,
-                              PIN_DBG_RADIO_EVT_EDEND,
-                              NRF_GPIOTE_POLARITY_TOGGLE,
-                              NRF_GPIOTE_INITIAL_VALUE_HIGH);
 
     nrf_gpiote_task_enable(GPIOTE_DBG_RADIO_EVT_END);
     nrf_gpiote_task_enable(GPIOTE_DBG_RADIO_EVT_DISABLED);
     nrf_gpiote_task_enable(GPIOTE_DBG_RADIO_EVT_READY);
     nrf_gpiote_task_enable(GPIOTE_DBG_RADIO_EVT_FRAMESTART);
-    nrf_gpiote_task_enable(GPIOTE_DBG_RADIO_EVT_EDEND);
 
     nrf_ppi_channel_endpoint_setup((nrf_ppi_channel_t)PPI_DBG_RADIO_EVT_END,
                                    (uint32_t)&NRF_RADIO->EVENTS_END,
@@ -102,15 +96,11 @@ static void radio_event_gpio_toggle_init(void)
     nrf_ppi_channel_endpoint_setup((nrf_ppi_channel_t)PPI_DBG_RADIO_EVT_FRAMESTART,
                                    (uint32_t)&NRF_RADIO->EVENTS_FRAMESTART,
                                    nrf_gpiote_task_addr_get(NRF_GPIOTE_TASKS_OUT_3));
-    nrf_ppi_channel_endpoint_setup((nrf_ppi_channel_t)PPI_DBG_RADIO_EVT_EDEND,
-                                   (uint32_t)&NRF_RADIO->EVENTS_EDEND,
-                                   nrf_gpiote_task_addr_get(NRF_GPIOTE_TASKS_OUT_4));
 
     nrf_ppi_channel_enable((nrf_ppi_channel_t)PPI_DBG_RADIO_EVT_END);
     nrf_ppi_channel_enable((nrf_ppi_channel_t)PPI_DBG_RADIO_EVT_DISABLED);
     nrf_ppi_channel_enable((nrf_ppi_channel_t)PPI_DBG_RADIO_EVT_READY);
     nrf_ppi_channel_enable((nrf_ppi_channel_t)PPI_DBG_RADIO_EVT_FRAMESTART);
-    nrf_ppi_channel_enable((nrf_ppi_channel_t)PPI_DBG_RADIO_EVT_EDEND);
 }
 
 /**

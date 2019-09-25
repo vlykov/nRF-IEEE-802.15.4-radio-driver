@@ -98,6 +98,16 @@ void * nrf_802154_wifi_coex_deny_event_addr_get(void);
 extern void nrf_802154_wifi_coex_prio_changed(rsch_prio_t priority);
 
 /**
+ * @brief Notifies that access to the medium was granted by the PTA.
+ */
+extern void nrf_802154_wifi_coex_granted(void);
+
+/**
+ * @brief Notifies that access to the medium was denied by the PTA.
+ */
+extern void nrf_802154_wifi_coex_denied(void);
+
+/**
  *@}
  **/
 

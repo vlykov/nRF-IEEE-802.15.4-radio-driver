@@ -559,3 +559,15 @@ void nrf_802154_clock_hfclk_ready(void)
     prec_approved_prio_set(RSCH_PREC_HFCLK, RSCH_PRIO_MAX);
     notify_core();
 }
+
+void nrf_802154_wifi_coex_granted(void)
+{
+    prec_approved_prio_set(RSCH_PREC_COEX, RSCH_PRIO_MAX);
+    notify_core();
+}
+
+void nrf_802154_wifi_coex_denied(void)
+{
+    prec_approved_prio_set(RSCH_PREC_COEX, RSCH_PRIO_RX);
+    notify_core();
+}
