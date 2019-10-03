@@ -66,6 +66,7 @@ typedef enum
     TRX_STATE_TXFRAME,
     TRX_STATE_TXACK,
     TRX_STATE_STANDALONE_CCA,
+    TRX_STATE_CONTINUOUS_CARRIER,
 
     /* PPIS disabled deconfigured
      * RADIO is DISABLED, TXDISABLE, RXDISABLE
@@ -175,6 +176,8 @@ bool nrf_802154_trx_go_idle(void);
 
 void nrf_802154_trx_standalone_cca(void);
 
+void nrf_802154_trx_continuous_carrier(void);
+
 void nrf_802154_trx_abort(void);
 
 void nrf_802154_trx_go_idle_abort(void);
@@ -183,7 +186,7 @@ void nrf_802154_trx_receive_ack_abort(void);
 void nrf_802154_trx_transmit_frame_abort(void);
 void nrf_802154_trx_transmit_ack_abort(void);
 void nrf_802154_trx_standalone_cca_abort(void);
-
+void nrf_802154_trx_continuous_carrier_abort(void);
 
 /**@brief   Handler called from isr at the beginning of a frame reception (just after synchronization header is received).
  * @note Proper implementation of this function is out of scope of the trx module.

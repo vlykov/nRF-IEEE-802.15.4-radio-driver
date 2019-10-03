@@ -363,6 +363,31 @@ static void fem_for_lna_reset(void)
     nrf_ppi_channel_disable(PPI_EGU_TIMER_START);
 }
 
+/** Configure FEM to set PA at appropriate time. */
+static void fem_for_pa_set(void)
+{
+    if (nrf_802154_fal_pa_configuration_set(&m_activate_tx_cc0, NULL) == NRF_SUCCESS)
+    {
+        uint32_t event_addr = (uint32_t)nrf_egu_event_address_get(NRF_802154_SWI_EGU_INSTANCE,
+                                                                  EGU_EVENT);
+        uint32_t task_addr = (uint32_t)nrf_timer_task_address_get(NRF_802154_TIMER_INSTANCE,
+                                                                  NRF_TIMER_TASK_START);
+
+        nrf_timer_shorts_enable(m_activate_tx_cc0.event.timer.p_timer_instance,
+                                NRF_TIMER_SHORT_COMPARE0_STOP_MASK);
+        nrf_ppi_channel_endpoint_setup(PPI_EGU_TIMER_START, event_addr, task_addr);
+        nrf_ppi_channel_enable(PPI_EGU_TIMER_START);
+    }
+}
+
+/** Reset FEM configuration for PA. */
+static void fem_for_pa_reset(void)
+{
+    nrf_802154_fal_pa_configuration_clear(&m_activate_tx_cc0, NULL);
+    nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
+    nrf_ppi_channel_disable(PPI_EGU_TIMER_START);
+    nrf_802154_fal_deactivate_now(NRF_802154_FAL_PA);
+}
 
 /** Configure FEM for TX procedure. */
 static void fem_for_tx_set(bool cca)
@@ -1219,6 +1244,10 @@ void nrf_802154_trx_abort(void)
             nrf_802154_trx_standalone_cca_abort();
             break;
 
+        case TRX_STATE_CONTINUOUS_CARRIER:
+            nrf_802154_trx_continuous_carrier_abort();
+            break;
+
         default:
             assert(false);
     }
@@ -1393,6 +1422,40 @@ void nrf_802154_trx_standalone_cca_abort(void)
 
     m_trx_state = TRX_STATE_FINISHED;
 }
+
+void nrf_802154_trx_continuous_carrier(void)
+{
+    assert((m_trx_state == TRX_STATE_IDLE) || (m_trx_state == TRX_STATE_FINISHED));
+
+    m_trx_state = TRX_STATE_CONTINUOUS_CARRIER;
+
+    // Set Tx Power
+    nrf_radio_txpower_set(nrf_802154_pib_tx_power_get());
+
+    // Set FEM
+    fem_for_pa_set();
+
+    // Clr event EGU
+    nrf_egu_event_clear(NRF_802154_SWI_EGU_INSTANCE, EGU_EVENT);
+
+    // Set PPIs
+    ppis_for_egu_and_ramp_up_set(NRF_RADIO_TASK_TXEN, false);
+
+    trigger_disable_to_start_rampup();
+}
+
+void nrf_802154_trx_continuous_carrier_abort(void)
+{
+    nrf_ppi_channel_disable(PPI_DISABLED_EGU);
+    nrf_ppi_channel_disable(PPI_EGU_RAMP_UP);
+
+    fem_for_pa_reset();
+
+    nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
+
+    m_trx_state = TRX_STATE_FINISHED;
+}
+
 
 static void irq_handler_address(void)
 {

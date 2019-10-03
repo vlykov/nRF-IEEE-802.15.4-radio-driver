@@ -183,15 +183,6 @@ static const nrf_802154_fal_event_t m_activate_rx_cc0 =
  .event.timer.counter_value        =
      RX_RAMP_UP_TIME};
 
-static const nrf_802154_fal_event_t m_activate_tx_cc0 =
-{.type                         = NRF_802154_FAL_EVENT_TYPE_TIMER,
- .override_ppi                 = false,
- .event.timer.p_timer_instance =
-     NRF_802154_TIMER_INSTANCE,
- .event.timer.compare_channel_mask = ((1 << NRF_TIMER_CC_CHANNEL0) | (1 << NRF_TIMER_CC_CHANNEL2)),
- .event.timer.counter_value        =
-     TX_RAMP_UP_TIME};
-
 
 typedef struct
 {
@@ -686,32 +677,6 @@ static void fem_for_lna_reset(void)
     nrf_ppi_channel_disable(PPI_EGU_TIMER_START);
 }
 
-/** Configure FEM to set PA at appropriate time. */
-static void fem_for_pa_set(void)
-{
-    if (nrf_802154_fal_pa_configuration_set(&m_activate_tx_cc0, NULL) == NRF_SUCCESS)
-    {
-        uint32_t event_addr = (uint32_t)nrf_egu_event_address_get(NRF_802154_SWI_EGU_INSTANCE,
-                                                                  EGU_EVENT);
-        uint32_t task_addr = (uint32_t)nrf_timer_task_address_get(NRF_802154_TIMER_INSTANCE,
-                                                                  NRF_TIMER_TASK_START);
-
-        nrf_timer_shorts_enable(m_activate_tx_cc0.event.timer.p_timer_instance,
-                                NRF_TIMER_SHORT_COMPARE0_STOP_MASK);
-        nrf_ppi_channel_endpoint_setup(PPI_EGU_TIMER_START, event_addr, task_addr);
-        nrf_ppi_channel_enable(PPI_EGU_TIMER_START);
-    }
-}
-
-/** Reset FEM configuration for PA. */
-static void fem_for_pa_reset(void)
-{
-    nrf_802154_fal_pa_configuration_clear(&m_activate_tx_cc0, NULL);
-    nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
-    nrf_ppi_channel_disable(PPI_EGU_TIMER_START);
-    nrf_802154_fal_deactivate_now(NRF_802154_FAL_PA);
-}
-
 /** Check if time remaining in the timeslot is long enough to process whole critical section. */
 static bool remaining_timeslot_time_is_enough_for_crit_sect(void)
 {
@@ -783,35 +748,6 @@ static void ed_terminate(void)
     }
 }
 
-/** Terminate Continuous Carrier procedure. */
-/*static*/ void TODO_move_to_trx_continuous_carrier_terminate(void)
-{
-    nrf_ppi_channel_disable(PPI_DISABLED_EGU);
-    nrf_ppi_channel_disable(PPI_EGU_RAMP_UP);
-
-    fem_for_pa_reset();
-
-    if (timeslot_is_granted())
-    {
-        bool shutdown = nrf_fem_prepare_powerdown(NRF_802154_TIMER_INSTANCE,
-                                                  NRF_TIMER_CC_CHANNEL0,
-                                                  PPI_EGU_TIMER_START);
-
-        nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
-        if (shutdown)
-        {
-            while (!nrf_timer_event_check(NRF_802154_TIMER_INSTANCE, NRF_TIMER_EVENT_COMPARE0))
-            {
-                // Wait until the event is set.
-            }
-            nrf_timer_shorts_disable(NRF_802154_TIMER_INSTANCE, NRF_TIMER_SHORT_COMPARE0_STOP_MASK);
-            nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
-            nrf_ppi_channel_disable(PPI_EGU_TIMER_START);
-        }
-    }
-}
-
-
 static bool can_terminate_current_operation(radio_state_t state, nrf_802154_term_t term_lvl, bool receiving_psdu_now)
 {
     bool result = false;
@@ -820,6 +756,7 @@ static bool can_terminate_current_operation(radio_state_t state, nrf_802154_term
     {
         case RADIO_STATE_SLEEP:
         case RADIO_STATE_FALLING_ASLEEP:
+        case RADIO_STATE_CONTINUOUS_CARRIER:
             result = true;
             break;
 
@@ -833,7 +770,6 @@ static bool can_terminate_current_operation(radio_state_t state, nrf_802154_term
         case RADIO_STATE_RX_ACK:
         case RADIO_STATE_ED:
         case RADIO_STATE_CCA:
-        case RADIO_STATE_CONTINUOUS_CARRIER:
             result = (term_lvl >= NRF_802154_TERM_802154);
             break;
 
@@ -1065,22 +1001,7 @@ static void continuous_carrier_init(bool disabled_was_triggered)
         return;
     }
 
-    // Set Tx Power
-    nrf_radio_txpower_set(nrf_802154_pib_tx_power_get());
-
-    // Set FEM
-    fem_for_pa_set();
-
-    // Clr event EGU
-    nrf_egu_event_clear(NRF_802154_SWI_EGU_INSTANCE, EGU_EVENT);
-
-    // Set PPIs
-    ppis_for_egu_and_ramp_up_set(NRF_RADIO_TASK_TXEN, false);
-
-    if (!disabled_was_triggered || !ppi_egu_worked())
-    {
-        nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
-    }
+    nrf_802154_trx_continuous_carrier();
 }
 
 /***************************************************************************************************
