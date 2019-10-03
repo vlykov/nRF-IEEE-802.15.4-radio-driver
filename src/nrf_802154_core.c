@@ -549,23 +549,6 @@ static bool ed_iter_setup(uint32_t * p_requested_ed_time_us, uint32_t * p_next_t
  * @section FSM transition request sub-procedures
  **************************************************************************************************/
 
-/** Wait time needed to propagate event through PPI to EGU.
- *
- * During detection if trigger of DISABLED event caused start of hardware procedure, detecting
- * function needs to wait until event is propagated from RADIO through PPI to EGU. This delay is
- * required to make sure EGU event is set if hardware was prepared before DISABLED event was
- * triggered.
- */
-static inline void ppi_and_egu_delay_wait(void)
-{
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-}
-
 /** Check if time remaining in the timeslot is long enough to process whole critical section. */
 static bool remaining_timeslot_time_is_enough_for_crit_sect(void)
 {
