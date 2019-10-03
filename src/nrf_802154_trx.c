@@ -1248,6 +1248,10 @@ void nrf_802154_trx_abort(void)
             nrf_802154_trx_continuous_carrier_abort();
             break;
 
+        case TRX_STATE_ENERGY_DETECTION:
+            nrf_802154_trx_energy_detection_abort();
+            break;
+
         default:
             assert(false);
     }
@@ -1456,6 +1460,58 @@ void nrf_802154_trx_continuous_carrier_abort(void)
     m_trx_state = TRX_STATE_FINISHED;
 }
 
+void nrf_802154_trx_energy_detection(uint32_t ed_count)
+{
+    assert((m_trx_state == TRX_STATE_FINISHED) || (m_trx_state == TRX_STATE_IDLE));
+
+    m_trx_state = TRX_STATE_ENERGY_DETECTION;
+
+    ed_count--;
+    /* Check that vd_count will fit into defined bits of register */
+    assert( (ed_count & (~RADIO_EDCNT_EDCNT_Msk)) == 0U );
+
+    nrf_radio_ed_loop_count_set(ed_count);
+
+    // Set shorts
+    nrf_radio_shorts_set(SHORTS_ED);
+
+    // Enable IRQs
+    nrf_radio_event_clear(NRF_RADIO_EVENT_EDEND);
+    nrf_radio_int_enable(NRF_RADIO_INT_EDEND_MASK);
+
+    // Set FEM
+    fem_for_lna_set();
+
+    // Clr event EGU
+    nrf_egu_event_clear(NRF_802154_SWI_EGU_INSTANCE, EGU_EVENT);
+
+    // Set PPIs
+    ppis_for_egu_and_ramp_up_set(NRF_RADIO_TASK_RXEN, true);
+
+    trigger_disable_to_start_rampup();
+}
+
+static void energy_detection_finish(void)
+{
+    nrf_ppi_channel_disable(PPI_DISABLED_EGU);
+    nrf_ppi_channel_disable(PPI_EGU_RAMP_UP);
+    nrf_ppi_fork_endpoint_setup(PPI_EGU_RAMP_UP, 0);
+    nrf_ppi_channel_remove_from_group(PPI_EGU_RAMP_UP, PPI_CHGRP0);
+
+    fem_for_lna_reset();
+
+    nrf_radio_int_disable(NRF_RADIO_INT_EDEND_MASK);
+    nrf_radio_shorts_set(SHORTS_IDLE);
+
+    nrf_radio_task_trigger(NRF_RADIO_TASK_EDSTOP);
+    nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
+}
+
+void nrf_802154_trx_energy_detection_abort(void)
+{
+    energy_detection_finish();
+    m_trx_state = TRX_STATE_FINISHED;
+}
 
 static void irq_handler_address(void)
 {
@@ -1782,7 +1838,14 @@ static void irq_handler_ccabusy(void)
 
 static void irq_handler_edend(void)
 {
-    assert(false);
+    assert(m_trx_state == TRX_STATE_ENERGY_DETECTION);
+
+    uint8_t ed_sample = nrf_radio_ed_sample_get();
+
+    energy_detection_finish();
+    m_trx_state = TRX_STATE_FINISHED;
+
+    nrf_802154_trx_energy_detection_finished(ed_sample);
 }
 
 static void irq_handler(void)

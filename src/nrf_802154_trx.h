@@ -67,6 +67,7 @@ typedef enum
     TRX_STATE_TXACK,
     TRX_STATE_STANDALONE_CCA,
     TRX_STATE_CONTINUOUS_CARRIER,
+    TRX_STATE_ENERGY_DETECTION,
 
     /* PPIS disabled deconfigured
      * RADIO is DISABLED, TXDISABLE, RXDISABLE
@@ -178,6 +179,18 @@ void nrf_802154_trx_standalone_cca(void);
 
 void nrf_802154_trx_continuous_carrier(void);
 
+/**@brief Puts trx module into energy detection mode.
+ *
+ * Operation ends up with a call to ref nrf_802154_trx_energy_detection_finished
+ *
+ * Operation can be terminated with a call to @ref nrf_802154_trx_energy_detection_abort,
+ * @ref nrf_802154_trx_abort or @ref nrf_802154_trx_disable. In this case no callback is called.
+ *
+ * @param ed_count  Number of iterations to perform. Must be in range 1..2097152 (TODO: where define it)
+ *                  One iteration takes (TODO: define, in procedures_duration.h?) 128us
+ */
+void nrf_802154_trx_energy_detection(uint32_t ed_count);
+
 void nrf_802154_trx_abort(void);
 
 void nrf_802154_trx_go_idle_abort(void);
@@ -187,6 +200,7 @@ void nrf_802154_trx_transmit_frame_abort(void);
 void nrf_802154_trx_transmit_ack_abort(void);
 void nrf_802154_trx_standalone_cca_abort(void);
 void nrf_802154_trx_continuous_carrier_abort(void);
+void nrf_802154_trx_energy_detection_abort(void);
 
 /**@brief   Handler called from isr at the beginning of a frame reception (just after synchronization header is received).
  * @note Proper implementation of this function is out of scope of the trx module.
@@ -220,6 +234,8 @@ extern void nrf_802154_trx_transmit_transmitted(trx_state_t state);
 extern void nrf_802154_trx_in_idle(void);
 
 extern void nrf_802154_trx_standalone_cca_finished(bool channel_was_idle);
+
+extern void nrf_802154_trx_energy_detection_finished(uint8_t ed_sample);
 
 #ifdef __cplusplus
 }

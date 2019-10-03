@@ -173,17 +173,6 @@ static uint8_t         m_ed_result;    ///< Result of the current energy detecti
 
 static volatile radio_state_t m_state; ///< State of the radio driver.
 
-// TODO: Remove all nrf_802154_fal_event_t instances, it should be in trx
-static const nrf_802154_fal_event_t m_activate_rx_cc0 =
-{.type                         = NRF_802154_FAL_EVENT_TYPE_TIMER,
- .override_ppi                 = false,
- .event.timer.p_timer_instance =
-     NRF_802154_TIMER_INSTANCE,
- .event.timer.compare_channel_mask = ((1 << NRF_TIMER_CC_CHANNEL0) | (1 << NRF_TIMER_CC_CHANNEL2)),
- .event.timer.counter_value        =
-     RX_RAMP_UP_TIME};
-
-
 typedef struct
 {
     bool frame_filtered        : 1; ///< If frame being received passed filtering operation.
@@ -495,13 +484,14 @@ static void irq_deinit(void)
 
 /** Get ED result value.
  *
- * @returns ED result based on data collected during Energy Detection procedure.
+ *  @param[in]  ed_sample   Energy Detection sample gathered from TRX module
+ *  @returns ED result based on data collected during Energy Detection procedure.
  */
-static uint8_t ed_result_get(void)
+static uint8_t ed_result_get(uint8_t ed_sample)
 {
-    uint32_t result = m_ed_result;
+    uint32_t result;
 
-    result  = nrf_802154_rssi_ed_corrected_get(result);
+    result  = nrf_802154_rssi_ed_corrected_get(ed_sample);
     result *= ED_RESULT_FACTOR;
 
     if (result > ED_RESULT_MAX)
@@ -517,44 +507,42 @@ static uint8_t ed_result_get(void)
  *  Energy detection procedure is performed in iterations to make sure it is performed for requested
  *  time regardless radio arbitration.
  *
- *  @param[in]  Remaining time of energy detection procedure [us].
+ *  @param[inout] p_requested_ed_time_us  Remaining time of energy detection procedure [us]. Value will be updated
+ *                                        with time remaining for the next attempt of energy detection.
+ *  @param[out]   p_next_trx_ed_count     Number of trx energy detection iterations to perform.
  *
  *  @retval  true   Next iteration of energy detection procedure will be performed now.
  *  @retval  false  Next iteration of energy detection procedure will not be performed now due to
  *                  ending timeslot.
  */
-static bool ed_iter_setup(uint32_t time_us)
+static bool ed_iter_setup(uint32_t * p_requested_ed_time_us, uint32_t * p_next_trx_ed_count)
 {
-    uint32_t us_left_in_timeslot = nrf_802154_rsch_timeslot_us_left_get();
-    uint32_t next_ed_iters       = us_left_in_timeslot / ED_ITER_DURATION;
+    uint32_t iters_left_in_timeslot = nrf_802154_rsch_timeslot_us_left_get() / ED_ITER_DURATION;
 
-    if (next_ed_iters > ED_ITERS_OVERHEAD)
+    if (iters_left_in_timeslot > ED_ITERS_OVERHEAD)
     {
-        next_ed_iters -= ED_ITERS_OVERHEAD;
+        /* Note that in single phy iters_left_in_timeslot will always be very big thus we will get here. */
+        iters_left_in_timeslot -= ED_ITERS_OVERHEAD;
 
-        if ((time_us / ED_ITER_DURATION) < next_ed_iters)
+        uint32_t requested_iters = *p_requested_ed_time_us / ED_ITER_DURATION;
+
+        if (requested_iters < iters_left_in_timeslot)
         {
-            m_ed_time_left = 0;
-            next_ed_iters  = time_us / ED_ITER_DURATION;
+            /* We will finish all iterations before timeslot end, thus no time is left */
+            *p_requested_ed_time_us = 0U;
         }
         else
         {
-            m_ed_time_left = time_us - (next_ed_iters * ED_ITER_DURATION);
-            next_ed_iters--; // Time of ED procedure is (next_ed_iters + 1) * 128us
+            *p_requested_ed_time_us = *p_requested_ed_time_us - (iters_left_in_timeslot * ED_ITER_DURATION);
+            requested_iters = iters_left_in_timeslot;
         }
 
-        nrf_radio_ed_loop_count_set(next_ed_iters);
+        *p_next_trx_ed_count = requested_iters;
 
         return true;
     }
-    else
-    {
-        // Silently wait for a new timeslot
 
-        m_ed_time_left = time_us;
-
-        return false;
-    }
+    return false;
 }
 
 /***************************************************************************************************
@@ -576,105 +564,6 @@ static inline void ppi_and_egu_delay_wait(void)
     __ASM("nop");
     __ASM("nop");
     __ASM("nop");
-}
-
-/** Detect if PPI starting EGU for current operation worked.
- *
- * @retval  true   PPI worked.
- * @retval  false  PPI did not work. DISABLED task should be triggered.
- */
-static bool ppi_egu_worked(void)
-{
-    // Detect if PPIs were set before DISABLED event was notified. If not trigger DISABLE
-    if (nrf_radio_state_get() != NRF_RADIO_STATE_DISABLED)
-    {
-        // If RADIO state is not DISABLED, it means that RADIO is still ramping down or already
-        // started ramping up.
-        return true;
-    }
-
-    // Wait for PPIs
-    ppi_and_egu_delay_wait();
-
-    if (nrf_egu_event_check(NRF_802154_SWI_EGU_INSTANCE, EGU_EVENT))
-    {
-        // If EGU event is set, procedure is running.
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-/** Set PPIs to connect DISABLED->EGU->RAMP_UP
- *
- * @param[in]  ramp_up_task    Task triggered to start ramp up procedure.
- * @param[in]  self_disabling  If PPI should disable itself.
- */
-static void ppis_for_egu_and_ramp_up_set(nrf_radio_task_t ramp_up_task, bool self_disabling)
-{
-    if (self_disabling)
-    {
-        nrf_ppi_channel_and_fork_endpoint_setup(PPI_EGU_RAMP_UP,
-                                                (uint32_t)nrf_egu_event_address_get(
-                                                    NRF_802154_SWI_EGU_INSTANCE,
-                                                    EGU_EVENT),
-                                                (uint32_t)nrf_radio_task_address_get(ramp_up_task),
-                                                (uint32_t)nrf_ppi_task_address_get(
-                                                    PPI_CHGRP0_DIS_TASK));
-    }
-    else
-    {
-        nrf_ppi_channel_endpoint_setup(PPI_EGU_RAMP_UP,
-                                       (uint32_t)nrf_egu_event_address_get(
-                                           NRF_802154_SWI_EGU_INSTANCE,
-                                           EGU_EVENT),
-                                       (uint32_t)nrf_radio_task_address_get(ramp_up_task));
-    }
-
-    nrf_ppi_channel_endpoint_setup(PPI_DISABLED_EGU,
-                                   (uint32_t)nrf_radio_event_address_get(NRF_RADIO_EVENT_DISABLED),
-                                   (uint32_t)nrf_egu_task_address_get(
-                                       NRF_802154_SWI_EGU_INSTANCE,
-                                       EGU_TASK));
-
-    if (self_disabling)
-    {
-        nrf_ppi_channel_include_in_group(PPI_EGU_RAMP_UP, PPI_CHGRP0);
-    }
-
-    nrf_ppi_channel_enable(PPI_EGU_RAMP_UP);
-    nrf_ppi_channel_enable(PPI_DISABLED_EGU);
-}
-
-/** Configure FEM to set LNA at appropriate time. */
-static void fem_for_lna_set(void)
-{
-    if (nrf_802154_fal_lna_configuration_set(&m_activate_rx_cc0, NULL) == NRF_SUCCESS)
-    {
-        uint32_t event_addr = (uint32_t)nrf_egu_event_address_get(NRF_802154_SWI_EGU_INSTANCE,
-                                                                  EGU_EVENT);
-        uint32_t task_addr = (uint32_t)nrf_timer_task_address_get(NRF_802154_TIMER_INSTANCE,
-                                                                  NRF_TIMER_TASK_START);
-
-        nrf_timer_shorts_enable(m_activate_rx_cc0.event.timer.p_timer_instance,
-                                NRF_TIMER_SHORT_COMPARE0_STOP_MASK);
-        nrf_ppi_channel_endpoint_setup(PPI_EGU_TIMER_START, event_addr, task_addr);
-        nrf_ppi_channel_enable(PPI_EGU_TIMER_START);
-    }
-}
-
-/** Reset FEM configuration for LNA.
- *
- * @param[in]  timer_short_mask  Mask of shorts that should be disabled on FEM timer.
- */
-static void fem_for_lna_reset(void)
-{
-    nrf_802154_fal_lna_configuration_clear(&m_activate_rx_cc0, NULL);
-    nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
-    nrf_timer_shorts_disable(NRF_802154_TIMER_INSTANCE, NRF_TIMER_SHORT_COMPARE0_STOP_MASK);
-    nrf_ppi_channel_disable(PPI_EGU_TIMER_START);
 }
 
 /** Check if time remaining in the timeslot is long enough to process whole critical section. */
@@ -711,41 +600,6 @@ static bool critical_section_enter_and_verify_timeslot_length(void)
     }
 
     return result;
-}
-
-/** Terminate ED procedure. */
-static void ed_terminate(void)
-{
-    nrf_ppi_channel_disable(PPI_DISABLED_EGU);
-    nrf_ppi_channel_disable(PPI_EGU_RAMP_UP);
-
-    fem_for_lna_reset();
-
-    nrf_ppi_channel_remove_from_group(PPI_EGU_RAMP_UP, PPI_CHGRP0);
-    nrf_ppi_fork_endpoint_setup(PPI_EGU_RAMP_UP, 0);
-
-    if (timeslot_is_granted())
-    {
-        bool shutdown = nrf_fem_prepare_powerdown(NRF_802154_TIMER_INSTANCE,
-                                                  NRF_TIMER_CC_CHANNEL0,
-                                                  PPI_EGU_TIMER_START);
-
-        nrf_radio_int_disable(NRF_RADIO_INT_EDEND_MASK);
-        nrf_radio_shorts_set(SHORTS_IDLE);
-        nrf_radio_task_trigger(NRF_RADIO_TASK_EDSTOP);
-        nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
-
-        if (shutdown)
-        {
-            while (!nrf_timer_event_check(NRF_802154_TIMER_INSTANCE, NRF_TIMER_EVENT_COMPARE0))
-            {
-                // Wait until the event is set.
-            }
-            nrf_timer_shorts_disable(NRF_802154_TIMER_INSTANCE, NRF_TIMER_SHORT_COMPARE0_STOP_MASK);
-            nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
-            nrf_ppi_channel_disable(PPI_EGU_TIMER_START);
-        }
-    }
 }
 
 static bool can_terminate_current_operation(radio_state_t state, nrf_802154_term_t term_lvl, bool receiving_psdu_now)
@@ -954,32 +808,20 @@ static bool tx_init(const uint8_t * p_data, bool cca, bool disabled_was_triggere
 /** Initialize ED operation */
 static void ed_init(bool disabled_was_triggered)
 {
-    if (!timeslot_is_granted() || !ed_iter_setup(m_ed_time_left))
+    if (!timeslot_is_granted())
+    {
+        return;
+    }
+
+    uint32_t trx_ed_count = 0U;
+
+    if (!ed_iter_setup(&m_ed_time_left, &trx_ed_count))
     {
         // Just wait for next timeslot if there is not enough time in this one.
         return;
     }
 
-    // Set shorts
-    nrf_radio_shorts_set(SHORTS_ED);
-
-    // Enable IRQs
-    nrf_radio_event_clear(NRF_RADIO_EVENT_EDEND);
-    nrf_radio_int_enable(NRF_RADIO_INT_EDEND_MASK);
-
-    // Set FEM
-    fem_for_lna_set();
-
-    // Clr event EGU
-    nrf_egu_event_clear(NRF_802154_SWI_EGU_INSTANCE, EGU_EVENT);
-
-    // Set PPIs
-    ppis_for_egu_and_ramp_up_set(NRF_RADIO_TASK_RXEN, true);
-
-    if (!disabled_was_triggered || !ppi_egu_worked())
-    {
-        nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
-    }
+    nrf_802154_trx_energy_detection(trx_ed_count);
 }
 
 /** Initialize CCA operation. */
@@ -1632,67 +1474,38 @@ void nrf_802154_trx_transmit_ccabusy(void)
     transmit_failed_notify_and_nesting_allow(NRF_802154_TX_ERROR_BUSY_CHANNEL);
 }
 
-/// This event is generated when energy detection procedure ends.
-static void irq_edend_state_ed(void)
+void nrf_802154_trx_energy_detection_finished(uint8_t ed_sample)
 {
-    uint32_t result = nrf_radio_ed_sample_get();
-
-    m_ed_result = result > m_ed_result ? result : m_ed_result;
-
-    if (m_ed_time_left)
+    if (m_ed_result < ed_sample)
     {
-        if (ed_iter_setup(m_ed_time_left))
+        // Collect maximum value of samples provided by trx
+        m_ed_result = ed_sample;
+    }
+
+    if (m_ed_time_left >= ED_ITER_DURATION)
+    {
+        uint32_t trx_ed_count = 0U;
+        if (ed_iter_setup(&m_ed_time_left, &trx_ed_count))
         {
-            nrf_radio_task_trigger(NRF_RADIO_TASK_EDSTART);
+            nrf_802154_trx_energy_detection(trx_ed_count);
         }
         else
         {
-            fem_for_lna_reset();
+            /* There is too little time in current timeslot, just wait for timeslot end.
+             * Operation will be resumed in next timeslot
+             */
         }
     }
     else
     {
-        // In case channel change was requested during energy detection procedure.
         channel_set(nrf_802154_pib_channel_get());
 
-        ed_terminate();
         state_set(RADIO_STATE_RX);
         rx_init(true);
 
-        energy_detected_notify(ed_result_get());
+        energy_detected_notify(ed_result_get(m_ed_result));
+
     }
-}
-
-/// Handler of radio interrupts.
-static void irq_handler(void)
-{
-    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_IRQ_HANDLER);
-
-    // Prevent interrupting of this handler by requests from higher priority code.
-    nrf_802154_critical_section_forcefully_enter();
-
-    if (nrf_radio_int_enable_check(NRF_RADIO_INT_EDEND_MASK) &&
-        nrf_radio_event_check(NRF_RADIO_EVENT_EDEND))
-    {
-        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_EVENT_EDEND);
-        nrf_radio_event_clear(NRF_RADIO_EVENT_EDEND);
-
-        switch (m_state)
-        {
-            case RADIO_STATE_ED:
-                irq_edend_state_ed();
-                break;
-
-            default:
-                assert(false);
-        }
-
-        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_EVENT_EDEND);
-    }
-
-    nrf_802154_critical_section_exit();
-
-    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_IRQ_HANDLER);
 }
 
 /***************************************************************************************************
@@ -1853,6 +1666,11 @@ bool nrf_802154_core_energy_detection(nrf_802154_term_t term_lvl, uint32_t time_
 
         if (result)
         {
+            if (time_us < ED_ITER_DURATION)
+            {
+                time_us = ED_ITER_DURATION;
+            }
+
             state_set(RADIO_STATE_ED);
             m_ed_time_left = time_us;
             m_ed_result    = 0;
@@ -2037,9 +1855,4 @@ bool nrf_802154_core_last_rssi_measurement_get(int8_t * p_rssi)
     }
 
     return result;
-}
-
-void TODO_remove_this_when_all_irq_handler_content_is_ported(void)
-{
-    irq_handler();
 }
