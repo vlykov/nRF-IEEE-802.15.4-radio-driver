@@ -61,9 +61,11 @@ typedef enum
      * FEM is going to powered or is powered depending if RADIO reached DISABLED
      */
     TRX_STATE_RXFRAME_FINISHED,
+
     TRX_STATE_RXACK,
     TRX_STATE_TXFRAME,
     TRX_STATE_TXACK,
+    TRX_STATE_STANDALONE_CCA,
 
     /* PPIS disabled deconfigured
      * RADIO is DISABLED, TXDISABLE, RXDISABLE
@@ -170,6 +172,9 @@ bool nrf_802154_trx_transmit_ack(const void * p_transmit_buffer, uint32_t delay_
 
 bool nrf_802154_trx_go_idle(void);
 
+
+void nrf_802154_trx_standalone_cca(void);
+
 void nrf_802154_trx_abort(void);
 
 void nrf_802154_trx_go_idle_abort(void);
@@ -177,6 +182,7 @@ void nrf_802154_trx_receive_frame_abort(void);
 void nrf_802154_trx_receive_ack_abort(void);
 void nrf_802154_trx_transmit_frame_abort(void);
 void nrf_802154_trx_transmit_ack_abort(void);
+void nrf_802154_trx_standalone_cca_abort(void);
 
 
 /**@brief   Handler called from isr at the beginning of a frame reception (just after synchronization header is received).
@@ -209,6 +215,8 @@ extern void nrf_802154_trx_transmit_started(trx_state_t state); // TODO change n
 extern void nrf_802154_trx_transmit_transmitted(trx_state_t state);
 
 extern void nrf_802154_trx_in_idle(void);
+
+extern void nrf_802154_trx_standalone_cca_finished(bool channel_was_idle);
 
 #ifdef __cplusplus
 }

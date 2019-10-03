@@ -354,6 +354,16 @@ static void fem_for_lna_set(void)
     }
 }
 
+/** Reset FEM configuration for LNA. */
+static void fem_for_lna_reset(void)
+{
+    nrf_802154_fal_lna_configuration_clear(&m_activate_rx_cc0, NULL);
+    nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
+    nrf_timer_shorts_disable(NRF_802154_TIMER_INSTANCE, NRF_TIMER_SHORT_COMPARE0_STOP_MASK);
+    nrf_ppi_channel_disable(PPI_EGU_TIMER_START);
+}
+
+
 /** Configure FEM for TX procedure. */
 static void fem_for_tx_set(bool cca)
 {
@@ -1205,6 +1215,10 @@ void nrf_802154_trx_abort(void)
             nrf_802154_trx_transmit_ack_abort();
             break;
 
+        case TRX_STATE_STANDALONE_CCA:
+            nrf_802154_trx_standalone_cca_abort();
+            break;
+
         default:
             assert(false);
     }
@@ -1331,6 +1345,54 @@ void nrf_802154_trx_receive_ack_abort(void)
     m_trx_state = TRX_STATE_FINISHED;
 }
 
+void nrf_802154_trx_standalone_cca(void)
+{
+    assert((m_trx_state == TRX_STATE_IDLE) || (m_trx_state == TRX_STATE_FINISHED));
+
+    m_trx_state = TRX_STATE_STANDALONE_CCA;
+
+    // Set shorts
+    nrf_radio_shorts_set(SHORTS_CCA);
+
+    // Enable IRQs
+    nrf_radio_event_clear(NRF_RADIO_EVENT_CCABUSY);
+    nrf_radio_event_clear(NRF_RADIO_EVENT_CCAIDLE);
+    nrf_radio_int_enable(NRF_RADIO_INT_CCABUSY_MASK | NRF_RADIO_INT_CCAIDLE_MASK);
+
+    // Set FEM
+    fem_for_lna_set();
+
+    // Clr event EGU
+    nrf_egu_event_clear(NRF_802154_SWI_EGU_INSTANCE, EGU_EVENT);
+
+    // Set PPIs
+    ppis_for_egu_and_ramp_up_set(NRF_RADIO_TASK_RXEN, true);
+
+    trigger_disable_to_start_rampup();
+}
+
+static void standalone_cca_finish(void)
+{
+    nrf_ppi_channel_disable(PPI_DISABLED_EGU);
+    nrf_ppi_channel_disable(PPI_EGU_RAMP_UP);
+    nrf_ppi_channel_remove_from_group(PPI_EGU_RAMP_UP, PPI_CHGRP0);
+
+    nrf_radio_shorts_set(SHORTS_IDLE);
+
+    fem_for_lna_reset();
+
+    nrf_radio_int_disable(NRF_RADIO_INT_CCABUSY_MASK | NRF_RADIO_INT_CCAIDLE_MASK);
+
+    nrf_radio_task_trigger(NRF_RADIO_TASK_CCASTOP);
+    nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
+}
+
+void nrf_802154_trx_standalone_cca_abort(void)
+{
+    standalone_cca_finish();
+
+    m_trx_state = TRX_STATE_FINISHED;
+}
 
 static void irq_handler_address(void)
 {
@@ -1620,7 +1682,17 @@ static void irq_handler_disabled(void)
 
 static void irq_handler_ccaidle(void)
 {
-    assert(false);
+    switch (m_trx_state)
+    {
+        case TRX_STATE_STANDALONE_CCA:
+            standalone_cca_finish();
+            m_trx_state = TRX_STATE_FINISHED;
+            nrf_802154_trx_standalone_cca_finished(true);
+            break;
+
+        default:
+            assert(false);
+    }
 }
 
 static void irq_handler_ccabusy(void)
@@ -1632,6 +1704,12 @@ static void irq_handler_ccabusy(void)
             txframe_finish();
             m_trx_state = TRX_STATE_FINISHED;
             nrf_802154_trx_transmit_ccabusy();
+            break;
+
+        case TRX_STATE_STANDALONE_CCA:
+            standalone_cca_finish();
+            m_trx_state = TRX_STATE_FINISHED;
+            nrf_802154_trx_standalone_cca_finished(false);
             break;
 
         default:

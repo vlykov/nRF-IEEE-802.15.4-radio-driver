@@ -783,41 +783,6 @@ static void ed_terminate(void)
     }
 }
 
-/** Terminate CCA procedure. */
-static void cca_terminate(void)
-{
-    nrf_ppi_channel_disable(PPI_DISABLED_EGU);
-    nrf_ppi_channel_disable(PPI_EGU_RAMP_UP);
-
-    fem_for_lna_reset();
-
-    nrf_ppi_channel_remove_from_group(PPI_EGU_RAMP_UP, PPI_CHGRP0);
-    nrf_ppi_fork_endpoint_setup(PPI_EGU_RAMP_UP, 0);
-
-    if (timeslot_is_granted())
-    {
-        bool shutdown = nrf_fem_prepare_powerdown(NRF_802154_TIMER_INSTANCE,
-                                                  NRF_TIMER_CC_CHANNEL0,
-                                                  PPI_EGU_TIMER_START);
-
-        nrf_radio_int_disable(NRF_RADIO_INT_CCABUSY_MASK | NRF_RADIO_INT_CCAIDLE_MASK);
-        nrf_radio_shorts_set(SHORTS_IDLE);
-        nrf_radio_task_trigger(NRF_RADIO_TASK_CCASTOP);
-        nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
-
-        if (shutdown)
-        {
-            while (!nrf_timer_event_check(NRF_802154_TIMER_INSTANCE, NRF_TIMER_EVENT_COMPARE0))
-            {
-                // Wait until the event is set.
-            }
-            nrf_timer_shorts_disable(NRF_802154_TIMER_INSTANCE, NRF_TIMER_SHORT_COMPARE0_STOP_MASK);
-            nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
-            nrf_ppi_channel_disable(PPI_EGU_TIMER_START);
-        }
-    }
-}
-
 /** Terminate Continuous Carrier procedure. */
 /*static*/ void TODO_move_to_trx_continuous_carrier_terminate(void)
 {
@@ -1089,27 +1054,7 @@ static void cca_init(bool disabled_was_triggered)
         return;
     }
 
-    // Set shorts
-    nrf_radio_shorts_set(SHORTS_CCA);
-
-    // Enable IRQs
-    nrf_radio_event_clear(NRF_RADIO_EVENT_CCABUSY);
-    nrf_radio_event_clear(NRF_RADIO_EVENT_CCAIDLE);
-    nrf_radio_int_enable(NRF_RADIO_INT_CCABUSY_MASK | NRF_RADIO_INT_CCAIDLE_MASK);
-
-    // Set FEM
-    fem_for_lna_set();
-
-    // Clr event EGU
-    nrf_egu_event_clear(NRF_802154_SWI_EGU_INSTANCE, EGU_EVENT);
-
-    // Set PPIs
-    ppis_for_egu_and_ramp_up_set(NRF_RADIO_TASK_RXEN, true);
-
-    if (!disabled_was_triggered || !ppi_egu_worked())
-    {
-        nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
-    }
+    nrf_802154_trx_standalone_cca();
 }
 
 /** Initialize Continuous Carrier operation. */
@@ -1750,15 +1695,12 @@ static void on_trx_received_ack(void)
     }
 }
 
-
-/// This event is generated when CCA reports idle channel during stand-alone procedure.
-static void irq_ccaidle_state_cca(void)
+void nrf_802154_trx_standalone_cca_finished(bool channel_was_idle)
 {
-    cca_terminate();
     state_set(RADIO_STATE_RX);
     rx_init(true);
 
-    cca_notify(true);
+    cca_notify(channel_was_idle);
 }
 
 void nrf_802154_trx_transmit_ccabusy(void)
@@ -1767,15 +1709,6 @@ void nrf_802154_trx_transmit_ccabusy(void)
     rx_init(true);
 
     transmit_failed_notify_and_nesting_allow(NRF_802154_TX_ERROR_BUSY_CHANNEL);
-}
-
-static void irq_ccabusy_state_cca(void)
-{
-    cca_terminate();
-    state_set(RADIO_STATE_RX);
-    rx_init(true);
-
-    cca_notify(false);
 }
 
 /// This event is generated when energy detection procedure ends.
@@ -1816,49 +1749,6 @@ static void irq_handler(void)
 
     // Prevent interrupting of this handler by requests from higher priority code.
     nrf_802154_critical_section_forcefully_enter();
-
-    if (nrf_radio_int_enable_check(NRF_RADIO_INT_CCAIDLE_MASK) &&
-        nrf_radio_event_check(NRF_RADIO_EVENT_CCAIDLE))
-    {
-        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_EVENT_CCAIDLE);
-        nrf_radio_event_clear(NRF_RADIO_EVENT_CCAIDLE);
-
-        switch (m_state)
-        {
-            case RADIO_STATE_CCA:
-                irq_ccaidle_state_cca();
-                break;
-
-            default:
-                assert(false);
-        }
-
-        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_EVENT_CCAIDLE);
-    }
-
-    if (nrf_radio_int_enable_check(NRF_RADIO_INT_CCABUSY_MASK) &&
-        nrf_radio_event_check(NRF_RADIO_EVENT_CCABUSY))
-    {
-        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_EVENT_CCABUSY);
-        nrf_radio_event_clear(NRF_RADIO_EVENT_CCABUSY);
-
-        switch (m_state)
-        {
-//            case RADIO_STATE_CCA_TX:
-//            case RADIO_STATE_TX:
-//                irq_ccabusy_state_tx_frame();
-//                break;
-
-            case RADIO_STATE_CCA:
-                irq_ccabusy_state_cca();
-                break;
-
-            default:
-                assert(false);
-        }
-
-        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_EVENT_CCABUSY);
-    }
 
     if (nrf_radio_int_enable_check(NRF_RADIO_INT_EDEND_MASK) &&
         nrf_radio_event_check(NRF_RADIO_EVENT_EDEND))
