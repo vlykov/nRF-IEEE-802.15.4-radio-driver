@@ -57,11 +57,8 @@
 #include "nrf_802154_trx.h"
 #include "nrf_802154_types.h"
 #include "nrf_802154_utils.h"
-#include "nrf_egu.h"
 #include "nrf_error.h"
-#include "nrf_ppi.h"
 #include "nrf_radio.h"
-#include "nrf_timer.h"
 #include "fem/nrf_fem_protocol_api.h"
 #include "mac_features/nrf_802154_delayed_trx.h"
 #include "mac_features/nrf_802154_filter.h"
@@ -73,60 +70,6 @@
 
 #include "nrf_802154_core_hooks.h"
 
-#define EGU_EVENT                  NRF_EGU_EVENT_TRIGGERED15
-#define EGU_TASK                   NRF_EGU_TASK_TRIGGER15
-#define PPI_CHGRP0                 NRF_802154_PPI_CORE_GROUP                     ///< PPI group used to disable self-disabling PPIs
-#define PPI_CHGRP0_DIS_TASK        NRF_PPI_TASK_CHG0_DIS                         ///< PPI task used to disable self-disabling PPIs
-
-#define PPI_DISABLED_EGU           NRF_802154_PPI_RADIO_DISABLED_TO_EGU          ///< PPI that connects RADIO DISABLED event with EGU task
-#define PPI_EGU_RAMP_UP            NRF_802154_PPI_EGU_TO_RADIO_RAMP_UP           ///< PPI that connects EGU event with RADIO TXEN or RXEN task
-#define PPI_EGU_TIMER_START        NRF_802154_PPI_EGU_TO_TIMER_START             ///< PPI that connects EGU event with TIMER START task
-#define PPI_CRCERROR_CLEAR         NRF_802154_PPI_RADIO_CRCERROR_TO_TIMER_CLEAR  ///< PPI that connects RADIO CRCERROR event with TIMER CLEAR task
-#define PPI_CCAIDLE_FEM            NRF_802154_PPI_RADIO_CCAIDLE_TO_FEM_GPIOTE    ///< PPI that connects RADIO CCAIDLE event with GPIOTE tasks used by FEM
-#define PPI_TIMER_TX_ACK           NRF_802154_PPI_TIMER_COMPARE_TO_RADIO_TXEN    ///< PPI that connects TIMER COMPARE event with RADIO TXEN task
-#define PPI_CRCOK_DIS_PPI          NRF_802154_PPI_RADIO_CRCOK_TO_PPI_GRP_DISABLE ///< PPI that connects RADIO CRCOK event with task that disables PPI group
-
-#if NRF_802154_DISABLE_BCC_MATCHING
-#define PPI_ADDRESS_COUNTER_COUNT  NRF_802154_PPI_RADIO_ADDR_TO_COUNTER_COUNT    ///< PPI that connects RADIO ADDRESS event with TIMER COUNT task
-#define PPI_CRCERROR_COUNTER_CLEAR NRF_802154_PPI_RADIO_CRCERROR_COUNTER_CLEAR   ///< PPI that connects RADIO CRCERROR event with TIMER CLEAR task
-#endif  // NRF_802154_DISABLE_BCC_MATCHING
-
-#if NRF_802154_DISABLE_BCC_MATCHING
-#define SHORT_ADDRESS_BCSTART 0UL
-#else // NRF_802154_DISABLE_BCC_MATCHING
-#define SHORT_ADDRESS_BCSTART NRF_RADIO_SHORT_ADDRESS_BCSTART_MASK
-#endif  // NRF_802154_DISABLE_BCC_MATCHING
-
-/// Value set to SHORTS register when no shorts should be enabled.
-#define SHORTS_IDLE             0
-
-/// Value set to SHORTS register for RX operation.
-#define SHORTS_RX               (NRF_RADIO_SHORT_ADDRESS_RSSISTART_MASK | \
-                                 NRF_RADIO_SHORT_END_DISABLE_MASK |       \
-                                 SHORT_ADDRESS_BCSTART)
-
-#define SHORTS_RX_FREE_BUFFER   (NRF_RADIO_SHORT_RXREADY_START_MASK)
-
-#define SHORTS_TX_ACK           (NRF_RADIO_SHORT_TXREADY_START_MASK | \
-                                 NRF_RADIO_SHORT_PHYEND_DISABLE_MASK)
-
-#define SHORTS_CCA_TX           (NRF_RADIO_SHORT_RXREADY_CCASTART_MASK | \
-                                 NRF_RADIO_SHORT_CCABUSY_DISABLE_MASK |  \
-                                 NRF_RADIO_SHORT_CCAIDLE_TXEN_MASK |     \
-                                 NRF_RADIO_SHORT_TXREADY_START_MASK |    \
-                                 NRF_RADIO_SHORT_PHYEND_DISABLE_MASK)
-
-#define SHORTS_TX               (NRF_RADIO_SHORT_TXREADY_START_MASK | \
-                                 NRF_RADIO_SHORT_PHYEND_DISABLE_MASK)
-
-#define SHORTS_RX_ACK           (NRF_RADIO_SHORT_ADDRESS_RSSISTART_MASK | \
-                                 NRF_RADIO_SHORT_END_DISABLE_MASK)
-
-#define SHORTS_ED               (NRF_RADIO_SHORT_READY_EDSTART_MASK)
-
-#define SHORTS_CCA              (NRF_RADIO_SHORT_RXREADY_CCASTART_MASK | \
-                                 NRF_RADIO_SHORT_CCABUSY_DISABLE_MASK)
-
 /// Delay before first check of received frame: 24 bits is PHY header and MAC Frame Control field.
 #define BCC_INIT                (3 * 8)
 
@@ -135,16 +78,7 @@
 /// Overhead of hardware preparation for ED procedure (aTurnaroundTime) [number of iterations]
 #define ED_ITERS_OVERHEAD       2U
 
-#define CRC_LENGTH              2               ///< Length of CRC in 802.15.4 frames [bytes]
-#define CRC_POLYNOMIAL          0x011021        ///< Polynomial used for CRC calculation in 802.15.4 frames
-
-#define MHMU_MASK               0xff000700      ///< Mask of known bytes in ACK packet
-#define MHMU_PATTERN            0x00000200      ///< Values of known bytes in ACK packet
-#define MHMU_PATTERN_DSN_OFFSET 24              ///< Offset of DSN in MHMU_PATTER [bits]
-
 #define ACK_IFS                 TURNAROUND_TIME ///< Ack Inter Frame Spacing [us] - delay between last symbol of received frame and first symbol of transmitted Ack
-#define TXRU_TIME               40              ///< Transmitter ramp up time [us]
-#define EVENT_LAT               23              ///< END event latency [us]
 
 #define MAX_CRIT_SECT_TIME      60              ///< Maximal time that the driver spends in single critical section.
 

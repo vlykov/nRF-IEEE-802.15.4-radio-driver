@@ -48,7 +48,6 @@
 
 #include "nrf_802154_trx.h"
 
-// TODO: Defines just copied from core. Figure out what's needed and remove duplicates
 #define EGU_EVENT                  NRF_EGU_EVENT_TRIGGERED15
 #define EGU_TASK                   NRF_EGU_TASK_TRIGGER15
 #define PPI_CHGRP0                 NRF_802154_PPI_CORE_GROUP                     ///< PPI group used to disable self-disabling PPIs
@@ -118,36 +117,11 @@
 #define SHORTS_CCA              (NRF_RADIO_SHORT_RXREADY_CCASTART_MASK | \
                                  NRF_RADIO_SHORT_CCABUSY_DISABLE_MASK)
 
-/// Delay before first check of received frame: 24 bits is PHY header and MAC Frame Control field.
-#define BCC_INIT                (3 * 8)
-
-/// Duration of single iteration of Energy Detection procedure
-#define ED_ITER_DURATION        128U
-/// Overhead of hardware preparation for ED procedure (aTurnaroundTime) [number of iterations]
-#define ED_ITERS_OVERHEAD       2U
-
 #define CRC_LENGTH              2               ///< Length of CRC in 802.15.4 frames [bytes]
 #define CRC_POLYNOMIAL          0x011021        ///< Polynomial used for CRC calculation in 802.15.4 frames
 
-#define MHMU_MASK               0xff000700      ///< Mask of known bytes in ACK packet
-#define MHMU_PATTERN            0x00000200      ///< Values of known bytes in ACK packet
-#define MHMU_PATTERN_DSN_OFFSET 24              ///< Offset of DSN in MHMU_PATTER [bits]
-
-#define ACK_IFS                 TURNAROUND_TIME ///< Ack Inter Frame Spacing [us] - delay between last symbol of received frame and first symbol of transmitted Ack
 #define TXRU_TIME               40              ///< Transmitter ramp up time [us]
 #define EVENT_LAT               23              ///< END event latency [us]
-
-#define MAX_CRIT_SECT_TIME      60              ///< Maximal time that the driver spends in single critical section.
-
-#define LQI_VALUE_FACTOR        4               ///< Factor needed to calculate LQI value based on data from RADIO peripheral
-#define LQI_MAX                 0xff            ///< Maximal LQI value
-
-/** Get LQI of given received packet. If CRC is calculated by hardware LQI is included instead of CRC
- *  in the frame. Length is stored in byte with index 0; CRC is 2 last bytes.
- */
-#define RX_FRAME_LQI(data)      ((data)[(data)[0] - 1])
-
-
 
 /// Common parameters for the FAL handling.
 static const nrf_802154_fal_event_t m_deactivate_on_disable =
