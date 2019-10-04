@@ -358,21 +358,6 @@ static uint8_t * rx_buffer_get(void)
 }
 
 /***************************************************************************************************
- * @section Radio parameters calculators
- **************************************************************************************************/
-
-/** Set radio channel
- *
- *  @param[in]  channel  Channel number to set (11-26).
- */
-static void channel_set(uint8_t channel)
-{
-    assert(channel >= 11 && channel <= 26);
-
-    nrf_radio_frequency_set(2405 + 5 * (channel - 11));
-}
-
-/***************************************************************************************************
  * @section ACK transmission management
  **************************************************************************************************/
 
@@ -1400,7 +1385,7 @@ void nrf_802154_trx_energy_detection_finished(uint8_t ed_sample)
     }
     else
     {
-        channel_set(nrf_802154_pib_channel_get());
+        nrf_802154_trx_channel_set(nrf_802154_pib_channel_get());
 
         state_set(RADIO_STATE_RX);
         rx_init(true);
@@ -1655,10 +1640,9 @@ bool nrf_802154_core_channel_update(void)
 
     if (result)
     {
-        // TODO: rewrite this function to use trx
         if (timeslot_is_granted())
         {
-            channel_set(nrf_802154_pib_channel_get());
+            nrf_802154_trx_channel_set(nrf_802154_pib_channel_get());
         }
 
         switch (m_state)
@@ -1674,7 +1658,7 @@ bool nrf_802154_core_channel_update(void)
             case RADIO_STATE_CONTINUOUS_CARRIER:
                 if (timeslot_is_granted())
                 {
-                    nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
+                    nrf_802154_trx_continuous_carrier_restart();
                 }
 
                 break;

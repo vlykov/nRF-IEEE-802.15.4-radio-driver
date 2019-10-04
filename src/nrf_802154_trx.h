@@ -87,6 +87,11 @@ void nrf_802154_trx_init(void);
 void nrf_802154_trx_enable(void);
 void nrf_802154_trx_disable(void);
 
+/**@brief Sets radio channel to use.
+ *
+ * @param[in] channel   Channel number to set (11-26).
+ */
+void nrf_802154_trx_channel_set(uint8_t channel);
 
 /**@brief Puts the trx module into receive frame (non-ack) mode.
  *
@@ -207,6 +212,7 @@ bool nrf_802154_trx_go_idle(void);
 void nrf_802154_trx_standalone_cca(void);
 
 void nrf_802154_trx_continuous_carrier(void);
+void nrf_802154_trx_continuous_carrier_restart(void);
 
 /**@brief Puts trx module into energy detection mode.
  *

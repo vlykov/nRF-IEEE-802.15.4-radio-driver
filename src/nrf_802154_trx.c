@@ -590,6 +590,10 @@ void nrf_802154_trx_disable(void)
     }
 }
 
+void nrf_802154_trx_channel_set(uint8_t channel)
+{
+    channel_set(channel);
+}
 
 
 /** Check if PSDU is currently being received.
@@ -1452,6 +1456,18 @@ void nrf_802154_trx_continuous_carrier(void)
 
     trigger_disable_to_start_rampup();
 }
+
+void nrf_802154_trx_continuous_carrier_restart(void)
+{
+    assert(m_trx_state == TRX_STATE_CONTINUOUS_CARRIER);
+
+    // Continuous carrier PPIs are configured without self-disabling
+    // Triggering RADIO.TASK_DISABLE causes ramp-down -> RADIO.EVENTS_DISABLED -> EGU.TASK -> EGU.EVENT ->
+    // RADIO.TASK_TXEN -> ramp_up -> new continous carrier
+
+    nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
+}
+
 
 void nrf_802154_trx_continuous_carrier_abort(void)
 {
