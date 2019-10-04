@@ -115,7 +115,8 @@ typedef struct
 
 static nrf_802154_flags_t m_flags;               ///< Flags used to store the current driver state.
 
-static volatile bool m_rsch_timeslot_is_granted; ///< State of the RSCH timeslot.
+static volatile bool        m_rsch_timeslot_is_granted;       ///< State of the RSCH timeslot.
+static volatile rsch_prio_t m_rsch_priority = RSCH_PRIO_IDLE; ///< Last notified RSCH priority.
 
 /***************************************************************************************************
  * @section Common core operations
@@ -133,6 +134,39 @@ static void state_set(radio_state_t state)
 
     /* We should request preconditions according to desired state, currently we
      * request preconditions only for non-sleep and drop preconditions for sleep */
+
+    switch (state)
+    {
+        case RADIO_STATE_SLEEP:
+            nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_IDLE);
+            break;
+
+        case RADIO_STATE_FALLING_ASLEEP:
+            nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_IDLE_LISTENING);
+            break;
+
+        case RADIO_STATE_RX:
+
+    }
+#if 0
+    // Receive
+    RADIO_STATE_RX,                 ///< The receiver is enabled and it is receiving frames.
+    RADIO_STATE_TX_ACK,             ///< The frame is received and the ACK is being transmitted.
+
+    // Transmit
+    RADIO_STATE_CCA_TX,             ///< Performing CCA followed by the frame transmission.
+    RADIO_STATE_TX,                 ///< Transmitting data frame (or beacon).
+    RADIO_STATE_RX_ACK,             ///< Receiving ACK after the transmitted frame.
+
+    // Energy Detection
+    RADIO_STATE_ED,                 ///< Performing the energy detection procedure.
+
+    // CCA
+    RADIO_STATE_CCA,                ///< Performing the CCA procedure.
+
+    // Continuous carrier
+    RADIO_STATE_CONTINUOUS_CARRIER, ///< Emitting the continuous carrier wave.
+#endif
 
     if (state == RADIO_STATE_SLEEP)
     {
@@ -843,8 +877,77 @@ static void cont_prec_denied(void)
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_TIMESLOT_ENDED);
 }
 
+static inline rsch_prio_t min_required_rsch_prio(radio_state_t state)
+{
+    switch (state)
+    {
+        case RADIO_STATE_SLEEP:
+            return RSCH_PRIO_IDLE;
+
+        case RADIO_STATE_FALLING_ASLEEP:
+            return RSCH_PRIO_RX; //TODO check if correct
+
+        case RADIO_STATE_RX:
+        case RADIO_STATE_RX_ACK:
+        case RADIO_STATE_ED:
+        case RADIO_STATE_CCA:
+            return RSCH_PRIO_RX;
+
+        case RADIO_STATE_TX:
+        case RADIO_STATE_TX_ACK:
+        case RADIO_STATE_CCA_TX:
+        case RADIO_STATE_CONTINUOUS_CARRIER:
+            return RSCH_PRIO_TX;
+
+        default:
+            assert(false);
+    }
+}
+
+static bool is_state_allowed_for_prio(rsch_prio_t prio, radio_state_t state)
+{
+    return (min_required_rsch_prio(state) <= prio);
+}
+
+static bool action_needed(rsch_prio_t old_prio, rsch_prio_t new_prio, radio_state_t state)
+{
+    bool old_prio_allows = is_state_allowed_for_prio(old_prio, state);
+    bool new_prio_allows = is_state_allowed_for_prio(new_prio, state);
+
+    // If both priotirietes are allowed, or both denied, no action needed.
+    return old_prio_allows != new_prio_allows;
+}
+
 void nrf_802154_rsch_crit_sect_prio_changed(rsch_prio_t prio)
 {
+#if 1
+    rsch_prio_t old_prio = m_rsch_priority;
+
+    if ((old_prio == RSCH_PRIO_IDLE) && (prio != RSCH_PRIO_IDLE))
+    {
+        // We have just got a timeslot.
+        nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_TIMESLOT_STARTED);
+    }
+    else if ((old_prio != RSCH_PRIO_IDLE) && (prio == RSCH_PRIO_IDLE))
+    {
+        // We are giving back timeslot.
+    }
+
+    switch (prio)
+    {
+        case RSCH_PRIO_IDLE:
+            cont_prec_denied();
+            nrf_802154_rsch_continuous_ended();
+            break;
+
+        case RSCH_PRIO_IDLE_LISTENING:
+
+            break;
+    }
+
+    m_rsch_priority = prio;
+
+#else
     if (prio > RSCH_PRIO_IDLE)
     {
         cont_prec_approved();
@@ -854,6 +957,7 @@ void nrf_802154_rsch_crit_sect_prio_changed(rsch_prio_t prio)
         cont_prec_denied();
         nrf_802154_rsch_continuous_ended();
     }
+#endif
 }
 
 /***************************************************************************************************
