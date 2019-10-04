@@ -175,13 +175,6 @@ static inline void prec_approved_prio_set(rsch_prec_t prec, rsch_prio_t prio)
     nrf_802154_log_entry(prec_approved_prio_set, 2);
 
     assert(prec <= RSCH_PREC_CNT);
-
-    if ((m_requested_prio == RSCH_PRIO_IDLE) && (prio != RSCH_PRIO_IDLE))
-    {
-        // Ignore approved precondition - it was not requested.
-        return;
-    }
-
     assert((m_approved_prios[prec] != prio) || (prio == RSCH_PRIO_IDLE));
 
     m_approved_prios[prec] = prio;
@@ -224,9 +217,15 @@ static inline void all_prec_update(void)
             }
             else
             {
-                nrf_802154_priority_drop_hfclk_stop_terminate();
-                nrf_802154_clock_hfclk_start();
-                nrf_raal_continuous_mode_enter();
+                if (m_approved_prios[RSCH_PREC_HFCLK] == RSCH_PRIO_IDLE)
+                {
+                    nrf_802154_priority_drop_hfclk_stop_terminate();
+                    nrf_802154_clock_hfclk_start();
+                }
+                if (m_approved_prios[RSCH_PREC_RAAL] == RSCH_PRIO_IDLE)
+                {
+                    nrf_raal_continuous_mode_enter();
+                }
             }
 
             nrf_802154_wifi_coex_prio_request(new_prio);
@@ -366,7 +365,6 @@ static void delayed_timeslot_prec_request(void * p_context)
 void nrf_802154_rsch_init(void)
 {
     nrf_raal_init();
-    nrf_802154_wifi_coex_init();
 
     m_ntf_mutex          = 0;
     m_req_mutex          = 0;
@@ -383,6 +381,7 @@ void nrf_802154_rsch_init(void)
     {
         m_approved_prios[i] = RSCH_PRIO_IDLE;
     }
+    nrf_802154_wifi_coex_init();
 }
 
 void nrf_802154_rsch_uninit(void)

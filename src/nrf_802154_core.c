@@ -122,6 +122,13 @@ static volatile rsch_prio_t m_rsch_priority = RSCH_PRIO_IDLE; ///< Last notified
  * @section Common core operations
  **************************************************************************************************/
 
+static rsch_prio_t min_required_rsch_prio(radio_state_t state);
+
+
+static void request_preconditions_for_state(radio_state_t state)
+{
+    nrf_802154_rsch_crit_sect_prio_request(min_required_rsch_prio(state));
+}
 /** Set driver state.
  *
  * @param[in]  state  Driver state to set.
@@ -135,47 +142,7 @@ static void state_set(radio_state_t state)
     /* We should request preconditions according to desired state, currently we
      * request preconditions only for non-sleep and drop preconditions for sleep */
 
-    switch (state)
-    {
-        case RADIO_STATE_SLEEP:
-            nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_IDLE);
-            break;
-
-        case RADIO_STATE_FALLING_ASLEEP:
-            nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_IDLE_LISTENING);
-            break;
-
-        case RADIO_STATE_RX:
-
-    }
-#if 0
-    // Receive
-    RADIO_STATE_RX,                 ///< The receiver is enabled and it is receiving frames.
-    RADIO_STATE_TX_ACK,             ///< The frame is received and the ACK is being transmitted.
-
-    // Transmit
-    RADIO_STATE_CCA_TX,             ///< Performing CCA followed by the frame transmission.
-    RADIO_STATE_TX,                 ///< Transmitting data frame (or beacon).
-    RADIO_STATE_RX_ACK,             ///< Receiving ACK after the transmitted frame.
-
-    // Energy Detection
-    RADIO_STATE_ED,                 ///< Performing the energy detection procedure.
-
-    // CCA
-    RADIO_STATE_CCA,                ///< Performing the CCA procedure.
-
-    // Continuous carrier
-    RADIO_STATE_CONTINUOUS_CARRIER, ///< Emitting the continuous carrier wave.
-#endif
-
-    if (state == RADIO_STATE_SLEEP)
-    {
-        nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_IDLE);
-    }
-    else
-    {
-        nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_MAX);
-    }
+    request_preconditions_for_state(state);
 }
 
 /** Clear flags describing frame being received. */
@@ -760,58 +727,7 @@ static void continuous_carrier_init(bool disabled_was_triggered)
 /***************************************************************************************************
  * @section Radio Scheduler notification handlers
  **************************************************************************************************/
-
-static void cont_prec_approved(void)
-{
-    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_TIMESLOT_STARTED);
-
-    if (remaining_timeslot_time_is_enough_for_crit_sect() && !timeslot_is_granted())
-    {
-        nrf_802154_trx_enable();
-
-        m_rsch_timeslot_is_granted = true;
-
-        nrf_802154_timer_coord_start();
-
-        switch (m_state)
-        {
-            case RADIO_STATE_SLEEP:
-                // Intentionally empty. Appropriate action will be performed on state change.
-                break;
-
-            case RADIO_STATE_RX:
-                rx_init(false);
-                break;
-
-            case RADIO_STATE_CCA_TX:
-                (void)tx_init(mp_tx_data, true, false);
-                break;
-
-            case RADIO_STATE_TX:
-                (void)tx_init(mp_tx_data, false, false);
-                break;
-
-            case RADIO_STATE_ED:
-                ed_init(false);
-                break;
-
-            case RADIO_STATE_CCA:
-                cca_init(false);
-                break;
-
-            case RADIO_STATE_CONTINUOUS_CARRIER:
-                continuous_carrier_init(false);
-                break;
-
-            default:
-                assert(false);
-        }
-    }
-
-    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_TIMESLOT_STARTED);
-}
-
-static void cont_prec_denied(void)
+static void on_timeslot_ended(void)
 {
     bool result;
 
@@ -877,7 +793,104 @@ static void cont_prec_denied(void)
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_TIMESLOT_ENDED);
 }
 
-static inline rsch_prio_t min_required_rsch_prio(radio_state_t state)
+static void on_preconditions_denied(radio_state_t state)
+{
+    bool result;
+
+    result = nrf_802154_core_hooks_terminate(NRF_802154_TERM_802154, REQ_ORIG_CORE);
+    assert(result);
+    (void)result;
+
+    bool receiving_psdu_now = false;
+    if (m_state == RADIO_STATE_RX)
+    {
+        receiving_psdu_now = nrf_802154_trx_psdu_is_being_received();
+    }
+
+    nrf_802154_trx_abort();
+
+    switch (m_state)
+    {
+        case RADIO_STATE_FALLING_ASLEEP:
+            // There should be on_timeslot_ended event
+            break;
+
+        case RADIO_STATE_RX:
+            if (receiving_psdu_now)
+            {
+                // TODO: Add new status code
+                receive_failed_notify(NRF_802154_RX_ERROR_ABORTED);
+            }
+
+            break;
+
+        case RADIO_STATE_TX_ACK:
+            state_set(RADIO_STATE_RX);
+            mp_current_rx_buffer->free = false;
+            received_frame_notify_and_nesting_allow(mp_current_rx_buffer->data);
+            break;
+
+        case RADIO_STATE_CCA_TX:
+        case RADIO_STATE_TX:
+        case RADIO_STATE_RX_ACK:
+            state_set(RADIO_STATE_RX);
+            transmit_failed_notify_and_nesting_allow(NRF_802154_TX_ERROR_ABORTED);
+            break;
+
+        case RADIO_STATE_ED:
+        case RADIO_STATE_CCA:
+        case RADIO_STATE_CONTINUOUS_CARRIER:
+        case RADIO_STATE_SLEEP:
+            // Intentionally empty.
+            break;
+
+        default:
+            assert(false);
+    }
+
+    operation_terminated_notify(state, receiving_psdu_now);
+}
+
+static void on_preconditions_approved(radio_state_t state)
+{
+    nrf_802154_trx_abort();
+
+    switch (m_state)
+    {
+        case RADIO_STATE_SLEEP:
+            // Intentionally empty. Appropriate action will be performed on state change.
+            break;
+
+        case RADIO_STATE_RX:
+            rx_init(false);
+            break;
+
+        case RADIO_STATE_CCA_TX:
+            (void)tx_init(mp_tx_data, true, false);
+            break;
+
+        case RADIO_STATE_TX:
+            (void)tx_init(mp_tx_data, false, false);
+            break;
+
+        case RADIO_STATE_ED:
+            ed_init(false);
+            break;
+
+        case RADIO_STATE_CCA:
+            cca_init(false);
+            break;
+
+        case RADIO_STATE_CONTINUOUS_CARRIER:
+            continuous_carrier_init(false);
+            break;
+
+        default:
+            assert(false);
+    }
+}
+
+static rsch_prio_t min_required_rsch_prio(radio_state_t state)
 {
     switch (state)
     {
@@ -885,9 +898,9 @@ static inline rsch_prio_t min_required_rsch_prio(radio_state_t state)
             return RSCH_PRIO_IDLE;
 
         case RADIO_STATE_FALLING_ASLEEP:
-            return RSCH_PRIO_RX; //TODO check if correct
-
         case RADIO_STATE_RX:
+            return RSCH_PRIO_IDLE_LISTENING;
+
         case RADIO_STATE_RX_ACK:
         case RADIO_STATE_ED:
         case RADIO_STATE_CCA:
@@ -909,55 +922,64 @@ static bool is_state_allowed_for_prio(rsch_prio_t prio, radio_state_t state)
     return (min_required_rsch_prio(state) <= prio);
 }
 
-static bool action_needed(rsch_prio_t old_prio, rsch_prio_t new_prio, radio_state_t state)
+static int_fast8_t action_needed(rsch_prio_t old_prio, rsch_prio_t new_prio, radio_state_t state)
 {
     bool old_prio_allows = is_state_allowed_for_prio(old_prio, state);
     bool new_prio_allows = is_state_allowed_for_prio(new_prio, state);
 
-    // If both priotirietes are allowed, or both denied, no action needed.
-    return old_prio_allows != new_prio_allows;
+    int_fast8_t result = 0;
+
+    if (old_prio_allows && !new_prio_allows)
+    {
+        result = -1;
+    }
+    else if (!old_prio_allows && new_prio_allows)
+    {
+        result = 1;
+    }
+
+    return result;
 }
 
 void nrf_802154_rsch_crit_sect_prio_changed(rsch_prio_t prio)
 {
-#if 1
     rsch_prio_t old_prio = m_rsch_priority;
+
+    m_rsch_priority = prio;
 
     if ((old_prio == RSCH_PRIO_IDLE) && (prio != RSCH_PRIO_IDLE))
     {
         // We have just got a timeslot.
         nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_TIMESLOT_STARTED);
+
+        nrf_802154_trx_enable();
+
+        m_rsch_timeslot_is_granted = true;
+
+        nrf_802154_timer_coord_start();
+
+        nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_TIMESLOT_STARTED);
     }
     else if ((old_prio != RSCH_PRIO_IDLE) && (prio == RSCH_PRIO_IDLE))
     {
         // We are giving back timeslot.
+        on_timeslot_ended();
+        return;
     }
 
-    switch (prio)
+    int_fast8_t transition = action_needed(old_prio, prio, m_state);
+    if (transition == 0)
     {
-        case RSCH_PRIO_IDLE:
-            cont_prec_denied();
-            nrf_802154_rsch_continuous_ended();
-            break;
-
-        case RSCH_PRIO_IDLE_LISTENING:
-
-            break;
+        return;
     }
-
-    m_rsch_priority = prio;
-
-#else
-    if (prio > RSCH_PRIO_IDLE)
+    else if (transition < 0)
     {
-        cont_prec_approved();
+        on_preconditions_denied(m_state);
     }
     else
     {
-        cont_prec_denied();
-        nrf_802154_rsch_continuous_ended();
+        on_preconditions_approved(m_state);
     }
-#endif
 }
 
 /***************************************************************************************************
@@ -1006,6 +1028,7 @@ uint8_t nrf_802154_trx_receive_on_bcmatch(uint8_t bcc)
             else
             {
                 m_flags.frame_filtered = true;
+                //TODO request higher preconditions (RX active)
             }
         }
         else if ((filter_result == NRF_802154_RX_ERROR_INVALID_LENGTH) ||
@@ -1072,6 +1095,7 @@ void nrf_802154_trx_receive_crcerror(trx_state_t state)
         case TRX_STATE_RXFRAME:
             // We don't change receive buffer, receive will go to the same that was already used
 #if !NRF_802154_DISABLE_BCC_MATCHING
+            request_preconditions_for_state(m_state);
             nrf_802154_trx_receive_frame(BCC_INIT / 8U);
 #else
             // With BCC matching disabled trx module will re-arm automatically
@@ -1161,15 +1185,29 @@ static void on_trx_received_frame(void)
 
         if (send_ack)
         {
-            // TODO: What about preconditions for coex here?
-            if (nrf_802154_trx_transmit_ack(mp_ack, ACK_IFS))
+            state_set(RADIO_STATE_TX_ACK);
+
+            if (is_state_allowed_for_prio(m_rsch_priority, RADIO_STATE_TX_ACK))
             {
-                state_set(RADIO_STATE_TX_ACK);
+                if (nrf_802154_trx_transmit_ack(mp_ack, ACK_IFS))
+                {
+                    // Intentionally empty: transmitting ack, because we can
+                }
+                else
+                {
+                    mp_current_rx_buffer->free = false;
+
+                    state_set(RADIO_STATE_RX);
+                    rx_init(true);
+
+                    received_frame_notify_and_nesting_allow(p_received_data);
+                }
             }
             else
             {
                 mp_current_rx_buffer->free = false;
 
+                state_set(RADIO_STATE_RX);
                 rx_init(true);
 
                 received_frame_notify_and_nesting_allow(p_received_data);
@@ -1177,6 +1215,7 @@ static void on_trx_received_frame(void)
         }
         else
         {
+            request_preconditions_for_state(m_state);
             // Filter out received ACK frame if promiscuous mode is disabled.
             if (((p_received_data[FRAME_TYPE_OFFSET] & FRAME_TYPE_MASK) != FRAME_TYPE_ACK) ||
                 nrf_802154_pib_promiscuous_get())
