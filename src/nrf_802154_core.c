@@ -1496,21 +1496,23 @@ bool nrf_802154_core_transmit(nrf_802154_term_t              term_lvl,
 
         if (result)
         {
-            // Set state to RX in case sleep terminate succeeded, but tx_init fails.
-            state_set(RADIO_STATE_RX);
-
+            state_set(cca ? RADIO_STATE_CCA_TX : RADIO_STATE_TX);
             mp_tx_data = p_data;
-            result     = tx_init(p_data, cca, true);
 
-            if (!immediate)
+            if (immediate)
             {
+                result = tx_init(p_data, cca, true);
+                if (!result)
+                {
+                    state_set(RADIO_STATE_RX);
+                    rx_init(false);
+                }
+            }
+            else
+            {
+                tx_init(p_data, cca, true);
                 result = true;
             }
-        }
-
-        if (result)
-        {
-            state_set(cca ? RADIO_STATE_CCA_TX : RADIO_STATE_TX);
         }
 
         if (notify_function != NULL)
