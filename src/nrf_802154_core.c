@@ -111,7 +111,6 @@ typedef struct
 {
     bool frame_filtered        : 1; ///< If frame being received passed filtering operation.
     bool rx_timeslot_requested : 1; ///< If timeslot for the frame being received is already requested.
-    bool rssi_started          : 1; // TODO: REMOVE THIS, this is in trx now
 } nrf_802154_flags_t;
 
 static nrf_802154_flags_t m_flags;               ///< Flags used to store the current driver state.
@@ -152,18 +151,10 @@ static void rx_flags_clear(void)
     m_flags.rx_timeslot_requested = false;
 }
 
-/** Request the RSSI measurement. */
-static void rssi_measure(void)
-{
-    m_flags.rssi_started = true;
-    nrf_radio_event_clear(NRF_RADIO_EVENT_RSSIEND);
-    nrf_radio_task_trigger(NRF_RADIO_TASK_RSSISTART);
-}
-
 /** Wait for the RSSI measurement. */
 static void rssi_measurement_wait(void)
 {
-    while (!nrf_radio_event_check(NRF_RADIO_EVENT_RSSIEND))
+    while (!nrf_802154_trx_rssi_sample_is_available())
     {
         // Intentionally empty: This function is called from a critical section.
         // WFE would not be waken up by a RADIO event.
@@ -176,7 +167,7 @@ static void rssi_measurement_wait(void)
  */
 static int8_t rssi_last_measurement_get(void)
 {
-    uint8_t rssi_sample = nrf_radio_rssi_sample_get();
+    uint8_t rssi_sample = nrf_802154_trx_rssi_last_sample_get();
 
     rssi_sample = nrf_802154_rssi_sample_corrected_get(rssi_sample);
 
@@ -681,10 +672,6 @@ static void rx_init(bool disabled_was_triggered)
     // Clear filtering flag
     rx_flags_clear();
 
-    // Clear the RSSI measurement flag.
-    // TODO: Move this to trx (partially moved)
-    m_flags.rssi_started = false;
-
     // Find available RX buffer
     free_buffer = rx_buffer_is_available();
 
@@ -1030,8 +1017,6 @@ void nrf_802154_trx_receive_crcerror(trx_state_t state)
 static void on_trx_received_frame(void)
 {
     uint8_t * p_received_data = mp_current_rx_buffer->data;
-
-    m_flags.rssi_started = true;
 
 #if NRF_802154_DISABLE_BCC_MATCHING
     uint8_t               num_data_bytes      = PHR_SIZE + FCF_SIZE;
@@ -1731,7 +1716,7 @@ bool nrf_802154_core_rssi_measure(void)
     {
         if (timeslot_is_granted() && (m_state == RADIO_STATE_RX))
         {
-            rssi_measure();
+            result = nrf_802154_trx_rssi_measure();
         }
         else
         {
@@ -1747,8 +1732,8 @@ bool nrf_802154_core_rssi_measure(void)
 bool nrf_802154_core_last_rssi_measurement_get(int8_t * p_rssi)
 {
     bool result       = false;
-    bool rssi_started = m_flags.rssi_started;
     bool in_crit_sect = false;
+    bool rssi_started = nrf_802154_trx_rssi_measure_is_started();
 
     if (rssi_started)
     {
@@ -1760,9 +1745,13 @@ bool nrf_802154_core_last_rssi_measurement_get(int8_t * p_rssi)
         // Checking if a timeslot is granted is valid only in a critical section
         if (timeslot_is_granted())
         {
-            rssi_measurement_wait();
-            *p_rssi = rssi_last_measurement_get();
-            result  = true;
+            rssi_started = nrf_802154_trx_rssi_measure_is_started();
+            if (rssi_started)
+            {
+                rssi_measurement_wait();
+                *p_rssi = rssi_last_measurement_get();
+                result  = true;
+            }
         }
     }
 

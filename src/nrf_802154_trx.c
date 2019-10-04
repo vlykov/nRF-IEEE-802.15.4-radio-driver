@@ -893,6 +893,37 @@ void nrf_802154_trx_receive_ack(void)
 //    }
 }
 
+bool nrf_802154_trx_rssi_measure(void)
+{
+    bool result = false;
+
+    if (m_trx_state == TRX_STATE_RXFRAME)
+    {
+        nrf_radio_event_clear(NRF_RADIO_EVENT_RSSIEND);
+        nrf_radio_task_trigger(NRF_RADIO_TASK_RSSISTART);
+        m_flags.rssi_started = true;
+
+        result = true;
+    }
+
+    return result;
+}
+
+bool nrf_802154_trx_rssi_measure_is_started(void)
+{
+    return m_flags.rssi_started;
+}
+
+uint8_t nrf_802154_trx_rssi_last_sample_get(void)
+{
+    return nrf_radio_rssi_sample_get();
+}
+
+bool nrf_802154_trx_rssi_sample_is_available(void)
+{
+    return nrf_radio_event_check(NRF_RADIO_EVENT_RSSIEND);
+}
+
 void nrf_802154_trx_transmit_frame(const void * p_transmit_buffer, bool cca)
 {
     uint32_t ints_to_enable = 0U;

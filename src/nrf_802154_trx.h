@@ -127,10 +127,39 @@ void nrf_802154_trx_receive_frame(uint8_t bcc);
  * - @ref nrf_802154_trx_receive_on_framestart is called when a frame has just started being received.
  * - when a frame is received with correct crc, @ref nrf_802154_trx_receive_received is called (from ISR)
  * - when a frame is received with incorrect crc, @ref nrf_802154_trx_receive_crcerror is called (from ISR)
- *
- *
  */
 void nrf_802154_trx_receive_ack(void);
+
+/**@brief Starts RSSI measurement.
+ *
+ * @note This function succeeds when TRX module is in receive frame state only.
+ *
+ * @retval true     When RSSI measurement has been started.
+ * @retval false    When TRX state didn't allow start of RSSI measurement.
+ */
+bool nrf_802154_trx_rssi_measure(void);
+
+/**@brief Checks if RSSI measurement is currently started.
+ *
+ * @retval true     When RSSI measurement is currently started. In this case user can
+ *                  check if RSSI sample is already available by call to @ref nrf_802154_trx_rssi_sample_is_available.
+ * @retval false    When RSSI measurement is not started.
+ */
+bool nrf_802154_trx_rssi_measure_is_started(void);
+
+/**@brief Checks if RSSI sample is available.
+ *
+ * @retval true    When RSSI sample is available.  The sample may be read by a call to @ref nrf_802154_trx_rssi_last_sample_get
+ * @retval false   When RSSI sample is unavailable.
+ */
+bool nrf_802154_trx_rssi_sample_is_available(void);
+
+/**@brief Returns last measured RSSI sample.
+ *
+ * @return RSSI sample. Returned value must be scaled using API provided by nrf_802154_rssi.h.
+ */
+uint8_t nrf_802154_trx_rssi_last_sample_get(void);
+
 
 /**@brief Check if PSDU is currently being received.
  *
