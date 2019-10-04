@@ -93,6 +93,8 @@ void nrf_802154_trx_disable(void);
  */
 void nrf_802154_trx_channel_set(uint8_t channel);
 
+void nrf_802154_trx_cca_configuration_update(void);
+
 /**@brief Puts the trx module into receive frame (non-ack) mode.
  *
  * The frame will be received into buffer set by @ref nrf_802154_trx_receive_buffer_set.

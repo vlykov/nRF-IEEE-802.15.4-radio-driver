@@ -595,6 +595,10 @@ void nrf_802154_trx_channel_set(uint8_t channel)
     channel_set(channel);
 }
 
+void nrf_802154_trx_cca_configuration_update(void)
+{
+    cca_configuration_update();
+}
 
 /** Check if PSDU is currently being received.
  *

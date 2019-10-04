@@ -299,18 +299,6 @@ static void cca_notify(bool result)
     nrf_802154_critical_section_nesting_deny();
 }
 
-/** Update CCA configuration in RADIO registers. */
-static void cca_configuration_update(void)
-{
-    nrf_802154_cca_cfg_t cca_cfg;
-
-    nrf_802154_pib_cca_cfg_get(&cca_cfg);
-    nrf_radio_cca_configure(cca_cfg.mode,
-                            nrf_802154_rssi_cca_ed_threshold_corrected_get(cca_cfg.ed_threshold),
-                            cca_cfg.corr_threshold,
-                            cca_cfg.corr_limit);
-}
-
 /** Check if timeslot is currently granted.
  *
  * @retval true   The timeslot is granted.
@@ -1683,7 +1671,7 @@ bool nrf_802154_core_cca_cfg_update(void)
         if (timeslot_is_granted())
         {
             // TODO: rewrite this function to use trx
-            cca_configuration_update();
+            nrf_802154_trx_cca_configuration_update();
         }
 
         nrf_802154_critical_section_exit();
