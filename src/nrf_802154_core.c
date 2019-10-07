@@ -448,6 +448,58 @@ static bool ed_iter_setup(uint32_t * p_requested_ed_time_us, uint32_t * p_next_t
  * @section FSM transition request sub-procedures
  **************************************************************************************************/
 
+static rsch_prio_t min_required_rsch_prio(radio_state_t state)
+{
+    switch (state)
+    {
+        case RADIO_STATE_SLEEP:
+            return RSCH_PRIO_IDLE;
+
+        case RADIO_STATE_FALLING_ASLEEP:
+        case RADIO_STATE_RX:
+            return RSCH_PRIO_IDLE_LISTENING;
+
+        case RADIO_STATE_RX_ACK:
+        case RADIO_STATE_ED:
+        case RADIO_STATE_CCA:
+            return RSCH_PRIO_RX;
+
+        case RADIO_STATE_TX:
+        case RADIO_STATE_TX_ACK:
+        case RADIO_STATE_CCA_TX:
+        case RADIO_STATE_CONTINUOUS_CARRIER:
+            return RSCH_PRIO_TX;
+
+        default:
+            assert(false);
+            return RSCH_PRIO_IDLE;
+    }
+}
+
+static bool is_state_allowed_for_prio(rsch_prio_t prio, radio_state_t state)
+{
+    return (min_required_rsch_prio(state) <= prio);
+}
+
+static int_fast8_t action_needed(rsch_prio_t old_prio, rsch_prio_t new_prio, radio_state_t state)
+{
+    bool old_prio_allows = is_state_allowed_for_prio(old_prio, state);
+    bool new_prio_allows = is_state_allowed_for_prio(new_prio, state);
+
+    int_fast8_t result = 0;
+
+    if (old_prio_allows && !new_prio_allows)
+    {
+        result = -1;
+    }
+    else if (!old_prio_allows && new_prio_allows)
+    {
+        result = 1;
+    }
+
+    return result;
+}
+
 /** Check if time remaining in the timeslot is long enough to process whole critical section. */
 static bool remaining_timeslot_time_is_enough_for_crit_sect(void)
 {
@@ -643,6 +695,11 @@ static void rx_init(bool disabled_was_triggered)
         return;
     }
 
+    if (!is_state_allowed_for_prio(m_rsch_priority, m_state))
+    {
+        return;
+    }
+
     // Clear filtering flag
     rx_flags_clear();
 
@@ -678,6 +735,11 @@ static bool tx_init(const uint8_t * p_data, bool cca, bool disabled_was_triggere
         return false;
     }
 
+    if (!is_state_allowed_for_prio(m_rsch_priority, m_state))
+    {
+        return false;
+    }
+
     nrf_802154_trx_transmit_frame(p_data, cca);
 
     return true;
@@ -687,6 +749,11 @@ static bool tx_init(const uint8_t * p_data, bool cca, bool disabled_was_triggere
 static void ed_init(bool disabled_was_triggered)
 {
     if (!timeslot_is_granted())
+    {
+        return;
+    }
+
+    if (!is_state_allowed_for_prio(m_rsch_priority, m_state))
     {
         return;
     }
@@ -710,6 +777,11 @@ static void cca_init(bool disabled_was_triggered)
         return;
     }
 
+    if (!is_state_allowed_for_prio(m_rsch_priority, m_state))
+    {
+        return;
+    }
+
     nrf_802154_trx_standalone_cca();
 }
 
@@ -717,6 +789,11 @@ static void cca_init(bool disabled_was_triggered)
 static void continuous_carrier_init(bool disabled_was_triggered)
 {
     if (!timeslot_is_granted())
+    {
+        return;
+    }
+
+    if (!is_state_allowed_for_prio(m_rsch_priority, m_state))
     {
         return;
     }
@@ -888,58 +965,6 @@ static void on_preconditions_approved(radio_state_t state)
         default:
             assert(false);
     }
-}
-
-static rsch_prio_t min_required_rsch_prio(radio_state_t state)
-{
-    switch (state)
-    {
-        case RADIO_STATE_SLEEP:
-            return RSCH_PRIO_IDLE;
-
-        case RADIO_STATE_FALLING_ASLEEP:
-        case RADIO_STATE_RX:
-            return RSCH_PRIO_IDLE_LISTENING;
-
-        case RADIO_STATE_RX_ACK:
-        case RADIO_STATE_ED:
-        case RADIO_STATE_CCA:
-            return RSCH_PRIO_RX;
-
-        case RADIO_STATE_TX:
-        case RADIO_STATE_TX_ACK:
-        case RADIO_STATE_CCA_TX:
-        case RADIO_STATE_CONTINUOUS_CARRIER:
-            return RSCH_PRIO_TX;
-
-        default:
-            assert(false);
-            return RSCH_PRIO_IDLE;
-    }
-}
-
-static bool is_state_allowed_for_prio(rsch_prio_t prio, radio_state_t state)
-{
-    return (min_required_rsch_prio(state) <= prio);
-}
-
-static int_fast8_t action_needed(rsch_prio_t old_prio, rsch_prio_t new_prio, radio_state_t state)
-{
-    bool old_prio_allows = is_state_allowed_for_prio(old_prio, state);
-    bool new_prio_allows = is_state_allowed_for_prio(new_prio, state);
-
-    int_fast8_t result = 0;
-
-    if (old_prio_allows && !new_prio_allows)
-    {
-        result = -1;
-    }
-    else if (!old_prio_allows && new_prio_allows)
-    {
-        result = 1;
-    }
-
-    return result;
 }
 
 void nrf_802154_rsch_crit_sect_prio_changed(rsch_prio_t prio)
