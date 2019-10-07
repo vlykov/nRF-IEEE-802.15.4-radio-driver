@@ -1030,6 +1030,7 @@ uint8_t nrf_802154_trx_receive_on_bcmatch(uint8_t bcc)
             {
                 m_flags.frame_filtered = true;
                 //TODO request higher preconditions (RX active)
+                nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_RX);
             }
         }
         else if ((filter_result == NRF_802154_RX_ERROR_INVALID_LENGTH) ||
