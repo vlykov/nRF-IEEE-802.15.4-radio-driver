@@ -481,6 +481,17 @@ static bool is_state_allowed_for_prio(rsch_prio_t prio, radio_state_t state)
     return (min_required_rsch_prio(state) <= prio);
 }
 
+static bool are_preconditions_met(void)
+{
+    rsch_prio_t   current_prio;
+    radio_state_t current_state;
+
+    current_prio  = m_rsch_priority;
+    current_state = m_state;
+
+    return is_state_allowed_for_prio(current_prio, current_state);
+}
+
 static int_fast8_t action_needed(rsch_prio_t old_prio, rsch_prio_t new_prio, radio_state_t state)
 {
     bool old_prio_allows = is_state_allowed_for_prio(old_prio, state);
@@ -695,7 +706,7 @@ static void rx_init(bool disabled_was_triggered)
         return;
     }
 
-    if (!is_state_allowed_for_prio(m_rsch_priority, m_state))
+    if (!are_preconditions_met())
     {
         return;
     }
@@ -735,7 +746,7 @@ static bool tx_init(const uint8_t * p_data, bool cca, bool disabled_was_triggere
         return false;
     }
 
-    if (!is_state_allowed_for_prio(m_rsch_priority, m_state))
+    if (!are_preconditions_met())
     {
         return false;
     }
@@ -753,7 +764,7 @@ static void ed_init(bool disabled_was_triggered)
         return;
     }
 
-    if (!is_state_allowed_for_prio(m_rsch_priority, m_state))
+    if (!are_preconditions_met())
     {
         return;
     }
@@ -777,7 +788,7 @@ static void cca_init(bool disabled_was_triggered)
         return;
     }
 
-    if (!is_state_allowed_for_prio(m_rsch_priority, m_state))
+    if (!are_preconditions_met())
     {
         return;
     }
@@ -793,7 +804,7 @@ static void continuous_carrier_init(bool disabled_was_triggered)
         return;
     }
 
-    if (!is_state_allowed_for_prio(m_rsch_priority, m_state))
+    if (!are_preconditions_met())
     {
         return;
     }
