@@ -914,6 +914,7 @@ static rsch_prio_t min_required_rsch_prio(radio_state_t state)
 
         default:
             assert(false);
+            return RSCH_PRIO_IDLE;
     }
 }
 
