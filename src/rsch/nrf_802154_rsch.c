@@ -561,7 +561,7 @@ void nrf_802154_clock_hfclk_ready(void)
 void nrf_802154_wifi_coex_granted(void)
 {
     prec_approved_prio_set(RSCH_PREC_COEX, RSCH_PRIO_MAX);
-    //TODO: make conditional on CONFIG/PRIORITY pin: tx/rx granted
+    // TODO: make conditional on CONFIG/PRIORITY pin: tx/rx granted
     notify_core();
 }
 

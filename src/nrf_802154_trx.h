@@ -167,7 +167,6 @@ bool nrf_802154_trx_rssi_sample_is_available(void);
  */
 uint8_t nrf_802154_trx_rssi_last_sample_get(void);
 
-
 /**@brief Check if PSDU is currently being received.
  *
  * @retval true     If trx is in receive mode triggered by nrf_802154_trx_receive_frame and
@@ -182,7 +181,6 @@ bool nrf_802154_trx_psdu_is_being_received(void);
 bool nrf_802154_trx_receive_is_buffer_missing(void);
 
 bool nrf_802154_trx_receive_buffer_set(void * p_receive_buffer);
-
 
 void nrf_802154_trx_transmit_frame(const void * p_transmit_buffer, bool cca);
 
@@ -209,7 +207,6 @@ void nrf_802154_trx_transmit_frame(const void * p_transmit_buffer, bool cca);
 bool nrf_802154_trx_transmit_ack(const void * p_transmit_buffer, uint32_t delay_us);
 
 bool nrf_802154_trx_go_idle(void);
-
 
 void nrf_802154_trx_standalone_cca(void);
 
@@ -262,7 +259,6 @@ extern uint8_t nrf_802154_trx_receive_on_bcmatch(uint8_t bcc);
 
 extern void nrf_802154_trx_receive_received(trx_state_t state);
 extern void nrf_802154_trx_receive_crcerror(trx_state_t state);
-
 
 extern void nrf_802154_trx_transmit_ccabusy(void);
 extern void nrf_802154_trx_transmit_started(trx_state_t state); // TODO change name nrf_802154_trx_transmit_on_shr

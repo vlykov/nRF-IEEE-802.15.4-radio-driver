@@ -35,8 +35,8 @@
 #include "nrf_802154_const.h"
 #include "nrf_802154_types.h"
 #include "nrf_802154_peripherals.h"
-#include "nrf_802154_pib.h"     // Unwanted dependency, but required yet
-#include "nrf_802154_rssi.h"    // Unwanted dependency, but required yet
+#include "nrf_802154_pib.h"  // Unwanted dependency, but required yet
+#include "nrf_802154_rssi.h" // Unwanted dependency, but required yet
 #include "nrf_802154_utils.h"
 
 #include "nrf_egu.h"
@@ -48,38 +48,38 @@
 
 #include "nrf_802154_trx.h"
 
-#define EGU_EVENT                  NRF_EGU_EVENT_TRIGGERED15
-#define EGU_TASK                   NRF_EGU_TASK_TRIGGER15
-#define PPI_CHGRP0                 NRF_802154_PPI_CORE_GROUP                     ///< PPI group used to disable self-disabling PPIs
-#define PPI_CHGRP0_DIS_TASK        NRF_PPI_TASK_CHG0_DIS                         ///< PPI task used to disable self-disabling PPIs
+#define EGU_EVENT                     NRF_EGU_EVENT_TRIGGERED15
+#define EGU_TASK                      NRF_EGU_TASK_TRIGGER15
+#define PPI_CHGRP0                    NRF_802154_PPI_CORE_GROUP                     ///< PPI group used to disable self-disabling PPIs
+#define PPI_CHGRP0_DIS_TASK           NRF_PPI_TASK_CHG0_DIS                         ///< PPI task used to disable self-disabling PPIs
 
-#define PPI_DISABLED_EGU           NRF_802154_PPI_RADIO_DISABLED_TO_EGU          ///< PPI that connects RADIO DISABLED event with EGU task
-#define PPI_EGU_RAMP_UP            NRF_802154_PPI_EGU_TO_RADIO_RAMP_UP           ///< PPI that connects EGU event with RADIO TXEN or RXEN task
-#define PPI_EGU_TIMER_START        NRF_802154_PPI_EGU_TO_TIMER_START             ///< PPI that connects EGU event with TIMER START task
-#define PPI_CCAIDLE_FEM            NRF_802154_PPI_RADIO_CCAIDLE_TO_FEM_GPIOTE    ///< PPI that connects RADIO CCAIDLE event with GPIOTE tasks used by FEM
-#define PPI_TIMER_TX_ACK           NRF_802154_PPI_TIMER_COMPARE_TO_RADIO_TXEN    ///< PPI that connects TIMER COMPARE event with RADIO TXEN task
+#define PPI_DISABLED_EGU              NRF_802154_PPI_RADIO_DISABLED_TO_EGU          ///< PPI that connects RADIO DISABLED event with EGU task
+#define PPI_EGU_RAMP_UP               NRF_802154_PPI_EGU_TO_RADIO_RAMP_UP           ///< PPI that connects EGU event with RADIO TXEN or RXEN task
+#define PPI_EGU_TIMER_START           NRF_802154_PPI_EGU_TO_TIMER_START             ///< PPI that connects EGU event with TIMER START task
+#define PPI_CCAIDLE_FEM               NRF_802154_PPI_RADIO_CCAIDLE_TO_FEM_GPIOTE    ///< PPI that connects RADIO CCAIDLE event with GPIOTE tasks used by FEM
+#define PPI_TIMER_TX_ACK              NRF_802154_PPI_TIMER_COMPARE_TO_RADIO_TXEN    ///< PPI that connects TIMER COMPARE event with RADIO TXEN task
 
 #if NRF_802154_DISABLE_BCC_MATCHING
-#define PPI_CRCOK_DIS_PPI          NRF_802154_PPI_RADIO_CRCOK_TO_PPI_GRP_DISABLE ///< PPI that connects RADIO CRCOK event with task that disables PPI group
-#define PPI_CRCERROR_CLEAR         NRF_802154_PPI_RADIO_CRCERROR_TO_TIMER_CLEAR  ///< PPI that connects RADIO CRCERROR event with TIMER CLEAR task
-#define PPI_ADDRESS_COUNTER_COUNT  NRF_802154_PPI_RADIO_ADDR_TO_COUNTER_COUNT    ///< PPI that connects RADIO ADDRESS event with TIMER COUNT task
-#define PPI_CRCERROR_COUNTER_CLEAR NRF_802154_PPI_RADIO_CRCERROR_COUNTER_CLEAR   ///< PPI that connects RADIO CRCERROR event with TIMER CLEAR task
+#define PPI_CRCOK_DIS_PPI             NRF_802154_PPI_RADIO_CRCOK_TO_PPI_GRP_DISABLE ///< PPI that connects RADIO CRCOK event with task that disables PPI group
+#define PPI_CRCERROR_CLEAR            NRF_802154_PPI_RADIO_CRCERROR_TO_TIMER_CLEAR  ///< PPI that connects RADIO CRCERROR event with TIMER CLEAR task
+#define PPI_ADDRESS_COUNTER_COUNT     NRF_802154_PPI_RADIO_ADDR_TO_COUNTER_COUNT    ///< PPI that connects RADIO ADDRESS event with TIMER COUNT task
+#define PPI_CRCERROR_COUNTER_CLEAR    NRF_802154_PPI_RADIO_CRCERROR_COUNTER_CLEAR   ///< PPI that connects RADIO CRCERROR event with TIMER CLEAR task
 
-#define PPI_NO_BCC_MATCHING_USED_MASK    ((1U << PPI_CRCOK_DIS_PPI) | \
-                                         (1U << PPI_CRCERROR_CLEAR) | \
-                                         (1U << PPI_ADDRESS_COUNTER_COUNT) | \
-                                         (1U << PPI_CRCERROR_COUNTER_CLEAR))
+#define PPI_NO_BCC_MATCHING_USED_MASK ((1U << PPI_CRCOK_DIS_PPI) |         \
+                                       (1U << PPI_CRCERROR_CLEAR) |        \
+                                       (1U << PPI_ADDRESS_COUNTER_COUNT) | \
+                                       (1U << PPI_CRCERROR_COUNTER_CLEAR))
 #else
-#define PPI_NO_BCC_MATCHING_USED_MASK    0U
-#endif  // NRF_802154_DISABLE_BCC_MATCHING
+#define PPI_NO_BCC_MATCHING_USED_MASK 0U
+#endif // NRF_802154_DISABLE_BCC_MATCHING
 
 /**@brief Mask of all PPI channels used directly by trx module. */
-#define PPI_ALL_USED_MASK           ((1U << PPI_DISABLED_EGU) |    \
-                                     (1U << PPI_EGU_RAMP_UP)  |    \
-                                     (1U << PPI_EGU_TIMER_START) | \
-                                     (1U << PPI_CCAIDLE_FEM)  |    \
-                                     (1U << PPI_TIMER_TX_ACK) |    \
-                                     PPI_NO_BCC_MATCHING_USED_MASK)
+#define PPI_ALL_USED_MASK     ((1U << PPI_DISABLED_EGU) |    \
+                               (1U << PPI_EGU_RAMP_UP) |     \
+                               (1U << PPI_EGU_TIMER_START) | \
+                               (1U << PPI_CCAIDLE_FEM) |     \
+                               (1U << PPI_TIMER_TX_ACK) |    \
+                               PPI_NO_BCC_MATCHING_USED_MASK)
 
 #if NRF_802154_DISABLE_BCC_MATCHING
 #define SHORT_ADDRESS_BCSTART 0UL
@@ -88,40 +88,40 @@
 #endif  // NRF_802154_DISABLE_BCC_MATCHING
 
 /// Value set to SHORTS register when no shorts should be enabled.
-#define SHORTS_IDLE             0
+#define SHORTS_IDLE           0
 
 /// Value set to SHORTS register for RX operation.
-#define SHORTS_RX               (NRF_RADIO_SHORT_ADDRESS_RSSISTART_MASK | \
-                                 NRF_RADIO_SHORT_END_DISABLE_MASK |       \
-                                 SHORT_ADDRESS_BCSTART)
+#define SHORTS_RX             (NRF_RADIO_SHORT_ADDRESS_RSSISTART_MASK | \
+                               NRF_RADIO_SHORT_END_DISABLE_MASK |       \
+                               SHORT_ADDRESS_BCSTART)
 
-#define SHORTS_RX_FREE_BUFFER   (NRF_RADIO_SHORT_RXREADY_START_MASK)
+#define SHORTS_RX_FREE_BUFFER (NRF_RADIO_SHORT_RXREADY_START_MASK)
 
-#define SHORTS_TX_ACK           (NRF_RADIO_SHORT_TXREADY_START_MASK | \
-                                 NRF_RADIO_SHORT_PHYEND_DISABLE_MASK)
+#define SHORTS_TX_ACK         (NRF_RADIO_SHORT_TXREADY_START_MASK | \
+                               NRF_RADIO_SHORT_PHYEND_DISABLE_MASK)
 
-#define SHORTS_CCA_TX           (NRF_RADIO_SHORT_RXREADY_CCASTART_MASK | \
-                                 NRF_RADIO_SHORT_CCABUSY_DISABLE_MASK |  \
-                                 NRF_RADIO_SHORT_CCAIDLE_TXEN_MASK |     \
-                                 NRF_RADIO_SHORT_TXREADY_START_MASK |    \
-                                 NRF_RADIO_SHORT_PHYEND_DISABLE_MASK)
+#define SHORTS_CCA_TX         (NRF_RADIO_SHORT_RXREADY_CCASTART_MASK | \
+                               NRF_RADIO_SHORT_CCABUSY_DISABLE_MASK |  \
+                               NRF_RADIO_SHORT_CCAIDLE_TXEN_MASK |     \
+                               NRF_RADIO_SHORT_TXREADY_START_MASK |    \
+                               NRF_RADIO_SHORT_PHYEND_DISABLE_MASK)
 
-#define SHORTS_TX               (NRF_RADIO_SHORT_TXREADY_START_MASK | \
-                                 NRF_RADIO_SHORT_PHYEND_DISABLE_MASK)
+#define SHORTS_TX             (NRF_RADIO_SHORT_TXREADY_START_MASK | \
+                               NRF_RADIO_SHORT_PHYEND_DISABLE_MASK)
 
-#define SHORTS_RX_ACK           (NRF_RADIO_SHORT_ADDRESS_RSSISTART_MASK | \
-                                 NRF_RADIO_SHORT_END_DISABLE_MASK)
+#define SHORTS_RX_ACK         (NRF_RADIO_SHORT_ADDRESS_RSSISTART_MASK | \
+                               NRF_RADIO_SHORT_END_DISABLE_MASK)
 
-#define SHORTS_ED               (NRF_RADIO_SHORT_READY_EDSTART_MASK)
+#define SHORTS_ED             (NRF_RADIO_SHORT_READY_EDSTART_MASK)
 
-#define SHORTS_CCA              (NRF_RADIO_SHORT_RXREADY_CCASTART_MASK | \
-                                 NRF_RADIO_SHORT_CCABUSY_DISABLE_MASK)
+#define SHORTS_CCA            (NRF_RADIO_SHORT_RXREADY_CCASTART_MASK | \
+                               NRF_RADIO_SHORT_CCABUSY_DISABLE_MASK)
 
-#define CRC_LENGTH              2               ///< Length of CRC in 802.15.4 frames [bytes]
-#define CRC_POLYNOMIAL          0x011021        ///< Polynomial used for CRC calculation in 802.15.4 frames
+#define CRC_LENGTH            2        ///< Length of CRC in 802.15.4 frames [bytes]
+#define CRC_POLYNOMIAL        0x011021 ///< Polynomial used for CRC calculation in 802.15.4 frames
 
-#define TXRU_TIME               40              ///< Transmitter ramp up time [us]
-#define EVENT_LAT               23              ///< END event latency [us]
+#define TXRU_TIME             40       ///< Transmitter ramp up time [us]
+#define EVENT_LAT             23       ///< END event latency [us]
 
 /// Common parameters for the FAL handling.
 static const nrf_802154_fal_event_t m_deactivate_on_disable =
@@ -164,23 +164,25 @@ static volatile trx_state_t m_trx_state;
 typedef struct
 {
 #if !NRF_802154_DISABLE_BCC_MATCHING
-    bool psdu_being_received ;      ///< If PSDU is currently being received.
+    bool psdu_being_received; ///< If PSDU is currently being received.
+
 #endif
 
-    bool missing_receive_buffer ;   ///!< If trx entered receive state without receive buffer
+    bool missing_receive_buffer; ///!< If trx entered receive state without receive buffer
 
 #if NRF_802154_TX_STARTED_NOTIFY_ENABLED
-    bool tx_started ; ///< If the requested transmission has started.
+    bool tx_started;             ///< If the requested transmission has started.
+
 #endif  // NRF_802154_TX_STARTED_NOTIFY_ENABLED
 
-    bool rssi_started ;
+    bool rssi_started;
 } nrf_802154_flags_t;
 
-static nrf_802154_flags_t m_flags;  ///< Flags used to store the current driver state.
+static nrf_802154_flags_t m_flags; ///< Flags used to store the current driver state.
 
 /**@brief Value of TIMER internal counter from which the counting is resumed on RADIO.EVENTS_END event. */
 static volatile uint32_t m_timer_value_on_radio_end_event;
-static volatile bool m_transmit_with_cca;
+static volatile bool     m_transmit_with_cca;
 
 /** Clear flags describing frame being received. */
 void rx_flags_clear(void)
@@ -234,7 +236,6 @@ static void cca_configuration_update(void)
                             cca_cfg.corr_limit);
 }
 
-
 /** Initialize interrupts for radio peripheral. */
 static void irq_init(void)
 {
@@ -255,7 +256,6 @@ static void irq_init(void)
     __DSB();
     __ISB();
 }
-
 
 /** Wait time needed to propagate event through PPI to EGU.
  *
@@ -518,7 +518,8 @@ static void fem_power_down_now(void)
 {
     nrf_802154_fal_deactivate_now(NRF_802154_FAL_ALL);
 
-    if (nrf_fem_prepare_powerdown(NRF_802154_TIMER_INSTANCE, NRF_TIMER_CC_CHANNEL0, PPI_EGU_TIMER_START))
+    if (nrf_fem_prepare_powerdown(NRF_802154_TIMER_INSTANCE, NRF_TIMER_CC_CHANNEL0,
+                                  PPI_EGU_TIMER_START))
     {
         // FEM requires timer to run to perform powering down operation
         nrf_timer_event_clear(NRF_802154_TIMER_INSTANCE, NRF_TIMER_EVENT_COMPARE0);
@@ -556,7 +557,8 @@ void nrf_802154_trx_disable(void)
 
         /* Stop & deconfigure timer */
         nrf_timer_shorts_disable(NRF_802154_TIMER_INSTANCE,
-                                 NRF_TIMER_SHORT_COMPARE0_STOP_MASK | NRF_TIMER_SHORT_COMPARE1_STOP_MASK);
+                                 NRF_TIMER_SHORT_COMPARE0_STOP_MASK |
+                                 NRF_TIMER_SHORT_COMPARE1_STOP_MASK);
         nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
 
         nrf_radio_power_set(true);
@@ -574,12 +576,13 @@ void nrf_802154_trx_disable(void)
 #if NRF_802154_DISABLE_BCC_MATCHING
         // Anomaly 78: use SHUTDOWN instead of STOP and CLEAR.
         nrf_timer_task_trigger(NRF_802154_COUNTER_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
-        nrf_timer_shorts_disable(NRF_802154_COUNTER_TIMER_INSTANCE, NRF_TIMER_SHORT_COMPARE1_STOP_MASK);
+        nrf_timer_shorts_disable(NRF_802154_COUNTER_TIMER_INSTANCE,
+                                 NRF_TIMER_SHORT_COMPARE1_STOP_MASK);
 #else
         m_flags.psdu_being_received = false;
 #endif
         m_flags.missing_receive_buffer = false;
-        m_flags.rssi_started = false;
+        m_flags.rssi_started           = false;
 #if NRF_802154_TX_STARTED_NOTIFY_ENABLED
         m_flags.tx_started = false;
 #endif
@@ -628,7 +631,7 @@ bool nrf_802154_trx_receive_is_buffer_missing(void)
     switch (m_trx_state)
     {
         case TRX_STATE_RXFRAME:
-            /* no break */
+        /* no break */
         case TRX_STATE_RXACK:
             return m_flags.missing_receive_buffer;
 
@@ -683,7 +686,7 @@ bool nrf_802154_trx_receive_buffer_set(void * p_receive_buffer)
 void nrf_802154_trx_receive_frame(uint8_t bcc)
 {
     uint32_t ints_to_enable = 0U;
-    uint32_t shorts = SHORTS_RX;
+    uint32_t shorts         = SHORTS_RX;
 
     // Force the TIMER to be stopped and count from 0.
     nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
@@ -840,7 +843,7 @@ void nrf_802154_trx_receive_frame(uint8_t bcc)
 
 void nrf_802154_trx_receive_ack(void)
 {
-    uint32_t shorts = SHORTS_RX_ACK;
+    uint32_t shorts         = SHORTS_RX_ACK;
     uint32_t ints_to_enable = 0U;
 
     m_trx_state = TRX_STATE_RXACK;
@@ -899,10 +902,10 @@ void nrf_802154_trx_receive_ack(void)
 
 // TODO: Move this stuff outside
 // UPDATE: Ack matching will be done in software, not by using those mhr stuff
-//    if ((mp_tx_data[FRAME_VERSION_OFFSET] & FRAME_VERSION_MASK) != FRAME_VERSION_2)
-//    {
-//        ack_matching_enable();
-//    }
+// if ((mp_tx_data[FRAME_VERSION_OFFSET] & FRAME_VERSION_MASK) != FRAME_VERSION_2)
+// {
+// ack_matching_enable();
+// }
 }
 
 bool nrf_802154_trx_rssi_measure(void)
@@ -943,7 +946,7 @@ void nrf_802154_trx_transmit_frame(const void * p_transmit_buffer, bool cca)
     // Force the TIMER to be stopped and count from 0.
     nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
 
-    m_trx_state = TRX_STATE_TXFRAME;
+    m_trx_state         = TRX_STATE_TXFRAME;
     m_transmit_with_cca = cca;
 
     nrf_radio_txpower_set(nrf_802154_pib_tx_power_get());
@@ -1005,7 +1008,8 @@ bool nrf_802154_trx_transmit_ack(const void * p_transmit_buffer, uint32_t delay_
         return result;
     }
 
-    uint32_t timer_cc_ramp_up_start = m_timer_value_on_radio_end_event + delay_us - TXRU_TIME - EVENT_LAT;
+    uint32_t timer_cc_ramp_up_start = m_timer_value_on_radio_end_event + delay_us - TXRU_TIME -
+                                      EVENT_LAT;
 
     nrf_timer_cc_write(NRF_802154_TIMER_INSTANCE,
                        NRF_TIMER_CC_CHANNEL1,
@@ -1199,7 +1203,7 @@ static void rxframe_finish(void)
     wait_until_radio_is_disabled(); // This includes waiting since CRCOK/CRCERROR (several cycles) event until END
                                     // and then during RXDISABLE state (0.5us)
 
-    ppi_and_egu_delay_wait();   // TODO: is this time enough?
+    ppi_and_egu_delay_wait();       // TODO: is this time enough?
 
     /* Now it is guaranteed, that:
      * - FEM operation to disable LNA mode is triggered through FEM's PPIs
@@ -1302,7 +1306,7 @@ bool nrf_802154_trx_go_idle(void)
 
         case TRX_STATE_RXFRAME_FINISHED:
             nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
-            /* fallthrough */
+        /* fallthrough */
 
         case TRX_STATE_FINISHED:
             go_idle_from_state_finished();
@@ -1320,7 +1324,6 @@ void nrf_802154_trx_go_idle_abort(void)
     nrf_radio_int_disable(NRF_RADIO_INT_DISABLED_MASK);
     m_trx_state = TRX_STATE_FINISHED;
 }
-
 
 void nrf_802154_trx_receive_frame_abort(void)
 {
@@ -1349,7 +1352,8 @@ static void rxack_finish_disable_ppis(void)
 
 static void rxack_finish_disable_ints(void)
 {
-    nrf_radio_int_disable(NRF_RADIO_INT_ADDRESS_MASK | NRF_RADIO_INT_CRCERROR_MASK | NRF_RADIO_INT_CRCOK_MASK);
+    nrf_radio_int_disable(
+        NRF_RADIO_INT_ADDRESS_MASK | NRF_RADIO_INT_CRCERROR_MASK | NRF_RADIO_INT_CRCOK_MASK);
 }
 
 static void rxack_finish_disable_fem_activation(void)
@@ -1476,7 +1480,6 @@ void nrf_802154_trx_continuous_carrier_restart(void)
     nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
 }
 
-
 void nrf_802154_trx_continuous_carrier_abort(void)
 {
     nrf_ppi_channel_disable(PPI_DISABLED_EGU);
@@ -1497,7 +1500,7 @@ void nrf_802154_trx_energy_detection(uint32_t ed_count)
 
     ed_count--;
     /* Check that vd_count will fit into defined bits of register */
-    assert( (ed_count & (~RADIO_EDCNT_EDCNT_Msk)) == 0U );
+    assert( (ed_count & (~RADIO_EDCNT_EDCNT_Msk)) == 0U);
 
     nrf_radio_ed_loop_count_set(ed_count);
 
@@ -1601,8 +1604,8 @@ static void irq_handler_bcmatch(void)
         nrf_radio_bcc_set(next_bcc * 8);
     }
 }
-#endif
 
+#endif
 
 #if !NRF_802154_DISABLE_BCC_MATCHING || NRF_802154_NOTIFY_CRCERROR
 static void irq_handler_crcerror(void)
@@ -1634,6 +1637,7 @@ static void irq_handler_crcerror(void)
             assert(false);
     }
 }
+
 #endif
 
 static void irq_handler_crcok(void)
@@ -1668,7 +1672,8 @@ static void txframe_finish_disable_ppis(void)
 
 static void txframe_finish_disable_ints(void)
 {
-    nrf_radio_int_disable(NRF_RADIO_INT_PHYEND_MASK | NRF_RADIO_INT_CCABUSY_MASK | NRF_RADIO_INT_ADDRESS_MASK);
+    nrf_radio_int_disable(
+        NRF_RADIO_INT_PHYEND_MASK | NRF_RADIO_INT_CCABUSY_MASK | NRF_RADIO_INT_ADDRESS_MASK);
 }
 
 static void txframe_finish(void)
@@ -1694,7 +1699,7 @@ static void txframe_finish(void)
 
     nrf_radio_shorts_set(SHORTS_IDLE);
 
-    m_flags.tx_started = false;
+    m_flags.tx_started             = false;
     m_flags.missing_receive_buffer = false;
 
     /* Current state of peripherals
@@ -1715,7 +1720,7 @@ void nrf_802154_trx_transmit_frame_abort(void)
 
     txframe_finish_disable_ints();
 
-    m_flags.tx_started = false;
+    m_flags.tx_started             = false;
     m_flags.missing_receive_buffer = false;
 
     nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
@@ -1746,7 +1751,8 @@ static void txack_finish(void)
     nrf_802154_fal_pa_configuration_clear(&m_activate_tx_cc0_timeshifted, NULL);
 
     nrf_timer_shorts_disable(NRF_802154_TIMER_INSTANCE,
-                             NRF_TIMER_SHORT_COMPARE0_STOP_MASK | NRF_TIMER_SHORT_COMPARE1_STOP_MASK);
+                             NRF_TIMER_SHORT_COMPARE0_STOP_MASK |
+                             NRF_TIMER_SHORT_COMPARE1_STOP_MASK);
 
     // Anomaly 78: use SHUTDOWN instead of STOP and CLEAR.
     nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
@@ -1771,7 +1777,8 @@ void nrf_802154_trx_transmit_ack_abort(void)
     nrf_802154_fal_pa_configuration_clear(&m_activate_tx_cc0_timeshifted, NULL);
 
     nrf_timer_shorts_disable(NRF_802154_TIMER_INSTANCE,
-                             NRF_TIMER_SHORT_COMPARE0_STOP_MASK | NRF_TIMER_SHORT_COMPARE1_STOP_MASK);
+                             NRF_TIMER_SHORT_COMPARE0_STOP_MASK |
+                             NRF_TIMER_SHORT_COMPARE1_STOP_MASK);
 
     // Anomaly 78: use SHUTDOWN instead of STOP and CLEAR.
     nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
@@ -2002,4 +2009,3 @@ void nrf_802154_core_irq_handler(void)
 {
     irq_handler();
 }
-

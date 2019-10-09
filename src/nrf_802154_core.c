@@ -71,24 +71,24 @@
 #include "nrf_802154_core_hooks.h"
 
 /// Delay before first check of received frame: 24 bits is PHY header and MAC Frame Control field.
-#define BCC_INIT                (3 * 8)
+#define BCC_INIT           (3 * 8)
 
 /// Duration of single iteration of Energy Detection procedure
-#define ED_ITER_DURATION        128U
+#define ED_ITER_DURATION   128U
 /// Overhead of hardware preparation for ED procedure (aTurnaroundTime) [number of iterations]
-#define ED_ITERS_OVERHEAD       2U
+#define ED_ITERS_OVERHEAD  2U
 
-#define ACK_IFS                 TURNAROUND_TIME ///< Ack Inter Frame Spacing [us] - delay between last symbol of received frame and first symbol of transmitted Ack
+#define ACK_IFS            TURNAROUND_TIME ///< Ack Inter Frame Spacing [us] - delay between last symbol of received frame and first symbol of transmitted Ack
 
-#define MAX_CRIT_SECT_TIME      60              ///< Maximal time that the driver spends in single critical section.
+#define MAX_CRIT_SECT_TIME 60              ///< Maximal time that the driver spends in single critical section.
 
-#define LQI_VALUE_FACTOR        4               ///< Factor needed to calculate LQI value based on data from RADIO peripheral
-#define LQI_MAX                 0xff            ///< Maximal LQI value
+#define LQI_VALUE_FACTOR   4               ///< Factor needed to calculate LQI value based on data from RADIO peripheral
+#define LQI_MAX            0xff            ///< Maximal LQI value
 
 /** Get LQI of given received packet. If CRC is calculated by hardware LQI is included instead of CRC
  *  in the frame. Length is stored in byte with index 0; CRC is 2 last bytes.
  */
-#define RX_FRAME_LQI(data)      ((data)[(data)[0] - 1])
+#define RX_FRAME_LQI(data) ((data)[(data)[0] - 1])
 
 #if NRF_802154_RX_BUFFERS > 1
 /// Pointer to currently used receive buffer.
@@ -109,11 +109,11 @@ static volatile radio_state_t m_state; ///< State of the radio driver.
 
 typedef struct
 {
-    bool frame_filtered        : 1; ///< If frame being received passed filtering operation.
-    bool rx_timeslot_requested : 1; ///< If timeslot for the frame being received is already requested.
+    bool frame_filtered        : 1;                           ///< If frame being received passed filtering operation.
+    bool rx_timeslot_requested : 1;                           ///< If timeslot for the frame being received is already requested.
 } nrf_802154_flags_t;
 
-static nrf_802154_flags_t m_flags;               ///< Flags used to store the current driver state.
+static nrf_802154_flags_t m_flags;                            ///< Flags used to store the current driver state.
 
 static volatile bool        m_rsch_timeslot_is_granted;       ///< State of the RSCH timeslot.
 static volatile rsch_prio_t m_rsch_priority = RSCH_PRIO_IDLE; ///< Last notified RSCH priority.
@@ -124,11 +124,11 @@ static volatile rsch_prio_t m_rsch_priority = RSCH_PRIO_IDLE; ///< Last notified
 
 static rsch_prio_t min_required_rsch_prio(radio_state_t state);
 
-
 static void request_preconditions_for_state(radio_state_t state)
 {
     nrf_802154_rsch_crit_sect_prio_request(min_required_rsch_prio(state));
 }
+
 /** Set driver state.
  *
  * @param[in]  state  Driver state to set.
@@ -432,7 +432,8 @@ static bool ed_iter_setup(uint32_t * p_requested_ed_time_us, uint32_t * p_next_t
         }
         else
         {
-            *p_requested_ed_time_us = *p_requested_ed_time_us - (iters_left_in_timeslot * ED_ITER_DURATION);
+            *p_requested_ed_time_us = *p_requested_ed_time_us -
+                                      (iters_left_in_timeslot * ED_ITER_DURATION);
             requested_iters = iters_left_in_timeslot;
         }
 
@@ -547,7 +548,9 @@ static bool critical_section_enter_and_verify_timeslot_length(void)
     return result;
 }
 
-static bool can_terminate_current_operation(radio_state_t state, nrf_802154_term_t term_lvl, bool receiving_psdu_now)
+static bool can_terminate_current_operation(radio_state_t     state,
+                                            nrf_802154_term_t term_lvl,
+                                            bool              receiving_psdu_now)
 {
     bool result = false;
 
@@ -560,7 +563,7 @@ static bool can_terminate_current_operation(radio_state_t state, nrf_802154_term
             break;
 
         case RADIO_STATE_RX:
-            result = (term_lvl >= NRF_802154_TERM_802154) || !receiving_psdu_now ;
+            result = (term_lvl >= NRF_802154_TERM_802154) || !receiving_psdu_now;
             break;
 
         case RADIO_STATE_TX_ACK:
@@ -646,6 +649,7 @@ static bool current_operation_terminate(nrf_802154_term_t term_lvl,
     if (result)
     {
         bool receiving_psdu_now = false;
+
         if (m_state == RADIO_STATE_RX)
         {
             receiving_psdu_now = nrf_802154_trx_psdu_is_being_received();
@@ -699,7 +703,7 @@ static void falling_asleep_init(void)
 /** Initialize RX operation. */
 static void rx_init(bool disabled_was_triggered)
 {
-    bool    free_buffer;
+    bool free_buffer;
 
     if (!timeslot_is_granted())
     {
@@ -826,6 +830,7 @@ static void on_timeslot_ended(void)
         m_rsch_timeslot_is_granted = false;
 
         bool receiving_psdu_now = false;
+
         if (m_state == RADIO_STATE_RX)
         {
             receiving_psdu_now = nrf_802154_trx_psdu_is_being_received();
@@ -890,6 +895,7 @@ static void on_preconditions_denied(radio_state_t state)
     (void)result;
 
     bool receiving_psdu_now = false;
+
     if (m_state == RADIO_STATE_RX)
     {
         receiving_psdu_now = nrf_802154_trx_psdu_is_being_received();
@@ -1005,6 +1011,7 @@ void nrf_802154_rsch_crit_sect_prio_changed(rsch_prio_t prio)
     }
 
     int_fast8_t transition = action_needed(old_prio, prio, m_state);
+
     if (transition == 0)
     {
         return;
@@ -1065,7 +1072,7 @@ uint8_t nrf_802154_trx_receive_on_bcmatch(uint8_t bcc)
             else
             {
                 m_flags.frame_filtered = true;
-                //TODO request higher preconditions (RX active)
+                // TODO request higher preconditions (RX active)
                 nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_RX);
             }
         }
@@ -1115,6 +1122,7 @@ uint8_t nrf_802154_trx_receive_on_bcmatch(uint8_t bcc)
 
     return bcc;
 }
+
 #endif
 
 void nrf_802154_trx_in_idle(void)
@@ -1142,6 +1150,7 @@ void nrf_802154_trx_receive_crcerror(trx_state_t state)
             receive_failed_notify(NRF_802154_RX_ERROR_INVALID_FCS);
 #endif // NRF_802154_NOTIFY_CRCERROR
             break;
+
 #endif
         case TRX_STATE_RXACK:
             assert(m_state == RADIO_STATE_RX_ACK);
@@ -1321,6 +1330,7 @@ void nrf_802154_trx_transmit_started(trx_state_t state)
             assert((m_state == RADIO_STATE_TX) || (m_state == RADIO_STATE_CCA_TX));
             transmit_started_notify();
             break;
+
 #endif
         case TRX_STATE_TXACK:
             assert(m_state == RADIO_STATE_TX_ACK);
@@ -1354,7 +1364,7 @@ static void on_trx_transmitted_frame(void)
     {
         state_set(RADIO_STATE_RX_ACK);
 
-        bool     rx_buffer_free = rx_buffer_is_available();
+        bool rx_buffer_free = rx_buffer_is_available();
 
         nrf_802154_trx_receive_buffer_set(rx_buffer_get());
 
@@ -1410,6 +1420,7 @@ static bool ack_match_check_version_not_2(const uint8_t * p_tx_data, const uint8
         case FRAME_VERSION_0:
         case FRAME_VERSION_1:
             break;
+
         default:
             return false;
     }
@@ -1492,7 +1503,7 @@ static void on_bad_ack(void)
 static void on_trx_received_ack(void)
 {
     // CRC of received frame is correct
-    uint8_t     * p_ack_data   = mp_current_rx_buffer->data;
+    uint8_t * p_ack_data = mp_current_rx_buffer->data;
 
     if (ack_match_check(mp_tx_data, p_ack_data))
     {
@@ -1541,6 +1552,7 @@ void nrf_802154_trx_energy_detection_finished(uint8_t ed_sample)
     if (m_ed_time_left >= ED_ITER_DURATION)
     {
         uint32_t trx_ed_count = 0U;
+
         if (ed_iter_setup(&m_ed_time_left, &trx_ed_count))
         {
             nrf_802154_trx_energy_detection(trx_ed_count);
