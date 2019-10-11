@@ -125,36 +125,45 @@
 
 /// Common parameters for the FAL handling.
 static const nrf_802154_fal_event_t m_deactivate_on_disable =
-{.type         = NRF_802154_FAL_EVENT_TYPE_GENERIC,
- .override_ppi =
-     false,
- .event.generic.register_address =
-     ((uint32_t)NRF_RADIO_BASE + (uint32_t)NRF_RADIO_EVENT_DISABLED)};
+{
+    .type                           = NRF_802154_FAL_EVENT_TYPE_GENERIC,
+    .override_ppi                   = false,
+    .event.generic.register_address =
+        ((uint32_t)NRF_RADIO_BASE + (uint32_t)NRF_RADIO_EVENT_DISABLED)
+};
 
 static const nrf_802154_fal_event_t m_activate_rx_cc0 =
-{.type                         = NRF_802154_FAL_EVENT_TYPE_TIMER,
- .override_ppi                 = false,
- .event.timer.p_timer_instance =
-     NRF_802154_TIMER_INSTANCE,
- .event.timer.compare_channel_mask = ((1 << NRF_TIMER_CC_CHANNEL0) | (1 << NRF_TIMER_CC_CHANNEL2)),
- .event.timer.counter_value        =
-     RX_RAMP_UP_TIME};
+{
+    .type                         = NRF_802154_FAL_EVENT_TYPE_TIMER,
+    .override_ppi                 = false,
+    .event.timer.p_timer_instance =
+        NRF_802154_TIMER_INSTANCE,
+    .event.timer.compare_channel_mask =
+        ((1 << NRF_TIMER_CC_CHANNEL0) | (1 << NRF_TIMER_CC_CHANNEL2)),
+    .event.timer.counter_value =
+        RX_RAMP_UP_TIME
+};
 
 static const nrf_802154_fal_event_t m_activate_tx_cc0 =
-{.type                         = NRF_802154_FAL_EVENT_TYPE_TIMER,
- .override_ppi                 = false,
- .event.timer.p_timer_instance =
-     NRF_802154_TIMER_INSTANCE,
- .event.timer.compare_channel_mask = ((1 << NRF_TIMER_CC_CHANNEL0) | (1 << NRF_TIMER_CC_CHANNEL2)),
- .event.timer.counter_value        =
-     TX_RAMP_UP_TIME};
+{
+    .type                         = NRF_802154_FAL_EVENT_TYPE_TIMER,
+    .override_ppi                 = false,
+    .event.timer.p_timer_instance =
+        NRF_802154_TIMER_INSTANCE,
+    .event.timer.compare_channel_mask =
+        ((1 << NRF_TIMER_CC_CHANNEL0) | (1 << NRF_TIMER_CC_CHANNEL2)),
+    .event.timer.counter_value =
+        TX_RAMP_UP_TIME
+};
 
 static const nrf_802154_fal_event_t m_ccaidle =
-{.type                           = NRF_802154_FAL_EVENT_TYPE_GENERIC,
- .override_ppi                   = true,
- .ppi_ch_id                      = PPI_CCAIDLE_FEM,
- .event.generic.register_address =
-     ((uint32_t)NRF_RADIO_BASE + (uint32_t)NRF_RADIO_EVENT_CCAIDLE)};
+{
+    .type                           = NRF_802154_FAL_EVENT_TYPE_GENERIC,
+    .override_ppi                   = true,
+    .ppi_ch_id                      = PPI_CCAIDLE_FEM,
+    .event.generic.register_address =
+        ((uint32_t)NRF_RADIO_BASE + (uint32_t)NRF_RADIO_EVENT_CCAIDLE)
+};
 
 /**@brief Fal event used by @ref nrf_802154_trx_transmit_ack and @ref txack_finish */
 static nrf_802154_fal_event_t m_activate_tx_cc0_timeshifted;
