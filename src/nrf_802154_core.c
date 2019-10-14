@@ -139,9 +139,6 @@ static void state_set(radio_state_t state)
 
     nrf_802154_log(EVENT_SET_STATE, (uint32_t)state);
 
-    /* We should request preconditions according to desired state, currently we
-     * request preconditions only for non-sleep and drop preconditions for sleep */
-
     request_preconditions_for_state(state);
 }
 
@@ -725,9 +722,6 @@ static void rx_init(bool disabled_was_triggered)
 
     nrf_802154_trx_receive_frame(BCC_INIT / 8U);
 
-    // TODO: This is UGLY looking into radio's internal, should be wrapped by trx.
-    // TODO: This is done also after triggering receive. There is possibility that frame will be received before
-    // we connect event crcok to timer coord
     // Configure the timer coordinator to get a timestamp of the CRCOK event.
     nrf_802154_timer_coord_timestamp_prepare(
         (uint32_t)nrf_radio_event_address_get(NRF_RADIO_EVENT_CRCOK));
@@ -912,7 +906,6 @@ static void on_preconditions_denied(radio_state_t state)
         case RADIO_STATE_RX:
             if (receiving_psdu_now)
             {
-                // TODO: Add new status code
                 receive_failed_notify(NRF_802154_RX_ERROR_ABORTED);
             }
 
@@ -1030,22 +1023,14 @@ void nrf_802154_rsch_crit_sect_prio_changed(rsch_prio_t prio)
  * @section RADIO interrupt handler
  **************************************************************************************************/
 
-void nrf_802154_trx_receive_on_shr(trx_state_t state)
+void nrf_802154_trx_receive_ack_started(void)
 {
-    switch (state)
-    {
-        case TRX_STATE_RXACK:
-            assert(m_state == RADIO_STATE_RX_ACK);
-            nrf_802154_core_hooks_rx_ack_started();
-            break;
-
-        default:
-            assert(false);
-    }
+    assert(m_state == RADIO_STATE_RX_ACK);
+    nrf_802154_core_hooks_rx_ack_started();
 }
 
 #if !NRF_802154_DISABLE_BCC_MATCHING
-uint8_t nrf_802154_trx_receive_on_bcmatch(uint8_t bcc)
+uint8_t nrf_802154_trx_receive_frame_bcmatched(uint8_t bcc)
 {
     uint8_t               prev_num_data_bytes;
     uint8_t               num_data_bytes;
@@ -1072,14 +1057,14 @@ uint8_t nrf_802154_trx_receive_on_bcmatch(uint8_t bcc)
             else
             {
                 m_flags.frame_filtered = true;
-                // TODO request higher preconditions (RX active)
+
                 nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_RX);
             }
         }
         else if ((filter_result == NRF_802154_RX_ERROR_INVALID_LENGTH) ||
                  (!nrf_802154_pib_promiscuous_get()))
         {
-            nrf_802154_trx_receive_frame_abort();
+            nrf_802154_trx_abort();
             rx_init(true);
 
             frame_accepted = false;
@@ -1109,7 +1094,7 @@ uint8_t nrf_802154_trx_receive_on_bcmatch(uint8_t bcc)
         else
         {
             // Disable receiver and wait for a new timeslot.
-            nrf_802154_trx_receive_frame_abort();
+            nrf_802154_trx_abort();
 
             // We should not leave trx in temporary state, let's receive then.
             // We avoid hard reset of radio during TX ACK phase due to timeslot end,
@@ -1125,7 +1110,7 @@ uint8_t nrf_802154_trx_receive_on_bcmatch(uint8_t bcc)
 
 #endif
 
-void nrf_802154_trx_in_idle(void)
+void nrf_802154_trx_go_idle_finished(void)
 {
     sleep_init();
     state_set(RADIO_STATE_SLEEP);
@@ -1133,36 +1118,29 @@ void nrf_802154_trx_in_idle(void)
 
 static void on_bad_ack(void);
 
-void nrf_802154_trx_receive_crcerror(trx_state_t state)
+void nrf_802154_trx_receive_frame_crcerror(void)
 {
-    switch (state)
-    {
-#if !NRF_802154_DISABLE_BCC_MATCHING || NRF_802154_NOTIFY_CRCERROR
-        case TRX_STATE_RXFRAME:
-            // We don't change receive buffer, receive will go to the same that was already used
+    assert(m_state == RADIO_STATE_RX);
+
+    // We don't change receive buffer, receive will go to the same that was already used
 #if !NRF_802154_DISABLE_BCC_MATCHING
-            request_preconditions_for_state(m_state);
-            nrf_802154_trx_receive_frame(BCC_INIT / 8U);
+    request_preconditions_for_state(m_state);
+    nrf_802154_trx_receive_frame(BCC_INIT / 8U);
 #else
-            // With BCC matching disabled trx module will re-arm automatically
+    // With BCC matching disabled trx module will re-arm automatically
 #endif
 #if NRF_802154_NOTIFY_CRCERROR
-            receive_failed_notify(NRF_802154_RX_ERROR_INVALID_FCS);
+    receive_failed_notify(NRF_802154_RX_ERROR_INVALID_FCS);
 #endif // NRF_802154_NOTIFY_CRCERROR
-            break;
-
-#endif
-        case TRX_STATE_RXACK:
-            assert(m_state == RADIO_STATE_RX_ACK);
-            on_bad_ack();
-            break;
-
-        default:
-            assert(false);
-    }
 }
 
-static void on_trx_received_frame(void)
+void nrf_802154_trx_receive_ack_crcerror(void)
+{
+    assert(m_state == RADIO_STATE_RX_ACK);
+    on_bad_ack();
+}
+
+void nrf_802154_trx_receive_frame_received(void)
 {
     uint8_t * p_received_data = mp_current_rx_buffer->data;
 
@@ -1199,7 +1177,7 @@ static void on_trx_received_frame(void)
     {
         // Frame is destined to this node but there is no timeslot to transmit ACK.
         // Just disable receiver and wait for a new timeslot.
-        nrf_802154_trx_receive_frame_abort();
+        nrf_802154_trx_abort();
 
         rx_flags_clear();
 
@@ -1302,47 +1280,19 @@ static void on_trx_received_frame(void)
     }
 }
 
-static void on_trx_received_ack(void);
-
-void nrf_802154_trx_receive_received(trx_state_t state)
+void nrf_802154_trx_transmit_frame_started(void)
 {
-    switch (state)
-    {
-        case TRX_STATE_RXFRAME:
-            on_trx_received_frame();
-            break;
-
-        case TRX_STATE_RXACK:
-            on_trx_received_ack();
-            break;
-
-        default:
-            assert(false);
-    }
+    assert((m_state == RADIO_STATE_TX) || (m_state == RADIO_STATE_CCA_TX));
+    transmit_started_notify();
 }
 
-void nrf_802154_trx_transmit_started(trx_state_t state)
+void nrf_802154_trx_transmit_ack_started(void)
 {
-    switch (state)
-    {
-#if NRF_802154_TX_STARTED_NOTIFY_ENABLED
-        case TRX_STATE_TXFRAME:
-            assert((m_state == RADIO_STATE_TX) || (m_state == RADIO_STATE_CCA_TX));
-            transmit_started_notify();
-            break;
-
-#endif
-        case TRX_STATE_TXACK:
-            assert(m_state == RADIO_STATE_TX_ACK);
-            nrf_802154_tx_ack_started(mp_ack);
-            break;
-
-        default:
-            assert(false);
-    }
+    assert(m_state == RADIO_STATE_TX_ACK);
+    nrf_802154_tx_ack_started(mp_ack);
 }
 
-static void on_trx_transmitted_ack(void)
+void nrf_802154_trx_transmit_ack_transmitted(void)
 {
     assert(m_state == RADIO_STATE_TX_ACK);
 
@@ -1358,7 +1308,7 @@ static void on_trx_transmitted_ack(void)
     received_frame_notify_and_nesting_allow(p_received_data);
 }
 
-static void on_trx_transmitted_frame(void)
+void nrf_802154_trx_transmit_frame_transmitted(void)
 {
     if (ack_is_requested(mp_tx_data))
     {
@@ -1384,23 +1334,6 @@ static void on_trx_transmitted_frame(void)
         rx_init(true);
 
         transmitted_frame_notify(NULL, 0, 0);
-    }
-}
-
-void nrf_802154_trx_transmit_transmitted(trx_state_t state)
-{
-    switch (state)
-    {
-        case TRX_STATE_TXACK:
-            on_trx_transmitted_ack();
-            break;
-
-        case TRX_STATE_TXFRAME:
-            on_trx_transmitted_frame();
-            break;
-
-        default:
-            assert(false);
     }
 }
 
@@ -1452,7 +1385,6 @@ static bool ack_match_check_version_2(const uint8_t * p_tx_data, const uint8_t *
     assert(parse_result);
     parse_result = nrf_802154_frame_parser_mhr_parse(p_ack_data, &ack_mhr_data);
 
-    // TOOD: Check PHR (frame length), may be complicated
     if (!parse_result ||
         (tx_mhr_data.p_src_addr == NULL) ||
         (ack_mhr_data.p_dst_addr == NULL) ||
@@ -1500,7 +1432,7 @@ static void on_bad_ack(void)
     transmit_failed_notify_and_nesting_allow(NRF_802154_TX_ERROR_INVALID_ACK);
 }
 
-static void on_trx_received_ack(void)
+void nrf_802154_trx_receive_ack_received(void)
 {
     // CRC of received frame is correct
     uint8_t * p_ack_data = mp_current_rx_buffer->data;
@@ -1517,7 +1449,6 @@ static void on_trx_received_ack(void)
         transmitted_frame_notify(p_ack_buffer->data,           // phr + psdu
                                  rssi_last_measurement_get(),  // rssi
                                  lqi_get(p_ack_buffer->data)); // lqi;
-
     }
     else
     {
@@ -1533,7 +1464,7 @@ void nrf_802154_trx_standalone_cca_finished(bool channel_was_idle)
     cca_notify(channel_was_idle);
 }
 
-void nrf_802154_trx_transmit_ccabusy(void)
+void nrf_802154_trx_transmit_frame_ccabusy(void)
 {
     state_set(RADIO_STATE_RX);
     rx_init(true);
@@ -1560,8 +1491,7 @@ void nrf_802154_trx_energy_detection_finished(uint8_t ed_sample)
         else
         {
             /* There is too little time in current timeslot, just wait for timeslot end.
-             * Operation will be resumed in next timeslot
-             */
+             * Operation will be resumed in next timeslot */
         }
     }
     else
@@ -1865,7 +1795,6 @@ bool nrf_802154_core_cca_cfg_update(void)
     {
         if (timeslot_is_granted())
         {
-            // TODO: rewrite this function to use trx
             nrf_802154_trx_cca_configuration_update();
         }
 
