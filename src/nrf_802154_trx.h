@@ -60,6 +60,16 @@ typedef enum
     TRX_RECEIVE_NOTIFICATION_STARTED = (1U << 1),
 } nrf_802154_trx_receive_notifications_t;
 
+/**@brief Notifications that can be enabled for @ref nrf_802154_trx_transmit_frame operation. */
+typedef enum
+{
+    /**@brief No notifications during frame transmission provided. */
+    TRX_TRANSMIT_NOTIFICATION_NONE = 0U,
+
+    /**@brief Notification @ref nrf_802154_trx_transmit_frame_ccaidle */
+    TRX_TRANSMIT_NOTIFICATION_CCAIDLE = (1U << 1),
+} nrf_802154_trx_transmit_notifications_t;
+
 /**@brief Initializes trx module.
  *
  * This function must be called exactly once, before any other API call. This function sets internal state
@@ -259,6 +269,8 @@ bool nrf_802154_trx_receive_buffer_set(void * p_receive_buffer);
  * - If cca succeded (channel was idle):
  *     - The RADIO switches to transmit mode (disables receive mode, starts ramp up in transmit mode).
  *     - The RADIO starts sending sending synchronization header (SHR).
+ *     - If @ref TRX_TRANSMIT_NOTIFICATION_CCAIDLE was present in notifications_mask,
+ *       the @ref nrf_802154_trx_transmit_frame_ccaidle is called.
  *     - @ref nrf_802154_trx_transmit_frame_started handler is called from an ISR just after SHR is sent
  *       (only when @ref NRF_802154_TX_STARTED_NOTIFY_ENABLED == 1).
  *     - @ref nrf_802154_trx_transmit_frame_transmitted handler is called from an ISR after full frame is sent on air.
@@ -266,19 +278,23 @@ bool nrf_802154_trx_receive_buffer_set(void * p_receive_buffer);
  *     - The RADIO disables receive mode
  *     - @ref nrf_802154_trx_transmit_frame_ccabusy from an ISR handler is called
  *
- * @param p_transmit_buffer Pointer to a buffer containing frame to transmit.
- *                          Must not be NULL. p_transmit_buffer[0] is the number of
- *                          bytes following p_transmit_buffer[0] to send.
- *                          The number of bytes pointed by p_transmit buffer must
- *                          be at least 1 and not less than p_transmit_buffer[0] + 1.
+ * @param p_transmit_buffer  Pointer to a buffer containing frame to transmit.
+ *                           Must not be NULL. p_transmit_buffer[0] is the number of
+ *                           bytes following p_transmit_buffer[0] to send.
+ *                           The number of bytes pointed by p_transmit buffer must
+ *                           be at least 1 and not less than p_transmit_buffer[0] + 1.
  *
- * @param cca               Selects if CCA procedure should be performed prior to
- *                          real transmission. If false no cca will be performed.
- *                          If true, cca will be performed.
+ * @param cca                Selects if CCA procedure should be performed prior to
+ *                           real transmission. If false no cca will be performed.
+ *                           If true, cca will be performed.
  *
+ * @param notifications_mask Selects additional notifications generated during a frame transmission.
+ *                           It is bitwise combination of @ref nrf_802154_trx_transmit_notifications_t values.
  * @note To transmit ack after frame is received use @ref nrf_802154_trx_transmit_ack.
  */
-void nrf_802154_trx_transmit_frame(const void * p_transmit_buffer, bool cca);
+void nrf_802154_trx_transmit_frame(const void                            * p_transmit_buffer,
+                                   bool                                    cca,
+                                   nrf_802154_trx_transmit_notifications_t notifications_mask);
 
 /**@brief Puts the trx module into transmit ACK mode.
  *
@@ -505,6 +521,21 @@ extern void nrf_802154_trx_receive_ack_received(void);
  *     - @ref nrf_802154_trx_disable.
  */
 extern void nrf_802154_trx_receive_ack_crcerror(void);
+
+/**@brief Handler called when a cca operation during transmit attempt was successful.
+ *
+ * This handler is called from an ISR when:
+ * - transmit operation with cca has been started with a call to @ref nrf_802154_transmit_frame(cca=true).
+ * - the RADIO detected that channel was free.
+ *
+ * When this handler is called following holds:
+ * - the RADIO peripheral started ramping up (or it ramped up already)
+ * - trx module is in @c TXFRAME state.
+ *
+ * Implementation is not responsible for anything since it serves as
+ * a pure notification of the successful channel assessment during transmission.
+ */
+extern void nrf_802154_trx_transmit_frame_ccaidle(void);
 
 /**@brief Handler called when a cca operation during transmit attempt failed.
  *
