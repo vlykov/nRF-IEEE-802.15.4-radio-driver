@@ -67,28 +67,34 @@
 #include "mac_features/ack_generator/nrf_802154_ack_generator.h"
 #include "rsch/nrf_802154_rsch.h"
 #include "rsch/nrf_802154_rsch_crit_sect.h"
+#include "timer_scheduler/nrf_802154_timer_sched.h"
 
 #include "nrf_802154_core_hooks.h"
 
 /// Delay before first check of received frame: 24 bits is PHY header and MAC Frame Control field.
-#define BCC_INIT           (3 * 8)
+#define BCC_INIT                    (3 * 8)
 
 /// Duration of single iteration of Energy Detection procedure
-#define ED_ITER_DURATION   128U
+#define ED_ITER_DURATION            128U
 /// Overhead of hardware preparation for ED procedure (aTurnaroundTime) [number of iterations]
-#define ED_ITERS_OVERHEAD  2U
+#define ED_ITERS_OVERHEAD           2U
 
-#define ACK_IFS            TURNAROUND_TIME ///< Ack Inter Frame Spacing [us] - delay between last symbol of received frame and first symbol of transmitted Ack
+#define ACK_IFS                     TURNAROUND_TIME ///< Ack Inter Frame Spacing [us] - delay between last symbol of received frame and first symbol of transmitted Ack
 
-#define MAX_CRIT_SECT_TIME 60              ///< Maximal time that the driver spends in single critical section.
+#define MAX_CRIT_SECT_TIME          60              ///< Maximal time that the driver spends in single critical section.
 
-#define LQI_VALUE_FACTOR   4               ///< Factor needed to calculate LQI value based on data from RADIO peripheral
-#define LQI_MAX            0xff            ///< Maximal LQI value
+#define LQI_VALUE_FACTOR            4               ///< Factor needed to calculate LQI value based on data from RADIO peripheral
+#define LQI_MAX                     0xff            ///< Maximal LQI value
 
 /** Get LQI of given received packet. If CRC is calculated by hardware LQI is included instead of CRC
  *  in the frame. Length is stored in byte with index 0; CRC is 2 last bytes.
  */
-#define RX_FRAME_LQI(data) ((data)[(data)[0] - 1])
+#define RX_FRAME_LQI(data)          ((data)[(data)[0] - 1])
+
+/** Timeout value when waiting for ntf_802154_trx_receive_frame_started after ntf_802154_trx_receive_frame_prestarted.
+ *  Timeout value in microseconds. The time equals to whole synchronization header (SHR) duration of 802.15.4 frame.
+ */
+#define PRESTARTED_TIMER_TIMEOUT_US (160U)
 
 #if NRF_802154_RX_BUFFERS > 1
 /// Pointer to currently used receive buffer.
@@ -122,6 +128,8 @@ static volatile rsch_prio_t m_rsch_priority = RSCH_PRIO_IDLE; ///< Last notified
 static nrf_802154_trx_receive_notifications_t m_trx_receive_frame_notifications_mask;
 /** @brief Value of argument @c notifications_mask to @ref nrf_802154_trx_transmit_frame */
 static nrf_802154_trx_transmit_notifications_t m_trx_transmit_frame_notifications_mask;
+
+static nrf_802154_timer_t m_rx_prestarted_timer;
 
 /***************************************************************************************************
  * @section Common core operations
@@ -627,6 +635,19 @@ static bool current_operation_terminate(nrf_802154_term_t term_lvl,
         {
             nrf_802154_trx_abort();
 
+            if (m_state == RADIO_STATE_RX)
+            {
+                /* When in rx mode, nrf_802154_trx_receive_frame_prestarted handler might
+                 * have already been called. We need to stop counting timeout. */
+                nrf_802154_timer_sched_remove(&m_rx_prestarted_timer, NULL);
+
+                /* We might have boosted preconditions (to support coex) above level
+                 * normally requested for current state by request_preconditions_for_state(m_state).
+                 * When current operation is terminated we request preconditions back
+                 * thus ceasing to request to coex. */
+                request_preconditions_for_state(m_state);
+            }
+
             if (notify)
             {
                 operation_terminated_notify(m_state, receiving_psdu_now);
@@ -1049,16 +1070,71 @@ void nrf_802154_trx_receive_ack_started(void)
     nrf_802154_core_hooks_rx_ack_started();
 }
 
+static void on_rx_prestarted_timeout(void * p_context)
+{
+    bool in_crit_sect;
+
+    (void)p_context;
+
+    /* If we were in critical section this handler would not be called.
+     * If we were outside of critical section this handler could be called,
+     * and nrf_802154_critical_section_enter must succeed.
+     * Justification:
+     * - If higher priority interrupt preempts this handler before it takes critical section, that
+     * interrupt may enter/exit critical section, but when it returns to this handler
+     * entering critical section will succeed.
+     * - If we entered critical section here the higher priority interrupt from radio
+     * will not occur.
+     * - The only related interrupt that can preempt this handler while it owns critical section
+     * is from raal timeslot margin, which will fail to enter critical section and schedule
+     * priority change to be called by nrf_802154_critical_section_exit.
+     */
+
+    in_crit_sect = nrf_802154_critical_section_enter();
+    assert(in_crit_sect);
+    (void)in_crit_sect;
+
+    /* nrf_802154_trx_receive_frame_prestarted boosted preconditions beyond those normally
+     * required by current state. Let's restore them now.  */
+    request_preconditions_for_state(m_state);
+
+    nrf_802154_critical_section_exit();
+}
+
 void nrf_802154_trx_receive_frame_prestarted(void)
 {
     assert(m_state == RADIO_STATE_RX);
-    // TODO: Implement coex requesting behavior
+    assert((m_trx_receive_frame_notifications_mask & TRX_RECEIVE_NOTIFICATION_PRESTARTED) != 0U);
+
+    /* This handler serves one main purpose: boosting preconditions for receive.
+     * This handler might not be followed by nrf_802154_trx_receive_frame_started.
+     * That's why we need to revert boosted precondition if nrf_802154_trx_receive_frame_started
+     * doesn't come. We use timer for this purpose.
+     */
+
+    uint32_t now = nrf_802154_timer_sched_time_get();
+
+    nrf_802154_timer_sched_remove(&m_rx_prestarted_timer, NULL);
+
+    /* Request boosted preconditions */
+    nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_RX);
+
+    m_rx_prestarted_timer.t0       = now;
+    m_rx_prestarted_timer.dt       = PRESTARTED_TIMER_TIMEOUT_US;
+    m_rx_prestarted_timer.callback = on_rx_prestarted_timeout;
+
+    nrf_802154_timer_sched_add(&m_rx_prestarted_timer, true);
 }
 
 void nrf_802154_trx_receive_frame_started(void)
 {
     assert(m_state == RADIO_STATE_RX);
-    // TODO: Implement coex requesting behavior
+    assert((m_trx_receive_frame_notifications_mask & TRX_RECEIVE_NOTIFICATION_STARTED) != 0U);
+
+    nrf_802154_timer_sched_remove(&m_rx_prestarted_timer, NULL);
+
+    /* Request boosted preconditions */
+    nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_RX);
 }
 
 #if !NRF_802154_DISABLE_BCC_MATCHING
@@ -1090,6 +1166,7 @@ uint8_t nrf_802154_trx_receive_frame_bcmatched(uint8_t bcc)
             {
                 m_flags.frame_filtered = true;
 
+                /* Request boosted preconditions */
                 nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_RX);
             }
         }
