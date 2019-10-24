@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 - 2018, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -131,6 +131,8 @@ static nrf_802154_trx_transmit_notifications_t m_trx_transmit_frame_notification
 
 static nrf_802154_timer_t m_rx_prestarted_timer;
 
+/** @brief Value of Coex TX Request mode */
+static nrf_802154_coex_tx_request_mode_t m_coex_tx_request_mode;
 /***************************************************************************************************
  * @section Common core operations
  **************************************************************************************************/
@@ -441,9 +443,18 @@ static rsch_prio_t min_required_rsch_prio(radio_state_t state)
 
         case RADIO_STATE_TX:
         case RADIO_STATE_TX_ACK:
-        case RADIO_STATE_CCA_TX:
         case RADIO_STATE_CONTINUOUS_CARRIER:
             return RSCH_PRIO_TX;
+
+        case RADIO_STATE_CCA_TX:
+            if (m_coex_tx_request_mode != NRF_802154_COEX_TX_REQUEST_CCA_DONE)
+            {
+                return RSCH_PRIO_TX;
+            }
+            else
+            {
+                return RSCH_PRIO_IDLE_LISTENING;
+            }
 
         default:
             assert(false);
@@ -1577,7 +1588,9 @@ void nrf_802154_trx_transmit_frame_ccaidle(void)
 {
     assert(m_state == RADIO_STATE_TX);
     assert(m_trx_transmit_frame_notifications_mask & TRX_TRANSMIT_NOTIFICATION_CCAIDLE);
-    // TODO: Implement coex requesting behavior
+    assert(m_coex_tx_request_mode == NRF_802154_COEX_TX_REQUEST_CCA_DONE);
+
+    nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_TX);
 }
 
 void nrf_802154_trx_transmit_frame_ccabusy(void)
@@ -1747,9 +1760,11 @@ bool nrf_802154_core_transmit(nrf_802154_term_t              term_lvl,
 
         if (result)
         {
-            state_set(cca ? RADIO_STATE_CCA_TX : RADIO_STATE_TX);
-            mp_tx_data                              = p_data;
+            m_coex_tx_request_mode                  = nrf_802154_pib_coex_tx_request_mode_get();
             m_trx_transmit_frame_notifications_mask = make_trx_frame_transmit_notification_mask();
+
+            state_set(cca ? RADIO_STATE_CCA_TX : RADIO_STATE_TX);
+            mp_tx_data = p_data;
 
             if (immediate)
             {
