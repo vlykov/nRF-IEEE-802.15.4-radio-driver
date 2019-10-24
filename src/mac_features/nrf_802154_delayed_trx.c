@@ -191,31 +191,22 @@ static void dly_op_state_set(rsch_dly_ts_id_t       dly_ts_id,
 /**
  * Start delayed operation.
  *
- * @param[in]  t0      Base time of the timestamp of the timeslot start [us].
- * @param[in]  dt      Time delta between @p t0 and the timestamp of the timeslot start [us].
- * @param[in]  length  Requested radio timeslot length [us].
- * @param[in]  dly_ts  Delayed timeslot ID.
+ * @param[in]  p_dly_ts_param  Parameters of the requested delayed timeslot.
  */
-static bool dly_op_request(uint32_t         t0,
-                           uint32_t         dt,
-                           uint32_t         length,
-                           rsch_dly_ts_id_t dly_ts_id)
+static bool dly_op_request(const rsch_dly_ts_param_t * p_dly_ts_param)
 {
-    bool result;
-
     // Set PENDING state before timeslot request, in case timeslot starts
-    // immediatly and interrupts current function execution.
-    dly_op_state_set(dly_ts_id, DELAYED_TRX_OP_STATE_STOPPED, DELAYED_TRX_OP_STATE_PENDING);
+    // immediately and interrupts current function execution.
+    dly_op_state_set(p_dly_ts_param->id, DELAYED_TRX_OP_STATE_STOPPED,
+                     DELAYED_TRX_OP_STATE_PENDING);
 
-    result = nrf_802154_rsch_delayed_timeslot_request(t0,
-                                                      dt,
-                                                      length,
-                                                      RSCH_PRIO_MAX,
-                                                      dly_ts_id);
+    bool result = nrf_802154_rsch_delayed_timeslot_request(p_dly_ts_param);
 
     if (!result)
     {
-        dly_op_state_set(dly_ts_id, DELAYED_TRX_OP_STATE_PENDING, DELAYED_TRX_OP_STATE_STOPPED);
+        dly_op_state_set(p_dly_ts_param->id,
+                         DELAYED_TRX_OP_STATE_PENDING,
+                         DELAYED_TRX_OP_STATE_STOPPED);
     }
 
     return result;
@@ -397,7 +388,17 @@ bool nrf_802154_delayed_trx_transmit(const uint8_t * p_data,
         m_tx_cca     = cca;
         m_tx_channel = channel;
 
-        result = dly_op_request(t0, dt, timeslot_length, RSCH_DLY_TX);
+        rsch_dly_ts_param_t dly_ts_param =
+        {
+            .t0                = t0,
+            .dt                = dt,
+            .length            = timeslot_length,
+            .prio              = RSCH_PRIO_TX,
+            .id                = RSCH_DLY_TX,
+            .prec_req_strategy = RSCH_PREC_REQ_STRATEGY_SHORTEST,
+        };
+
+        result = dly_op_request(&dly_ts_param);
     }
 
     return result;
@@ -415,7 +416,6 @@ bool nrf_802154_delayed_trx_receive(uint32_t t0,
 
     if (result)
     {
-
         dt -= RX_SETUP_TIME;
         dt -= RX_RAMP_UP_TIME;
 
@@ -430,7 +430,17 @@ bool nrf_802154_delayed_trx_receive(uint32_t t0,
         // remove timer in case it was left after abort operation
         nrf_802154_timer_sched_remove(&m_timeout_timer, NULL);
 
-        result = dly_op_request(t0, dt, timeslot_length, RSCH_DLY_RX);
+        rsch_dly_ts_param_t dly_ts_param =
+        {
+            .t0                = t0,
+            .dt                = dt,
+            .length            = timeslot_length,
+            .prio              = RSCH_PRIO_IDLE_LISTENING,
+            .id                = RSCH_DLY_RX,
+            .prec_req_strategy = RSCH_PREC_REQ_STRATEGY_SHORTEST,
+        };
+
+        result = dly_op_request(&dly_ts_param);
     }
 
     return result;
@@ -473,9 +483,8 @@ void nrf_802154_rsch_delayed_timeslot_started(rsch_dly_ts_id_t dly_ts_id)
 
 bool nrf_802154_delayed_trx_transmit_cancel(void)
 {
-    bool result;
+    bool result = nrf_802154_rsch_delayed_timeslot_cancel(RSCH_DLY_TX);
 
-    result                      = nrf_802154_rsch_delayed_timeslot_cancel(RSCH_DLY_TX);
     m_dly_op_state[RSCH_DLY_TX] = DELAYED_TRX_OP_STATE_STOPPED;
 
     return result;
@@ -483,10 +492,7 @@ bool nrf_802154_delayed_trx_transmit_cancel(void)
 
 bool nrf_802154_delayed_trx_receive_cancel(void)
 {
-    bool result;
-
-    result = nrf_802154_rsch_delayed_timeslot_cancel(RSCH_DLY_RX);
-
+    bool result = nrf_802154_rsch_delayed_timeslot_cancel(RSCH_DLY_RX);
     bool was_running;
 
     nrf_802154_timer_sched_remove(&m_timeout_timer, &was_running);
