@@ -141,10 +141,10 @@ static bool coex_tx_request_mode_is_supported(nrf_802154_coex_tx_request_mode_t 
 
     switch (mode)
     {
-        case NRF_802154_COEX_TX_REQUEST_DISABLED:
-        case NRF_802154_COEX_TX_REQUEST_FRAME_READY:
-        case NRF_802154_COEX_TX_REQUEST_CCA_START:
-        case NRF_802154_COEX_TX_REQUEST_CCA_DONE:
+        case NRF_802154_COEX_TX_REQUEST_MODE_DISABLED:
+        case NRF_802154_COEX_TX_REQUEST_MODE_FRAME_READY:
+        case NRF_802154_COEX_TX_REQUEST_MODE_CCA_START:
+        case NRF_802154_COEX_TX_REQUEST_MODE_CCA_DONE:
             result = true;
             break;
 
@@ -209,7 +209,7 @@ void nrf_802154_pib_init(void)
 #else
     m_data.coex.rx_request_mode = NRF_802154_COEX_RX_REQUEST_MODE_DESTINED;
 #endif
-    m_data.coex.tx_request_mode = NRF_802154_COEX_TX_REQUEST_FRAME_READY;
+    m_data.coex.tx_request_mode = NRF_802154_COEX_TX_REQUEST_MODE_FRAME_READY;
 }
 
 bool nrf_802154_pib_promiscuous_get(void)

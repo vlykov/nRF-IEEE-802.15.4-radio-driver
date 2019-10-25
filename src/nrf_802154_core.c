@@ -447,7 +447,7 @@ static rsch_prio_t min_required_rsch_prio(radio_state_t state)
             return RSCH_PRIO_TX;
 
         case RADIO_STATE_CCA_TX:
-            if (m_coex_tx_request_mode != NRF_802154_COEX_TX_REQUEST_CCA_DONE)
+            if (m_coex_tx_request_mode != NRF_802154_COEX_TX_REQUEST_MODE_CCA_DONE)
             {
                 return RSCH_PRIO_TX;
             }
@@ -730,13 +730,13 @@ static nrf_802154_trx_transmit_notifications_t make_trx_frame_transmit_notificat
 
     switch (nrf_802154_pib_coex_tx_request_mode_get())
     {
-        case NRF_802154_COEX_TX_REQUEST_DISABLED:
-        case NRF_802154_COEX_TX_REQUEST_FRAME_READY:
-        case NRF_802154_COEX_TX_REQUEST_CCA_START:
+        case NRF_802154_COEX_TX_REQUEST_MODE_DISABLED:
+        case NRF_802154_COEX_TX_REQUEST_MODE_FRAME_READY:
+        case NRF_802154_COEX_TX_REQUEST_MODE_CCA_START:
             /* No additional notifications required. */
             break;
 
-        case NRF_802154_COEX_TX_REQUEST_CCA_DONE:
+        case NRF_802154_COEX_TX_REQUEST_MODE_CCA_DONE:
             result |= TRX_TRANSMIT_NOTIFICATION_CCAIDLE;
             break;
 
@@ -1588,7 +1588,7 @@ void nrf_802154_trx_transmit_frame_ccaidle(void)
 {
     assert(m_state == RADIO_STATE_TX);
     assert(m_trx_transmit_frame_notifications_mask & TRX_TRANSMIT_NOTIFICATION_CCAIDLE);
-    assert(m_coex_tx_request_mode == NRF_802154_COEX_TX_REQUEST_CCA_DONE);
+    assert(m_coex_tx_request_mode == NRF_802154_COEX_TX_REQUEST_MODE_CCA_DONE);
 
     nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_TX);
 }
