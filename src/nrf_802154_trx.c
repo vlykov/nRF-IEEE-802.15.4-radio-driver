@@ -183,8 +183,8 @@ static const nrf_802154_fal_event_t m_activate_rx_cc0 =
     {
         .p_timer_instance     = NRF_802154_TIMER_INSTANCE,
         .compare_channel_mask = ((1 << NRF_TIMER_CC_CHANNEL0) | (1 << NRF_TIMER_CC_CHANNEL2)),
-        .counter_value        = RX_RAMP_UP_TIME,
-    },
+        .counter_value        = RX_RAMP_UP_TIME
+    }
 };
 
 static const nrf_802154_fal_event_t m_activate_tx_cc0 =
@@ -195,8 +195,8 @@ static const nrf_802154_fal_event_t m_activate_tx_cc0 =
     {
         .p_timer_instance     = NRF_802154_TIMER_INSTANCE,
         .compare_channel_mask = ((1 << NRF_TIMER_CC_CHANNEL0) | (1 << NRF_TIMER_CC_CHANNEL2)),
-        .counter_value        = TX_RAMP_UP_TIME,
-    },
+        .counter_value        = TX_RAMP_UP_TIME
+    }
 };
 
 static const nrf_802154_fal_event_t m_ccaidle =
