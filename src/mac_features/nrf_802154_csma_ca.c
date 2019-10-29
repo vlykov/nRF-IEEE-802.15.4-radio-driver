@@ -173,7 +173,7 @@ static void random_backoff_start(bool allow_zero_backoff)
         };
 
         // If Coex precondition should be requested immediately, preconditions priority must be leveraged
-        if (nrf_802154_pib_coex_tx_request_mode_get() == NRF_802154_COEX_TX_REQUEST_FRAME_READY)
+        if (nrf_802154_pib_coex_tx_request_mode_get() == NRF_802154_COEX_TX_REQUEST_MODE_FRAME_READY)
         {
             backoff_ts_param.prio = RSCH_PRIO_TX;
         }
