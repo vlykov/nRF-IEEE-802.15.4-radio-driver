@@ -525,6 +525,20 @@ bool nrf_802154_cca(void);
 bool nrf_802154_continuous_carrier(void);
 
 /**
+ * @brief Changes the radio state to modulated carrier.
+ *
+ * @note When the radio is emitting modulated carrier signals, it blocks all transmissions on the
+ *       selected channel. This function is to be called only during radio tests. Do not
+ *       use it during normal device operation.
+ *
+ * @param[in] p_data Pointer to a buffer to modulate the carrier with.
+ *
+ * @retval  true   The modulated carrier procedure was scheduled.
+ * @retval  false  The driver could not schedule the modulated carrier procedure.
+ */
+bool nrf_802154_modulated_carrier(const uint8_t * p_data);
+
+/**
  * @}
  * @defgroup nrf_802154_calls Calls to higher layer
  * @{

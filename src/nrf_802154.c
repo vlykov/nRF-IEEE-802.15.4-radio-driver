@@ -324,6 +324,9 @@ nrf_802154_state_t nrf_802154_state_get(void)
 
         case RADIO_STATE_CONTINUOUS_CARRIER:
             return NRF_802154_STATE_CONTINUOUS_CARRIER;
+
+        case RADIO_STATE_MODULATED_CARRIER:
+            return NRF_802154_STATE_MODULATED_CARRIER;
     }
 
     return NRF_802154_STATE_INVALID;
@@ -495,6 +498,18 @@ bool nrf_802154_continuous_carrier(void)
     result = nrf_802154_request_continuous_carrier(NRF_802154_TERM_NONE);
 
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_CONTINUOUS_CARRIER);
+    return result;
+}
+
+bool nrf_802154_modulated_carrier(const uint8_t * p_data)
+{
+    bool result;
+
+    nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_MODULATED_CARRIER);
+
+    result = nrf_802154_request_modulated_carrier(NRF_802154_TERM_NONE, p_data);
+
+    nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_MODULATED_CARRIER);
     return result;
 }
 

@@ -54,6 +54,7 @@ typedef uint8_t nrf_802154_state_t;
 #define NRF_802154_STATE_ENERGY_DETECTION   0x05 // !< Radio in the energy detection state.
 #define NRF_802154_STATE_CCA                0x06 // !< Radio in the CCA state.
 #define NRF_802154_STATE_CONTINUOUS_CARRIER 0x07 // !< Radio in the continuous carrier state.
+#define NRF_802154_STATE_MODULATED_CARRIER  0x08 // !< Radio in the modulated carrier state.
 
 /**
  * @brief Errors reported during the frame transmission.

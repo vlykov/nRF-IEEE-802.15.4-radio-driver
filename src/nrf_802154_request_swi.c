@@ -75,6 +75,7 @@ typedef enum
     REQ_TYPE_ENERGY_DETECTION,
     REQ_TYPE_CCA,
     REQ_TYPE_CONTINUOUS_CARRIER,
+    REQ_TYPE_MODULATED_CARRIER,
     REQ_TYPE_BUFFER_FREE,
     REQ_TYPE_CHANNEL_UPDATE,
     REQ_TYPE_CCA_CFG_UPDATE,
@@ -133,6 +134,13 @@ typedef struct
             nrf_802154_term_t term_lvl; ///< Request priority.
             bool            * p_result; ///< Continuous carrier request result.
         } continuous_carrier;           ///< Continuous carrier request details.
+
+        struct
+        {
+            nrf_802154_term_t term_lvl; ///< Request priority.
+            const uint8_t   * p_data;   ///< Pointer to a buffer to modulate the carrier wave with.
+            bool            * p_result; ///< Modulated carrier request result.
+        } modulated_carrier;            ///< Modulated carrier request details.
 
         struct
         {
@@ -388,6 +396,27 @@ static void swi_continuous_carrier(nrf_802154_term_t term_lvl, bool * p_result)
 }
 
 /**
+ * @brief Requests entering the @ref RADIO_STATE_MODULATED_CARRIER state from the SWI priority.
+ *
+ * @param[in]   term_lvl  Termination level of this request. Selects procedures to abort.
+ * @param[in]   p_data    Pointer to the data buffer to modulate the carrier wave with.
+ * @param[out]  p_result  Result of entering the modulated carrier state.
+ */
+static void swi_modulated_carrier(nrf_802154_term_t term_lvl,
+                                  const uint8_t   * p_data,
+                                  bool            * p_result)
+{
+    nrf_802154_req_data_t * p_slot = req_enter();
+
+    p_slot->type                            = REQ_TYPE_MODULATED_CARRIER;
+    p_slot->data.modulated_carrier.term_lvl = term_lvl;
+    p_slot->data.modulated_carrier.p_data   = p_data;
+    p_slot->data.modulated_carrier.p_result = p_result;
+
+    req_exit();
+}
+
+/**
  * @brief Notifies the core module that the given buffer is not used anymore and can be freed.
  *
  * @param[in]  p_data   Pointer to the buffer to be freed.
@@ -536,6 +565,15 @@ bool nrf_802154_request_continuous_carrier(nrf_802154_term_t term_lvl)
                      term_lvl)
 }
 
+bool nrf_802154_request_modulated_carrier(nrf_802154_term_t term_lvl,
+                                          const uint8_t   * p_data)
+{
+    REQUEST_FUNCTION(nrf_802154_core_modulated_carrier,
+                     swi_modulated_carrier,
+                     term_lvl,
+                     p_data)
+}
+
 bool nrf_802154_request_buffer_free(uint8_t * p_data)
 {
     REQUEST_FUNCTION(nrf_802154_core_notify_buffer_free, swi_buffer_free, p_data)
@@ -611,6 +649,12 @@ static void irq_handler_req_event(void)
                 *(p_slot->data.continuous_carrier.p_result) =
                     nrf_802154_core_continuous_carrier(
                         p_slot->data.continuous_carrier.term_lvl);
+                break;
+
+            case REQ_TYPE_MODULATED_CARRIER:
+                *(p_slot->data.modulated_carrier.p_result) =
+                    nrf_802154_core_modulated_carrier(p_slot->data.modulated_carrier.term_lvl,
+                                                      p_slot->data.modulated_carrier.p_data);
                 break;
 
             case REQ_TYPE_BUFFER_FREE:

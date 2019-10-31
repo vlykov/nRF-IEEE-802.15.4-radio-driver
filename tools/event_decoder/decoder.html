@@ -130,6 +130,9 @@
                         case 9:
                             ret += "RADIO_STATE_CONTINUOUS_CARRIER";
                         break;
+                        case 10:
+                            ret += "RADIO_STATE_MODULATED_CARRIER";
+                        break;
                         default:
                             console.log("state = " + param);
                             break;
@@ -217,6 +220,7 @@
             {id: "RECEIVE_AT", val: 0x000A, from: "APP", to: "DRIVER", text: "nrf_802154_receive_at()"},
             {id: "TRANSMIT_AT_CANCEL", val: 0x000B, from: "APP", to: "DRIVER", text: "nrf_802154_transmit_at_cancel()"},
             {id: "RECEIVE_AT_CANCEL", val: 0x000C, from: "APP", to: "DRIVER", text: "nrf_802154_receive_at_cancel()"},
+            {id: "MODULATED_CARRIER", val: 0x000D, from: "APP", to: "DRIVER", text: "nrf_802154_modulated_carrier()"},
 
             {id: "RADIO_IRQ", val: 0x0100, from: "RAAL", to: "DRIVER", text: "RADIO_IRQHandler()"},
             {id: "EVENT_FRAMESTART", val: 0x0101, from: "DRIVER", to: "DRIVER", text: "EVENT_FRAMESTART"},

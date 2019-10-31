@@ -349,6 +349,15 @@ void nrf_802154_trx_continuous_carrier(void);
  */
 void nrf_802154_trx_continuous_carrier_restart(void);
 
+/**@brief Starts generating modulated carrier with given buffer.
+ *
+ * @param[in] p_transmit_buffer Pointer to a buffer used for modulating the carrier wave.
+ */
+void nrf_802154_trx_modulated_carrier(const void * p_transmit_buffer);
+
+/** @brief Restarts generating modulated carrier.*/
+void nrf_802154_trx_modulated_carrier_restart(void);
+
 /**@brief Puts trx module into energy detection mode.
  *
  * Operation ends up with a call to @ref nrf_802154_trx_energy_detection_finished handler.
