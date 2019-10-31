@@ -434,6 +434,9 @@
                 "_attrs": [
                     "public"
                 ],
+                "_includes" : [
+                    "src/platform/coex"
+                ],                
                 "_name": "external"
             }
         ]
