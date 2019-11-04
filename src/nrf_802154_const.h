@@ -1,4 +1,4 @@
-/* Copyright (c) 2017, Nordic Semiconductor ASA
+/* Copyright (c) 2017 - 2019, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -158,6 +158,10 @@
 
 #define BROADCAST_ADDRESS            ((uint8_t[SHORT_ADDRESS_SIZE]) {0xff, 0xff}) ///< Broadcast short address.
 
+#define MIN_SIFS_PERIOD_US           192                                          ///< Minimum Short IFS period default value in us.
+#define MIN_LIFS_PERIOD_US           640                                          ///< Minimum Short IFS period default value in us.
+#define MAX_SIFS_FRAME_SIZE          18                                           ///< Maximum frame length which can be followed by the Short Interframe Space.
+
 typedef enum
 {
     REQ_ORIG_HIGHER_LAYER,
@@ -172,6 +176,9 @@ typedef enum
 #if NRF_802154_DELAYED_TRX_ENABLED
     REQ_ORIG_DELAYED_TRX,
 #endif // NRF_802154_DELAYED_TRX_ENABLED
+#if NRF_802154_IFS_ENABLED
+    REQ_ORIG_IFS,
+#endif // NRF_802154_IFS_ENABLED
 } req_originator_t;
 
 #endif // NRD_DRV_RADIO802154_CONST_H_

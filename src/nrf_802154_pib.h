@@ -270,6 +270,48 @@ void nrf_802154_pib_csmaca_max_backoffs_set(uint8_t max_backoffs);
  */
 uint8_t nrf_802154_pib_csmaca_max_backoffs_get(void);
 
+/**
+ * @brief Gets IFS trigger only on address match value.
+ *
+ * @return Current IFS trigger on address match value.
+ */
+bool nrf_802154_pib_ifs_address_match_only_get(void);
+
+/**
+ * @brief Sets IFS trigger only on address match value.
+ *
+ * @param[in] enabled IFS trigger on address match value.
+ */
+void nrf_802154_pib_ifs_address_match_only_set(bool enabled);
+
+/**
+ * @brief Gets Short IFS period in microseconds.
+ *
+ * @return Current Short IFS period in microseconds.
+ */
+uint16_t nrf_802154_pib_ifs_min_sifs_period_get(void);
+
+/**
+ * @brief Sets Short IFS period in microseconds.
+ *
+ * @param[in] period Short IFS period in microseconds.
+ */
+void nrf_802154_pib_ifs_min_sifs_period_set(uint16_t period);
+
+/**
+ * @brief Gets Long IFS period in microseconds.
+ *
+ * @return Current Long IFS period in microseconds.
+ */
+uint16_t nrf_802154_pib_ifs_min_lifs_period_get(void);
+
+/**
+ * @brief Sets Long IFS period in microseconds.
+ *
+ * @param[in] period Long IFS period in microseconds.
+ */
+void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period);
+
 #ifdef __cplusplus
 }
 #endif

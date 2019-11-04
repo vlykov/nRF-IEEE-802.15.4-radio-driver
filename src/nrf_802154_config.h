@@ -408,6 +408,16 @@ extern "C" {
 #endif
 
 /**
+ * @def NRF_802154_IFS_ENABLED
+ *
+ * Indicates whether the Short/Long IFS feature is to be enabled in the driver.
+ *
+ */
+#ifndef NRF_802154_IFS_ENABLED
+#define NRF_802154_IFS_ENABLED 1
+#endif
+
+/**
  * @}
  * @defgroup nrf_802154_config_transmission Transmission start notification feature configuration
  * @{

@@ -63,21 +63,33 @@ typedef struct
 
 typedef struct
 {
-    int8_t                  tx_power;                             ///< Transmit power.
-    uint8_t                 pan_id[PAN_ID_SIZE];                  ///< Pan Id of this node.
-    uint8_t                 short_addr[SHORT_ADDRESS_SIZE];       ///< Short Address of this node.
-    uint8_t                 extended_addr[EXTENDED_ADDRESS_SIZE]; ///< Extended Address of this node.
-    nrf_802154_cca_cfg_t    cca;                                  ///< CCA mode and thresholds.
-    bool                    promiscuous : 1;                      ///< Indicating if radio is in promiscuous mode.
-    bool                    auto_ack    : 1;                      ///< Indicating if auto ACK procedure is enabled.
-    bool                    pan_coord   : 1;                      ///< Indicating if radio is configured as the PAN coordinator.
-    uint8_t                 channel     : 5;                      ///< Channel on which the node receives messages.
-    nrf_802154_pib_coex_t   coex;                                 ///< Coex-related fields.
+    bool     matching_addresses_only; //< Whether to use it for matching addresses only
+    uint16_t min_sifs_period_us;      //< 12 * 16 us = 192 us
+    uint16_t min_lifs_period_us;      //< 40 * 16 us = 640 us
+} nrf_802154_pib_ifs_t;
+
+typedef struct
+{
+    int8_t                  tx_power;                               ///< Transmit power.
+    uint8_t                 pan_id[PAN_ID_SIZE];                    ///< Pan Id of this node.
+    uint8_t                 short_addr[SHORT_ADDRESS_SIZE];         ///< Short Address of this node.
+    uint8_t                 extended_addr[EXTENDED_ADDRESS_SIZE];   ///< Extended Address of this node.
+    nrf_802154_cca_cfg_t    cca;                                    ///< CCA mode and thresholds.
+    bool                    promiscuous : 1;                        ///< Indicating if radio is in promiscuous mode.
+    bool                    auto_ack    : 1;                        ///< Indicating if auto ACK procedure is enabled.
+    bool                    pan_coord   : 1;                        ///< Indicating if radio is configured as the PAN coordinator.
+    uint8_t                 channel     : 5;                        ///< Channel on which the node receives messages.
+    nrf_802154_pib_coex_t   coex;                                   ///< Coex-related fields.
     nrf_802154_pib_csmaca_t csmaca;                               ///< CSMA-CA related fields.
+    nrf_802154_pib_ifs_t    ifs;                                    ///< IFS-related fields.
 } nrf_802154_pib_data_t;
 
 // Static variables.
-static nrf_802154_pib_data_t m_data; ///< Buffer containing PIB data.
+static nrf_802154_pib_data_t m_data =
+{
+    .ifs.min_sifs_period_us = MIN_SIFS_PERIOD_US,
+    .ifs.min_lifs_period_us = MIN_LIFS_PERIOD_US
+}; ///< Buffer containing PIB data.
 
 /**
  * Converts TX power integer values to RADIO TX power allowed values.
@@ -412,4 +424,34 @@ void nrf_802154_pib_csmaca_max_backoffs_set(uint8_t max_backoffs)
 uint8_t nrf_802154_pib_csmaca_max_backoffs_get(void)
 {
     return m_data.csmaca.max_backoffs;
+}
+
+bool nrf_802154_pib_ifs_address_match_only_get(void)
+{
+    return m_data.ifs.matching_addresses_only;
+}
+
+void nrf_802154_pib_ifs_address_match_only_set(bool enabled)
+{
+    m_data.ifs.matching_addresses_only = enabled;
+}
+
+uint16_t nrf_802154_pib_ifs_min_sifs_period_get(void)
+{
+    return m_data.ifs.min_sifs_period_us;
+}
+
+void nrf_802154_pib_ifs_min_sifs_period_set(uint16_t period)
+{
+    m_data.ifs.min_sifs_period_us = period;
+}
+
+uint16_t nrf_802154_pib_ifs_min_lifs_period_get(void)
+{
+    return m_data.ifs.min_lifs_period_us;
+}
+
+void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period)
+{
+    m_data.ifs.min_lifs_period_us = period;
 }
