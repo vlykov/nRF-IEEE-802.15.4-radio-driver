@@ -46,6 +46,8 @@
 #include "nrf_802154_utils.h"
 #include "fal/nrf_802154_fal.h"
 
+#define CSMACA_BE_MAXIMUM 8 ///< The maximum allowed CSMA-CA backoff exponent (BE) that results from the implementation
+
 typedef struct
 {
     nrf_802154_coex_rx_request_mode_t rx_request_mode; ///< Coex request mode in receive operation.
@@ -54,16 +56,24 @@ typedef struct
 
 typedef struct
 {
-    int8_t                tx_power;                             ///< Transmit power.
-    uint8_t               pan_id[PAN_ID_SIZE];                  ///< Pan Id of this node.
-    uint8_t               short_addr[SHORT_ADDRESS_SIZE];       ///< Short Address of this node.
-    uint8_t               extended_addr[EXTENDED_ADDRESS_SIZE]; ///< Extended Address of this node.
-    nrf_802154_cca_cfg_t  cca;                                  ///< CCA mode and thresholds.
-    bool                  promiscuous : 1;                      ///< Indicating if radio is in promiscuous mode.
-    bool                  auto_ack    : 1;                      ///< Indicating if auto ACK procedure is enabled.
-    bool                  pan_coord   : 1;                      ///< Indicating if radio is configured as the PAN coordinator.
-    uint8_t               channel     : 5;                      ///< Channel on which the node receives messages.
-    nrf_802154_pib_coex_t coex;                                 ///< Coex-related fields.
+    uint8_t min_be;       // The minimum value of the backoff exponent (BE) in the CSMA-CA algorithm
+    uint8_t max_be;       // The maximum value of the backoff exponent (BE) in the CSMA-CA algorithm
+    uint8_t max_backoffs; // The maximum number of backoffs that the CSMA-CA algorithm will attempt before declaring a channel access failure.
+} nrf_802154_pib_csmaca_t;
+
+typedef struct
+{
+    int8_t                  tx_power;                             ///< Transmit power.
+    uint8_t                 pan_id[PAN_ID_SIZE];                  ///< Pan Id of this node.
+    uint8_t                 short_addr[SHORT_ADDRESS_SIZE];       ///< Short Address of this node.
+    uint8_t                 extended_addr[EXTENDED_ADDRESS_SIZE]; ///< Extended Address of this node.
+    nrf_802154_cca_cfg_t    cca;                                  ///< CCA mode and thresholds.
+    bool                    promiscuous : 1;                      ///< Indicating if radio is in promiscuous mode.
+    bool                    auto_ack    : 1;                      ///< Indicating if auto ACK procedure is enabled.
+    bool                    pan_coord   : 1;                      ///< Indicating if radio is configured as the PAN coordinator.
+    uint8_t                 channel     : 5;                      ///< Channel on which the node receives messages.
+    nrf_802154_pib_coex_t   coex;                                 ///< Coex-related fields.
+    nrf_802154_pib_csmaca_t csmaca;                               ///< CSMA-CA related fields.
 } nrf_802154_pib_data_t;
 
 // Static variables.
@@ -210,6 +220,10 @@ void nrf_802154_pib_init(void)
     m_data.coex.rx_request_mode = NRF_802154_COEX_RX_REQUEST_MODE_DESTINED;
 #endif
     m_data.coex.tx_request_mode = NRF_802154_COEX_TX_REQUEST_MODE_FRAME_READY;
+
+    m_data.csmaca.min_be       = NRF_802154_CSMA_CA_MIN_BE_DEFAULT;
+    m_data.csmaca.max_be       = NRF_802154_CSMA_CA_MAX_BE_DEFAULT;
+    m_data.csmaca.max_backoffs = NRF_802154_CSMA_CA_MAX_CSMA_BACKOFFS_DEFAULT;
 }
 
 bool nrf_802154_pib_promiscuous_get(void)
@@ -356,4 +370,48 @@ bool nrf_802154_pib_coex_tx_request_mode_set(nrf_802154_coex_tx_request_mode_t m
 nrf_802154_coex_tx_request_mode_t nrf_802154_pib_coex_tx_request_mode_get(void)
 {
     return m_data.coex.tx_request_mode;
+}
+
+bool nrf_802154_pib_csmaca_min_be_set(uint8_t min_be)
+{
+    bool result = (min_be <= CSMACA_BE_MAXIMUM);
+
+    if (result)
+    {
+        m_data.csmaca.min_be = min_be;
+    }
+
+    return result;
+}
+
+uint8_t nrf_802154_pib_csmaca_min_be_get(void)
+{
+    return m_data.csmaca.min_be;
+}
+
+bool nrf_802154_pib_csmaca_max_be_set(uint8_t max_be)
+{
+    bool result = (max_be <= CSMACA_BE_MAXIMUM);
+
+    if (result)
+    {
+        m_data.csmaca.max_be = max_be;
+    }
+
+    return result;
+}
+
+uint8_t nrf_802154_pib_csmaca_max_be_get(void)
+{
+    return m_data.csmaca.max_be;
+}
+
+void nrf_802154_pib_csmaca_max_backoffs_set(uint8_t max_backoffs)
+{
+    m_data.csmaca.max_backoffs = max_backoffs;
+}
+
+uint8_t nrf_802154_pib_csmaca_max_backoffs_get(void)
+{
+    return m_data.csmaca.max_backoffs;
 }
