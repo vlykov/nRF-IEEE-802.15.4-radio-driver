@@ -233,6 +233,7 @@ void nrf_802154_pib_init(void)
 
     m_data.ifs.min_sifs_period_us = MIN_SIFS_PERIOD_US;
     m_data.ifs.min_lifs_period_us = MIN_LIFS_PERIOD_US;
+    m_data.ifs.mode               = NRF_802154_IFS_MODE_DISABLED;
 }
 
 bool nrf_802154_pib_promiscuous_get(void)
@@ -430,9 +431,19 @@ nrf_802154_ifs_mode_t nrf_802154_pib_ifs_mode_get(void)
     return m_data.ifs.mode;
 }
 
-void nrf_802154_pib_ifs_mode_set(nrf_802154_ifs_mode_t mode)
+bool nrf_802154_pib_ifs_mode_set(nrf_802154_ifs_mode_t mode)
 {
-    m_data.ifs.mode = mode;
+    switch (mode)
+    {
+        case NRF_802154_IFS_MODE_DISABLED:
+        case NRF_802154_IFS_MODE_MATCHING_ADDRESSES:
+        case NRF_802154_IFS_MODE_ALWAYS:
+            m_data.ifs.mode = mode;
+            return true;
+
+        default:
+            return false;
+    }
 }
 
 uint16_t nrf_802154_pib_ifs_min_sifs_period_get(void)

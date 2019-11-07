@@ -67,7 +67,7 @@ static void ifs_tx_result_notify(bool result)
 {
     if (!result)
     {
-        nrf_802154_notify_transmit_failed(m_context.p_data, NRF_802154_TX_ERROR_BUSY_CHANNEL);
+        nrf_802154_notify_transmit_failed(m_context.p_data, NRF_802154_TX_ERROR_TIMESLOT_DENIED);
     }
 }
 
@@ -138,7 +138,6 @@ static uint16_t ifs_needed_by_time(const uint8_t * p_frame, uint32_t current_tim
 
 bool nrf_802154_ifs_pretransmission(const uint8_t * p_frame, bool cca)
 {
-    uint32_t current_timestamp = nrf_802154_timer_sched_time_get();
     nrf_802154_ifs_mode_t mode = nrf_802154_pib_ifs_mode_get();
 
     if (mode == NRF_802154_IFS_MODE_DISABLED)
@@ -158,7 +157,8 @@ bool nrf_802154_ifs_pretransmission(const uint8_t * p_frame, bool cca)
         return true;
     }
 
-    uint32_t dt = ifs_needed_by_time(p_frame, current_timestamp);
+    uint32_t current_timestamp = nrf_802154_timer_sched_time_get();
+    uint32_t dt                = ifs_needed_by_time(p_frame, current_timestamp);
 
     if (dt == 0)
     {

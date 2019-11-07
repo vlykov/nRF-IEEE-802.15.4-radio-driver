@@ -280,9 +280,12 @@ nrf_802154_ifs_mode_t nrf_802154_pib_ifs_mode_get(void);
 /**
  * @brief Sets IFS operation mode.
  *
- * @param[in] mode IFS operation mode. Refer to @ref nrf_802154_ifs_mode_t for details.
+ * @param[in] mode  IFS operation mode. Refer to @ref nrf_802154_ifs_mode_t for details.
+ *
+ * @retval    true  The update of PIB was successful.
+ * @retval    false The update of PIB failed due to the unsupported mode.
  */
-void nrf_802154_pib_ifs_mode_set(nrf_802154_ifs_mode_t mode);
+bool nrf_802154_pib_ifs_mode_set(nrf_802154_ifs_mode_t mode);
 
 /**
  * @brief Gets Short IFS period in microseconds.
