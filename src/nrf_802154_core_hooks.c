@@ -171,7 +171,8 @@ bool nrf_802154_core_hooks_pre_transmission(const uint8_t * p_frame, bool cca)
 {
     bool result = true;
 
-    for (uint32_t i = 0; i < sizeof(m_pre_transmission_hooks) / sizeof(m_pre_transmission_hooks[0]); i++)
+    for (uint32_t i = 0; i < sizeof(m_pre_transmission_hooks) / sizeof(m_pre_transmission_hooks[0]);
+         i++)
     {
         if (m_pre_transmission_hooks[i] == NULL)
         {

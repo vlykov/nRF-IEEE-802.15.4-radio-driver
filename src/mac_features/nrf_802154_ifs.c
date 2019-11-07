@@ -48,20 +48,20 @@
 typedef struct
 {
     uint8_t * p_data;
-    bool cca;
+    bool      cca;
 } ifs_operation_t;
 
 static union
 {
-    uint8_t sh[SHORT_ADDRESS_SIZE];                                     ///< Short address of the last frame transmitted.
-    uint8_t ext[EXTENDED_ADDRESS_SIZE];                                 ///< Extended address of the last frame transmitted.
+    uint8_t sh[SHORT_ADDRESS_SIZE];                   ///< Short address of the last frame transmitted.
+    uint8_t ext[EXTENDED_ADDRESS_SIZE];               ///< Extended address of the last frame transmitted.
 } m_last_address;
 
-static bool m_is_last_address_extended;                                 ///< Whether the last transmitted frame had the extended address populated.
-static uint32_t m_last_frame_timestamp;                                 ///< Timestamp of the last transmitted frame (end of frame).
-static uint8_t m_last_frame_length;                                     ///< Length in bytes of the last transmitted frame.
-static ifs_operation_t m_context;                                       ///< Context passed to the timer.
-static nrf_802154_timer_t m_timer;                                      ///< Interframe space timer.
+static bool               m_is_last_address_extended; ///< Whether the last transmitted frame had the extended address populated.
+static uint32_t           m_last_frame_timestamp;     ///< Timestamp of the last transmitted frame (end of frame).
+static uint8_t            m_last_frame_length;        ///< Length in bytes of the last transmitted frame.
+static ifs_operation_t    m_context;                  ///< Context passed to the timer.
+static nrf_802154_timer_t m_timer;                    ///< Interframe space timer.
 
 static void ifs_tx_result_notify(bool result)
 {
@@ -74,6 +74,7 @@ static void ifs_tx_result_notify(bool result)
 static void callback_fired(void * p_context)
 {
     ifs_operation_t * p_ctx = (ifs_operation_t *)p_context;
+
     nrf_802154_request_transmit(NRF_802154_TERM_802154,
                                 REQ_ORIG_IFS,
                                 p_ctx->p_data,
@@ -88,6 +89,7 @@ static bool is_ifs_needed_by_address(const uint8_t * p_frame)
     bool is_extended;
 
     const uint8_t * addr = nrf_802154_frame_parser_dst_addr_get(p_frame, &is_extended);
+
     if (!addr)
     {
         return true;
@@ -96,7 +98,7 @@ static bool is_ifs_needed_by_address(const uint8_t * p_frame)
     if (is_extended == m_is_last_address_extended)
     {
         uint8_t * last_addr = is_extended ? m_last_address.ext : m_last_address.sh;
-        size_t addr_len     = is_extended ? EXTENDED_ADDRESS_SIZE : SHORT_ADDRESS_SIZE;
+        size_t    addr_len  = is_extended ? EXTENDED_ADDRESS_SIZE : SHORT_ADDRESS_SIZE;
 
         if (0 == memcmp(addr, last_addr, addr_len))
         {
@@ -107,7 +109,7 @@ static bool is_ifs_needed_by_address(const uint8_t * p_frame)
     return false;
 }
 
-/**@brief Checks if the IFS is needed by measuring time between the actual and the last frames. 
+/**@brief Checks if the IFS is needed by measuring time between the actual and the last frames.
  *        Returns the needed ifs, 0 if none.
  */
 static uint16_t ifs_needed_by_time(const uint8_t * p_frame, uint32_t current_timestamp)
@@ -183,7 +185,9 @@ void nrf_802154_ifs_transmitted_hook(const uint8_t * p_frame)
 
     m_last_frame_timestamp = nrf_802154_timer_sched_time_get();
 
-    const uint8_t * addr = nrf_802154_frame_parser_dst_addr_get(p_frame, &m_is_last_address_extended);
+    const uint8_t * addr =
+        nrf_802154_frame_parser_dst_addr_get(p_frame, &m_is_last_address_extended);
+
     if (!addr)
     {
         // If the transmitted frame has no address, we consider that enough time has passed so no IFS insertion will be needed.
@@ -220,6 +224,7 @@ bool nrf_802154_ifs_abort(nrf_802154_term_t term_lvl, req_originator_t req_orig)
             if (was_running)
             {
                 ifs_operation_t * p_op = (ifs_operation_t *)m_timer.p_context;
+
                 nrf_802154_notify_transmit_failed(p_op->p_data, NRF_802154_TX_ERROR_ABORTED);
             }
         }

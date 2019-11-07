@@ -70,22 +70,22 @@ typedef struct
 
 typedef struct
 {
-    int8_t                  tx_power;                               ///< Transmit power.
-    uint8_t                 pan_id[PAN_ID_SIZE];                    ///< Pan Id of this node.
-    uint8_t                 short_addr[SHORT_ADDRESS_SIZE];         ///< Short Address of this node.
-    uint8_t                 extended_addr[EXTENDED_ADDRESS_SIZE];   ///< Extended Address of this node.
-    nrf_802154_cca_cfg_t    cca;                                    ///< CCA mode and thresholds.
-    bool                    promiscuous : 1;                        ///< Indicating if radio is in promiscuous mode.
-    bool                    auto_ack    : 1;                        ///< Indicating if auto ACK procedure is enabled.
-    bool                    pan_coord   : 1;                        ///< Indicating if radio is configured as the PAN coordinator.
-    uint8_t                 channel     : 5;                        ///< Channel on which the node receives messages.
-    nrf_802154_pib_coex_t   coex;                                   ///< Coex-related fields.
-    nrf_802154_pib_csmaca_t csmaca;                                 ///< CSMA-CA related fields.
-    nrf_802154_pib_ifs_t    ifs;                                    ///< IFS-related fields.
+    int8_t                  tx_power;                             ///< Transmit power.
+    uint8_t                 pan_id[PAN_ID_SIZE];                  ///< Pan Id of this node.
+    uint8_t                 short_addr[SHORT_ADDRESS_SIZE];       ///< Short Address of this node.
+    uint8_t                 extended_addr[EXTENDED_ADDRESS_SIZE]; ///< Extended Address of this node.
+    nrf_802154_cca_cfg_t    cca;                                  ///< CCA mode and thresholds.
+    bool                    promiscuous : 1;                      ///< Indicating if radio is in promiscuous mode.
+    bool                    auto_ack    : 1;                      ///< Indicating if auto ACK procedure is enabled.
+    bool                    pan_coord   : 1;                      ///< Indicating if radio is configured as the PAN coordinator.
+    uint8_t                 channel     : 5;                      ///< Channel on which the node receives messages.
+    nrf_802154_pib_coex_t   coex;                                 ///< Coex-related fields.
+    nrf_802154_pib_csmaca_t csmaca;                               ///< CSMA-CA related fields.
+    nrf_802154_pib_ifs_t    ifs;                                  ///< IFS-related fields.
 } nrf_802154_pib_data_t;
 
 // Static variables.
-static nrf_802154_pib_data_t m_data;                                ///< Buffer containing PIB data.
+static nrf_802154_pib_data_t m_data; ///< Buffer containing PIB data.
 
 /**
  * Converts TX power integer values to RADIO TX power allowed values.
