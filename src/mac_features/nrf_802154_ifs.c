@@ -112,7 +112,10 @@ static bool is_ifs_needed_by_address(const uint8_t * p_frame)
  */
 static uint16_t ifs_needed_by_time(const uint8_t * p_frame, uint32_t current_timestamp)
 {
-    assert(nrf_802154_timer_sched_time_is_in_future(m_last_frame_timestamp, 0, current_timestamp));
+    if (!nrf_802154_timer_sched_time_is_in_future(m_last_frame_timestamp, 0, current_timestamp))
+    {
+        return 0;
+    }
     uint16_t ifs_period;
     uint32_t dt = current_timestamp - m_last_frame_timestamp;
 
