@@ -152,7 +152,7 @@ bool nrf_802154_ifs_pretransmission(const uint8_t * p_frame, bool cca)
         return true;
     }
 
-    if (mode == NRF_802154_IFS_MODE_MATCHING_ADDRESSES && !is_ifs_needed_by_address(p_frame))
+    if ((mode == NRF_802154_IFS_MODE_MATCHING_ADDRESSES) && !is_ifs_needed_by_address(p_frame))
     {
         return true;
     }
@@ -179,6 +179,8 @@ bool nrf_802154_ifs_pretransmission(const uint8_t * p_frame, bool cca)
 
 void nrf_802154_ifs_transmitted_hook(const uint8_t * p_frame)
 {
+    assert(p_frame[0] != 0U);
+
     m_last_frame_timestamp = nrf_802154_timer_sched_time_get();
 
     const uint8_t * addr = nrf_802154_frame_parser_dst_addr_get(p_frame, &m_is_last_address_extended);
@@ -199,7 +201,6 @@ void nrf_802154_ifs_transmitted_hook(const uint8_t * p_frame)
     }
 
     m_last_frame_length = p_frame[0];
-    assert(m_last_frame_length < 128);
 }
 
 bool nrf_802154_ifs_abort(nrf_802154_term_t term_lvl, req_originator_t req_orig)
