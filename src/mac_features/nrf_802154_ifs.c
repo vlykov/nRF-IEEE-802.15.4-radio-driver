@@ -40,8 +40,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "nrf_802154_request.h"
 #include "nrf_802154_pib.h"
+#include "nrf_802154_request.h"
 #include "mac_features/nrf_802154_frame_parser.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
 
@@ -51,36 +51,42 @@ typedef struct
     bool cca;
 } ifs_operation_t;
 
-static uint32_t m_current_timestamp;
-static uint8_t m_last_short_address[SHORT_ADDRESS_SIZE];
-static uint8_t m_last_extended_address[EXTENDED_ADDRESS_SIZE];
-static bool m_is_last_address_extended;
-static uint32_t m_last_frame_timestamp;
-static uint8_t m_last_frame_length;
-static ifs_operation_t m_context;
-static nrf_802154_timer_t m_timer;
+static union
+{
+    uint8_t sh[SHORT_ADDRESS_SIZE];                                     ///< Short address of the last frame transmitted.
+    uint8_t ext[EXTENDED_ADDRESS_SIZE];                                 ///< Extended address of the last frame transmitted.
+} m_last_address;
+
+static bool m_is_last_address_extended;                                 ///< Whether the last transmitted frame had the extended address populated.
+static uint32_t m_last_frame_timestamp;                                 ///< Timestamp of the last transmitted frame (end of frame).
+static uint8_t m_last_frame_length;                                     ///< Length in bytes of the last transmitted frame.
+static ifs_operation_t m_context;                                       ///< Context passed to the timer.
+static nrf_802154_timer_t m_timer;                                      ///< Interframe space timer.
+
+static void ifs_tx_result_notify(bool result)
+{
+    if (!result)
+    {
+        nrf_802154_notify_transmit_failed(m_context.p_data, NRF_802154_TX_ERROR_BUSY_CHANNEL);
+    }
+}
 
 static void callback_fired(void * p_context)
 {
-    ifs_operation_t * context = (ifs_operation_t *)p_context;
+    ifs_operation_t * p_ctx = (ifs_operation_t *)p_context;
     nrf_802154_request_transmit(NRF_802154_TERM_802154,
                                 REQ_ORIG_IFS,
-                                context->p_data,
-                                context->cca,
+                                p_ctx->p_data,
+                                p_ctx->cca,
                                 true,
-                                NULL);
+                                ifs_tx_result_notify);
 }
 
 /**@brief Checks if the IFS is needed by comparing the addresses of the actual and the last frames. */
 static bool is_ifs_needed_by_address(const uint8_t * p_frame)
 {
-    if (nrf_802154_pib_ifs_address_match_only_get() == false)
-    {
-        /* We dont't care about the address match. */
-        return true;
-    }
-
     bool is_extended;
+
     const uint8_t * addr = nrf_802154_frame_parser_dst_addr_get(p_frame, &is_extended);
     if (!addr)
     {
@@ -89,10 +95,10 @@ static bool is_ifs_needed_by_address(const uint8_t * p_frame)
 
     if (is_extended == m_is_last_address_extended)
     {
-        uint8_t * last_addr = is_extended ? m_last_extended_address : m_last_short_address;
+        uint8_t * last_addr = is_extended ? m_last_address.ext : m_last_address.sh;
         size_t addr_len     = is_extended ? EXTENDED_ADDRESS_SIZE : SHORT_ADDRESS_SIZE;
 
-        if (!memcmp(addr, last_addr, addr_len))
+        if (0 == memcmp(addr, last_addr, addr_len))
         {
             return true;
         }
@@ -101,60 +107,66 @@ static bool is_ifs_needed_by_address(const uint8_t * p_frame)
     return false;
 }
 
-/**@brief Checks if the IFS is needed by measuring time between the actual and the last frames. */
-static bool is_ifs_needed_by_time(const uint8_t * p_frame, bool * is_lifs)
+/**@brief Checks if the IFS is needed by measuring time between the actual and the last frames. 
+ *        Returns the needed ifs, 0 if none.
+ */
+static uint16_t ifs_needed_by_time(const uint8_t * p_frame, uint32_t current_timestamp)
 {
-    assert(m_current_timestamp > m_last_frame_timestamp);
-    uint32_t dt = m_current_timestamp - m_last_frame_timestamp;
-
+    assert(nrf_802154_timer_sched_time_is_in_future(m_last_frame_timestamp, 0, current_timestamp));
     uint16_t ifs_period;
+    uint32_t dt = current_timestamp - m_last_frame_timestamp;
+
     if (m_last_frame_length > MAX_SIFS_FRAME_SIZE)
     {
-        *is_lifs = true;
         ifs_period = nrf_802154_pib_ifs_min_lifs_period_get();
     }
     else
     {
-        *is_lifs = false;
         ifs_period = nrf_802154_pib_ifs_min_sifs_period_get();
     }
 
     if (dt > ifs_period)
     {
-        return false;
+        return 0;
     }
 
-    return true;
+    return ifs_period;
 }
 
-bool nrf_802154_ifs_pretransmission_hook(const uint8_t * p_frame, bool cca)
+bool nrf_802154_ifs_pretransmission(const uint8_t * p_frame, bool cca)
 {
-    m_current_timestamp = nrf_802154_timer_sched_time_get();
+    uint32_t current_timestamp = nrf_802154_timer_sched_time_get();
+    nrf_802154_ifs_mode_t mode = nrf_802154_pib_ifs_mode_get();
+
+    if (mode == NRF_802154_IFS_MODE_DISABLED)
+    {
+        // Functionality is disabled - skip the routine.
+        return true;
+    }
 
     if (!m_last_frame_length)
     {
-        // No frame was transmitted before - skip the routine
+        // No frame was transmitted before - skip the routine.
         return true;
     }
 
-    if (!is_ifs_needed_by_address(p_frame))
+    if (mode == NRF_802154_IFS_MODE_MATCHING_ADDRESSES && !is_ifs_needed_by_address(p_frame))
     {
         return true;
     }
 
-    bool is_lifs;
-    if (!is_ifs_needed_by_time(p_frame, &is_lifs))
+    uint32_t dt = ifs_needed_by_time(p_frame, current_timestamp);
+
+    if (dt == 0)
     {
         return true;
     }
 
-    uint32_t dt = is_lifs ? nrf_802154_pib_ifs_min_lifs_period_get() : nrf_802154_pib_ifs_min_sifs_period_get();
-
-    m_context.p_data = (uint8_t *)p_frame;
-    m_context.cca = cca;
-    m_timer.t0 = m_current_timestamp;
-    m_timer.dt = dt;
-    m_timer.callback = callback_fired;
+    m_context.p_data  = (uint8_t *)p_frame;
+    m_context.cca     = cca;
+    m_timer.t0        = current_timestamp;
+    m_timer.dt        = dt;
+    m_timer.callback  = callback_fired;
     m_timer.p_context = &m_context;
 
     nrf_802154_timer_sched_add(&m_timer, true);
@@ -169,42 +181,47 @@ void nrf_802154_ifs_transmitted_hook(const uint8_t * p_frame)
     const uint8_t * addr = nrf_802154_frame_parser_dst_addr_get(p_frame, &m_is_last_address_extended);
     if (!addr)
     {
+        // If the transmitted frame has no address, we consider that enough time has passed so no IFS insertion will be needed.
         m_last_frame_length = 0;
         return;
     }
 
     if (m_is_last_address_extended)
     {
-        memcpy(m_last_extended_address, addr, EXTENDED_ADDRESS_SIZE);
+        memcpy(m_last_address.ext, addr, EXTENDED_ADDRESS_SIZE);
     }
     else
     {
-        memcpy(m_last_short_address, addr, SHORT_ADDRESS_SIZE);
+        memcpy(m_last_address.sh, addr, SHORT_ADDRESS_SIZE);
     }
 
     m_last_frame_length = p_frame[0];
     assert(m_last_frame_length < 128);
 }
 
-bool nrf_802154_ifs_abort_hook(nrf_802154_term_t term_lvl, req_originator_t req_orig)
+bool nrf_802154_ifs_abort(nrf_802154_term_t term_lvl, req_originator_t req_orig)
 {
     bool result = true;
+    bool was_running;
+
     if (req_orig == REQ_ORIG_IFS)
     {
         // Ignore if self-request.
     }
-    else if (nrf_802154_timer_sched_is_running(&m_timer))
+    else
     {
         if (term_lvl >= NRF_802154_TERM_802154)
         {
-            ifs_operation_t * op = (ifs_operation_t *)m_timer.p_context;
-            bool was_running;
-            nrf_802154_notify_transmit_failed(op->p_data, NRF_802154_TX_ERROR_ABORTED);
             nrf_802154_timer_sched_remove(&m_timer, &was_running);
+            if (was_running)
+            {
+                ifs_operation_t * p_op = (ifs_operation_t *)m_timer.p_context;
+                nrf_802154_notify_transmit_failed(p_op->p_data, NRF_802154_TX_ERROR_ABORTED);
+            }
         }
         else
         {
-            result = false;
+            result = !nrf_802154_timer_sched_is_running(&m_timer);
         }
     }
 

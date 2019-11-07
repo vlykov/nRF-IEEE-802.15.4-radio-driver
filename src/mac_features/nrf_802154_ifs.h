@@ -38,21 +38,21 @@
 #include "nrf_802154_types.h"
 
 /**
- * @brief Catches the frame before transmission and checks if it needs to be delayed.
+ * @brief Examines the frame before transmission and checks if it needs to be delayed.
  *
- * @param[in]  p_frame  Pointer to the buffer that contains the transmitted frame.
+ * @param[in]  p_frame  Pointer to the buffer that contains the PHR and PSDU of the transmitted frame.
  * @param[in]  cca      Whether to trigger CCA before transmitting the frame.
  *
  * @retval     true     Frame will be transmitted right away.
  * @retval     false    Frame is delayed and will be transmistted after a needed IFS.
  */
-bool nrf_802154_ifs_pretransmission_hook(const uint8_t * p_frame, bool cca);
+bool nrf_802154_ifs_pretransmission(const uint8_t * p_frame, bool cca);
 
 /**
  * @brief Captures the timestamp, length and destination address of the transmitted
- *        frame for the sake of future analysis by the @ref nrf_802154_ifs_pretransmission_hook
+ *        frame for the sake of future analysis by the @ref nrf_802154_ifs_pretransmission
  *
- * @param[in]  p_frame  Pointer to the buffer that contains the transmitted frame.
+ * @param[in]  p_frame  Pointer to the buffer that contains the PHR and PSDU of the transmitted frame.
  */
 void nrf_802154_ifs_transmitted_hook(const uint8_t * p_frame);
 
@@ -66,6 +66,6 @@ void nrf_802154_ifs_transmitted_hook(const uint8_t * p_frame);
  * @retval  false  Transmission procedure were not running.
  *
  */
-bool nrf_802154_ifs_abort_hook(nrf_802154_term_t term_lvl, req_originator_t req_orig);
+bool nrf_802154_ifs_abort(nrf_802154_term_t term_lvl, req_originator_t req_orig);
 
 #endif // NRF_802154_IFS_H

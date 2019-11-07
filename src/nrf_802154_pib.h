@@ -271,18 +271,18 @@ void nrf_802154_pib_csmaca_max_backoffs_set(uint8_t max_backoffs);
 uint8_t nrf_802154_pib_csmaca_max_backoffs_get(void);
 
 /**
- * @brief Gets IFS trigger only on address match value.
+ * @brief Gets IFS operation mode.
  *
- * @return Current IFS trigger on address match value.
+ * @return Current IFS operation mode. Refer to @ref nrf_802154_ifs_mode_t for details.
  */
-bool nrf_802154_pib_ifs_address_match_only_get(void);
+nrf_802154_ifs_mode_t nrf_802154_pib_ifs_mode_get(void);
 
 /**
- * @brief Sets IFS trigger only on address match value.
+ * @brief Sets IFS operation mode.
  *
- * @param[in] enabled IFS trigger on address match value.
+ * @param[in] mode IFS operation mode. Refer to @ref nrf_802154_ifs_mode_t for details.
  */
-void nrf_802154_pib_ifs_address_match_only_set(bool enabled);
+void nrf_802154_pib_ifs_mode_set(nrf_802154_ifs_mode_t mode);
 
 /**
  * @brief Gets Short IFS period in microseconds.

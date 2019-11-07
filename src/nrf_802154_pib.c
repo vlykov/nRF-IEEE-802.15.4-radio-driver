@@ -63,9 +63,9 @@ typedef struct
 
 typedef struct
 {
-    bool     matching_addresses_only; //< Whether to use it for matching addresses only
-    uint16_t min_sifs_period_us;      //< 12 * 16 us = 192 us
-    uint16_t min_lifs_period_us;      //< 40 * 16 us = 640 us
+    nrf_802154_ifs_mode_t mode;               ///< Mode of Interframe Space insertion.
+    uint16_t              min_sifs_period_us; ///< Minimum Short Interframe Space period in us.
+    uint16_t              min_lifs_period_us; ///< Minimum Long Interframe Space period in us.
 } nrf_802154_pib_ifs_t;
 
 typedef struct
@@ -80,16 +80,12 @@ typedef struct
     bool                    pan_coord   : 1;                        ///< Indicating if radio is configured as the PAN coordinator.
     uint8_t                 channel     : 5;                        ///< Channel on which the node receives messages.
     nrf_802154_pib_coex_t   coex;                                   ///< Coex-related fields.
-    nrf_802154_pib_csmaca_t csmaca;                               ///< CSMA-CA related fields.
+    nrf_802154_pib_csmaca_t csmaca;                                 ///< CSMA-CA related fields.
     nrf_802154_pib_ifs_t    ifs;                                    ///< IFS-related fields.
 } nrf_802154_pib_data_t;
 
 // Static variables.
-static nrf_802154_pib_data_t m_data =
-{
-    .ifs.min_sifs_period_us = MIN_SIFS_PERIOD_US,
-    .ifs.min_lifs_period_us = MIN_LIFS_PERIOD_US
-}; ///< Buffer containing PIB data.
+static nrf_802154_pib_data_t m_data;                                ///< Buffer containing PIB data.
 
 /**
  * Converts TX power integer values to RADIO TX power allowed values.
@@ -234,6 +230,9 @@ void nrf_802154_pib_init(void)
     m_data.csmaca.min_be       = NRF_802154_CSMA_CA_MIN_BE_DEFAULT;
     m_data.csmaca.max_be       = NRF_802154_CSMA_CA_MAX_BE_DEFAULT;
     m_data.csmaca.max_backoffs = NRF_802154_CSMA_CA_MAX_CSMA_BACKOFFS_DEFAULT;
+
+    m_data.ifs.min_sifs_period_us = MIN_SIFS_PERIOD_US;
+    m_data.ifs.min_lifs_period_us = MIN_LIFS_PERIOD_US;
 }
 
 bool nrf_802154_pib_promiscuous_get(void)
@@ -426,14 +425,14 @@ uint8_t nrf_802154_pib_csmaca_max_backoffs_get(void)
     return m_data.csmaca.max_backoffs;
 }
 
-bool nrf_802154_pib_ifs_address_match_only_get(void)
+nrf_802154_ifs_mode_t nrf_802154_pib_ifs_mode_get(void)
 {
-    return m_data.ifs.matching_addresses_only;
+    return m_data.ifs.mode;
 }
 
-void nrf_802154_pib_ifs_address_match_only_set(bool enabled)
+void nrf_802154_pib_ifs_mode_set(nrf_802154_ifs_mode_t mode)
 {
-    m_data.ifs.matching_addresses_only = enabled;
+    m_data.ifs.mode = mode;
 }
 
 uint16_t nrf_802154_pib_ifs_min_sifs_period_get(void)

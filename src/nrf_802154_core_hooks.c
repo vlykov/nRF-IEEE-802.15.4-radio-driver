@@ -76,7 +76,7 @@ static const abort_hook m_abort_hooks[] =
 #endif
 
 #if NRF_802154_IFS_ENABLED
-    nrf_802154_ifs_abort_hook,
+    nrf_802154_ifs_abort,
 #endif
 
     NULL,
@@ -85,7 +85,7 @@ static const abort_hook m_abort_hooks[] =
 static const pre_transmission_hook m_pre_transmission_hooks[] =
 {
 #if NRF_802154_IFS_ENABLED
-    nrf_802154_ifs_pretransmission_hook,
+    nrf_802154_ifs_pretransmission,
 #endif
     NULL,
 };

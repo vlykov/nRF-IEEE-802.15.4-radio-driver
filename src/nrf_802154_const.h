@@ -159,7 +159,7 @@
 #define BROADCAST_ADDRESS            ((uint8_t[SHORT_ADDRESS_SIZE]) {0xff, 0xff}) ///< Broadcast short address.
 
 #define MIN_SIFS_PERIOD_US           192                                          ///< Minimum Short IFS period default value in us.
-#define MIN_LIFS_PERIOD_US           640                                          ///< Minimum Short IFS period default value in us.
+#define MIN_LIFS_PERIOD_US           640                                          ///< Minimum Long IFS period default value in us.
 #define MAX_SIFS_FRAME_SIZE          18                                           ///< Maximum frame length which can be followed by the Short Interframe Space.
 
 typedef enum
