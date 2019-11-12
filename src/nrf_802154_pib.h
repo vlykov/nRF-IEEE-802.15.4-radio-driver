@@ -270,6 +270,51 @@ void nrf_802154_pib_csmaca_max_backoffs_set(uint8_t max_backoffs);
  */
 uint8_t nrf_802154_pib_csmaca_max_backoffs_get(void);
 
+/**
+ * @brief Gets IFS operation mode.
+ *
+ * @return Current IFS operation mode. Refer to @ref nrf_802154_ifs_mode_t for details.
+ */
+nrf_802154_ifs_mode_t nrf_802154_pib_ifs_mode_get(void);
+
+/**
+ * @brief Sets IFS operation mode.
+ *
+ * @param[in] mode  IFS operation mode. Refer to @ref nrf_802154_ifs_mode_t for details.
+ *
+ * @retval    true  The update of PIB was successful.
+ * @retval    false The update of PIB failed due to the unsupported mode.
+ */
+bool nrf_802154_pib_ifs_mode_set(nrf_802154_ifs_mode_t mode);
+
+/**
+ * @brief Gets Short IFS period in microseconds.
+ *
+ * @return Current Short IFS period in microseconds.
+ */
+uint16_t nrf_802154_pib_ifs_min_sifs_period_get(void);
+
+/**
+ * @brief Sets Short IFS period in microseconds.
+ *
+ * @param[in] period Short IFS period in microseconds.
+ */
+void nrf_802154_pib_ifs_min_sifs_period_set(uint16_t period);
+
+/**
+ * @brief Gets Long IFS period in microseconds.
+ *
+ * @return Current Long IFS period in microseconds.
+ */
+uint16_t nrf_802154_pib_ifs_min_lifs_period_get(void);
+
+/**
+ * @brief Sets Long IFS period in microseconds.
+ *
+ * @param[in] period Long IFS period in microseconds.
+ */
+void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period);
+
 #ifdef __cplusplus
 }
 #endif

@@ -63,6 +63,13 @@ typedef struct
 
 typedef struct
 {
+    nrf_802154_ifs_mode_t mode;               ///< Mode of Interframe Space insertion.
+    uint16_t              min_sifs_period_us; ///< Minimum Short Interframe Space period in us.
+    uint16_t              min_lifs_period_us; ///< Minimum Long Interframe Space period in us.
+} nrf_802154_pib_ifs_t;
+
+typedef struct
+{
     int8_t                  tx_power;                             ///< Transmit power.
     uint8_t                 pan_id[PAN_ID_SIZE];                  ///< Pan Id of this node.
     uint8_t                 short_addr[SHORT_ADDRESS_SIZE];       ///< Short Address of this node.
@@ -74,6 +81,7 @@ typedef struct
     uint8_t                 channel     : 5;                      ///< Channel on which the node receives messages.
     nrf_802154_pib_coex_t   coex;                                 ///< Coex-related fields.
     nrf_802154_pib_csmaca_t csmaca;                               ///< CSMA-CA related fields.
+    nrf_802154_pib_ifs_t    ifs;                                  ///< IFS-related fields.
 } nrf_802154_pib_data_t;
 
 // Static variables.
@@ -222,6 +230,10 @@ void nrf_802154_pib_init(void)
     m_data.csmaca.min_be       = NRF_802154_CSMA_CA_MIN_BE_DEFAULT;
     m_data.csmaca.max_be       = NRF_802154_CSMA_CA_MAX_BE_DEFAULT;
     m_data.csmaca.max_backoffs = NRF_802154_CSMA_CA_MAX_CSMA_BACKOFFS_DEFAULT;
+
+    m_data.ifs.min_sifs_period_us = MIN_SIFS_PERIOD_US;
+    m_data.ifs.min_lifs_period_us = MIN_LIFS_PERIOD_US;
+    m_data.ifs.mode               = NRF_802154_IFS_MODE_DISABLED;
 }
 
 bool nrf_802154_pib_promiscuous_get(void)
@@ -412,4 +424,44 @@ void nrf_802154_pib_csmaca_max_backoffs_set(uint8_t max_backoffs)
 uint8_t nrf_802154_pib_csmaca_max_backoffs_get(void)
 {
     return m_data.csmaca.max_backoffs;
+}
+
+nrf_802154_ifs_mode_t nrf_802154_pib_ifs_mode_get(void)
+{
+    return m_data.ifs.mode;
+}
+
+bool nrf_802154_pib_ifs_mode_set(nrf_802154_ifs_mode_t mode)
+{
+    switch (mode)
+    {
+        case NRF_802154_IFS_MODE_DISABLED:
+        case NRF_802154_IFS_MODE_MATCHING_ADDRESSES:
+        case NRF_802154_IFS_MODE_ALWAYS:
+            m_data.ifs.mode = mode;
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+uint16_t nrf_802154_pib_ifs_min_sifs_period_get(void)
+{
+    return m_data.ifs.min_sifs_period_us;
+}
+
+void nrf_802154_pib_ifs_min_sifs_period_set(uint16_t period)
+{
+    m_data.ifs.min_sifs_period_us = period;
+}
+
+uint16_t nrf_802154_pib_ifs_min_lifs_period_get(void)
+{
+    return m_data.ifs.min_lifs_period_us;
+}
+
+void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period)
+{
+    m_data.ifs.min_lifs_period_us = period;
 }
