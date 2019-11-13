@@ -51,6 +51,8 @@
 #include "rsch/nrf_802154_rsch.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
 
+#if NRF_802154_DELAYED_TRX_ENABLED
+
 /* The following time is the sum of 70us RTC_IRQHandler processing time, 40us of time that elapses
  * from the moment a board starts transmission to the moment other boards (e.g. sniffer) are able
  * to detect that frame and in case of TX - 50us that accounts for a delay of yet unknown origin.
@@ -528,3 +530,4 @@ void nrf_802154_delayed_trx_rx_started_hook(const uint8_t * p_frame)
         m_dly_rx_frame.ack_requested = nrf_802154_frame_parser_ar_bit_is_set(p_frame);
     }
 }
+#endif // NRF_802154_DELAYED_TRX_ENABLED

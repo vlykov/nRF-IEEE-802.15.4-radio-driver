@@ -54,19 +54,23 @@ typedef struct
     nrf_802154_coex_tx_request_mode_t tx_request_mode; ///< Coex request mode in transmit operation.
 } nrf_802154_pib_coex_t;
 
+#if NRF_802154_CSMA_CA_ENABLED
 typedef struct
 {
     uint8_t min_be;       // The minimum value of the backoff exponent (BE) in the CSMA-CA algorithm
     uint8_t max_be;       // The maximum value of the backoff exponent (BE) in the CSMA-CA algorithm
     uint8_t max_backoffs; // The maximum number of backoffs that the CSMA-CA algorithm will attempt before declaring a channel access failure.
 } nrf_802154_pib_csmaca_t;
+#endif // NRF_802154_CSMA_CA_ENABLED
 
+#if NRF_802154_IFS_ENABLED
 typedef struct
 {
     nrf_802154_ifs_mode_t mode;               ///< Mode of Interframe Space insertion.
     uint16_t              min_sifs_period_us; ///< Minimum Short Interframe Space period in us.
     uint16_t              min_lifs_period_us; ///< Minimum Long Interframe Space period in us.
 } nrf_802154_pib_ifs_t;
+#endif // NRF_802154_IFS_ENABLED
 
 typedef struct
 {
@@ -80,8 +84,12 @@ typedef struct
     bool                    pan_coord   : 1;                      ///< Indicating if radio is configured as the PAN coordinator.
     uint8_t                 channel     : 5;                      ///< Channel on which the node receives messages.
     nrf_802154_pib_coex_t   coex;                                 ///< Coex-related fields.
+#if NRF_802154_CSMA_CA_ENABLED
     nrf_802154_pib_csmaca_t csmaca;                               ///< CSMA-CA related fields.
+#endif
+#if NRF_802154_IFS_ENABLED
     nrf_802154_pib_ifs_t    ifs;                                  ///< IFS-related fields.
+#endif
 } nrf_802154_pib_data_t;
 
 // Static variables.
@@ -227,13 +235,17 @@ void nrf_802154_pib_init(void)
 #endif
     m_data.coex.tx_request_mode = NRF_802154_COEX_TX_REQUEST_MODE_FRAME_READY;
 
+#if NRF_802154_CSMA_CA_ENABLED
     m_data.csmaca.min_be       = NRF_802154_CSMA_CA_MIN_BE_DEFAULT;
     m_data.csmaca.max_be       = NRF_802154_CSMA_CA_MAX_BE_DEFAULT;
     m_data.csmaca.max_backoffs = NRF_802154_CSMA_CA_MAX_CSMA_BACKOFFS_DEFAULT;
+#endif // NRF_802154_CSMA_CA_ENABLED
 
+#if NRF_802154_IFS_ENABLED
     m_data.ifs.min_sifs_period_us = MIN_SIFS_PERIOD_US;
     m_data.ifs.min_lifs_period_us = MIN_LIFS_PERIOD_US;
     m_data.ifs.mode               = NRF_802154_IFS_MODE_DISABLED;
+#endif // NRF_802154_IFS_ENABLED
 }
 
 bool nrf_802154_pib_promiscuous_get(void)
@@ -382,6 +394,7 @@ nrf_802154_coex_tx_request_mode_t nrf_802154_pib_coex_tx_request_mode_get(void)
     return m_data.coex.tx_request_mode;
 }
 
+#if NRF_802154_CSMA_CA_ENABLED
 bool nrf_802154_pib_csmaca_min_be_set(uint8_t min_be)
 {
     bool result = (min_be <= CSMACA_BE_MAXIMUM);
@@ -425,7 +438,9 @@ uint8_t nrf_802154_pib_csmaca_max_backoffs_get(void)
 {
     return m_data.csmaca.max_backoffs;
 }
+#endif // NRF_802154_CSMA_CA_ENABLED
 
+#if NRF_802154_IFS_ENABLED
 nrf_802154_ifs_mode_t nrf_802154_pib_ifs_mode_get(void)
 {
     return m_data.ifs.mode;
@@ -465,3 +480,4 @@ void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period)
 {
     m_data.ifs.min_lifs_period_us = period;
 }
+#endif // NRF_802154_IFS_ENABLED
