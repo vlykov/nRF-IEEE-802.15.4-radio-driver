@@ -237,4 +237,5 @@ bool nrf_802154_ifs_abort(nrf_802154_term_t term_lvl, req_originator_t req_orig)
 
     return result;
 }
+
 #endif // NRF_802154_IFS_ENABLED

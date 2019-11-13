@@ -183,4 +183,5 @@ bool nrf_802154_ack_timeout_tx_failed_hook(const uint8_t * p_frame, nrf_802154_t
 
     return true;
 }
+
 #endif // NRF_802154_ACK_TIMEOUT_ENABLED

@@ -61,7 +61,8 @@ typedef struct
     uint8_t max_be;       // The maximum value of the backoff exponent (BE) in the CSMA-CA algorithm
     uint8_t max_backoffs; // The maximum number of backoffs that the CSMA-CA algorithm will attempt before declaring a channel access failure.
 } nrf_802154_pib_csmaca_t;
-#endif // NRF_802154_CSMA_CA_ENABLED
+
+#endif  // NRF_802154_CSMA_CA_ENABLED
 
 #if NRF_802154_IFS_ENABLED
 typedef struct
@@ -70,7 +71,8 @@ typedef struct
     uint16_t              min_sifs_period_us; ///< Minimum Short Interframe Space period in us.
     uint16_t              min_lifs_period_us; ///< Minimum Long Interframe Space period in us.
 } nrf_802154_pib_ifs_t;
-#endif // NRF_802154_IFS_ENABLED
+
+#endif  // NRF_802154_IFS_ENABLED
 
 typedef struct
 {
@@ -84,11 +86,14 @@ typedef struct
     bool                    pan_coord   : 1;                      ///< Indicating if radio is configured as the PAN coordinator.
     uint8_t                 channel     : 5;                      ///< Channel on which the node receives messages.
     nrf_802154_pib_coex_t   coex;                                 ///< Coex-related fields.
+
 #if NRF_802154_CSMA_CA_ENABLED
     nrf_802154_pib_csmaca_t csmaca;                               ///< CSMA-CA related fields.
+
 #endif
 #if NRF_802154_IFS_ENABLED
-    nrf_802154_pib_ifs_t    ifs;                                  ///< IFS-related fields.
+    nrf_802154_pib_ifs_t ifs; ///< IFS-related fields.
+
 #endif
 } nrf_802154_pib_data_t;
 
@@ -438,6 +443,7 @@ uint8_t nrf_802154_pib_csmaca_max_backoffs_get(void)
 {
     return m_data.csmaca.max_backoffs;
 }
+
 #endif // NRF_802154_CSMA_CA_ENABLED
 
 #if NRF_802154_IFS_ENABLED
@@ -480,4 +486,5 @@ void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period)
 {
     m_data.ifs.min_lifs_period_us = period;
 }
+
 #endif // NRF_802154_IFS_ENABLED

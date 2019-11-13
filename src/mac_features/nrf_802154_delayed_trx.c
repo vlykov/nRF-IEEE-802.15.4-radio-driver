@@ -530,4 +530,5 @@ void nrf_802154_delayed_trx_rx_started_hook(const uint8_t * p_frame)
         m_dly_rx_frame.ack_requested = nrf_802154_frame_parser_ar_bit_is_set(p_frame);
     }
 }
+
 #endif // NRF_802154_DELAYED_TRX_ENABLED

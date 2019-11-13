@@ -465,6 +465,7 @@ bool nrf_802154_receive_at_cancel(void)
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RECEIVE_AT_CANCEL);
     return result;
 }
+
 #endif // NRF_802154_DELAYED_TRX_ENABLED
 
 bool nrf_802154_energy_detection(uint32_t time_us)

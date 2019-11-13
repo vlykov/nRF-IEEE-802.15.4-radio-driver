@@ -1859,7 +1859,7 @@ static void txframe_finish(void)
 
     nrf_radio_shorts_set(SHORTS_IDLE);
 #if NRF_802154_TX_STARTED_NOTIFY_ENABLED
-    m_flags.tx_started             = false;
+    m_flags.tx_started = false;
 #endif
     m_flags.missing_receive_buffer = false;
 
@@ -1881,7 +1881,7 @@ static void transmit_frame_abort(void)
 
     txframe_finish_disable_ints();
 #if NRF_802154_TX_STARTED_NOTIFY_ENABLED
-    m_flags.tx_started             = false;
+    m_flags.tx_started = false;
 #endif
     m_flags.missing_receive_buffer = false;
 
