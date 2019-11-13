@@ -126,9 +126,10 @@ typedef uint8_t nrf_802154_term_t;
 typedef struct
 {
     nrf_radio_cca_mode_t mode;           // !< CCA mode.
-    uint8_t              ed_threshold;   // !< Busy threshold of the CCA energy. Not used in NRF_RADIO_CCA_MODE_CARRIER.
-    uint8_t              corr_threshold; // !< Busy threshold of the CCA correlator. Not used in NRF_RADIO_CCA_MODE_ED.
-    uint8_t              corr_limit;     // !< Limit of occurrences above the busy threshold of the CCA correlator. Not used in NRF_RADIO_CCA_MODE_ED.
+    uint8_t              ed_threshold;   // !< Busy threshold of the CCA energy. Not used in @ref NRF_RADIO_CCA_MODE_CARRIER.
+    uint8_t              corr_threshold; // !< Busy threshold of the CCA correlator. Not used in @ref NRF_RADIO_CCA_MODE_ED.
+    uint8_t              corr_limit;     // !< Limit of occurrences above the busy threshold of the CCA correlator. Not used in @ref NRF_RADIO_CCA_MODE_ED.
+    bool                 sliding_window; // !< Sliding window mode i.e. whether the device waits indefinitely for the clear channel to transmit. Can be only used while in @ref NRF_RADIO_CCA_MODE_ED mode.
 } nrf_802154_cca_cfg_t;
 
 /**

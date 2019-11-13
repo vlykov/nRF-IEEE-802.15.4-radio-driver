@@ -299,6 +299,19 @@ extern "C" {
 #define NRF_802154_PPI_RADIO_CRCOK_TO_PPI_GRP_DISABLE NRF_PPI_CHANNEL10
 #endif
 
+/**
+ * @def NRF_802154_PPI_RADIO_CCABUSY_TO_RADIO_CCASTART
+ *
+ * The PPI channel that connects RADIO_CCCABUSY event with the RADIO_CCASTART task.
+ * It is used in case of sliding window option is enabled in the CCA configuration.
+ *
+ * @note This option is used by the core module regardless of the driver configuration.
+ *
+ */
+#ifndef NRF_802154_PPI_RADIO_CCABUSY_TO_RADIO_CCASTART
+#define NRF_802154_PPI_RADIO_CCABUSY_TO_RADIO_CCASTART NRF_PPI_CHANNEL10
+#endif
+
 #if NRF_802154_DISABLE_BCC_MATCHING
 
 /**

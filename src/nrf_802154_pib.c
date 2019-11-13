@@ -219,6 +219,7 @@ void nrf_802154_pib_init(void)
     m_data.cca.ed_threshold   = NRF_802154_CCA_ED_THRESHOLD_DEFAULT;
     m_data.cca.corr_threshold = NRF_802154_CCA_CORR_THRESHOLD_DEFAULT;
     m_data.cca.corr_limit     = NRF_802154_CCA_CORR_LIMIT_DEFAULT;
+    m_data.cca.sliding_window = false;
 
 #if NRF_802154_DISABLE_BCC_MATCHING
     m_data.coex.rx_request_mode = NRF_802154_COEX_RX_REQUEST_MODE_PREAMBLE;
@@ -323,19 +324,22 @@ void nrf_802154_pib_cca_cfg_set(const nrf_802154_cca_cfg_t * p_cca_cfg)
     switch (p_cca_cfg->mode)
     {
         case NRF_RADIO_CCA_MODE_ED:
-            m_data.cca.mode         = p_cca_cfg->mode;
-            m_data.cca.ed_threshold = p_cca_cfg->ed_threshold;
+            m_data.cca.mode           = p_cca_cfg->mode;
+            m_data.cca.ed_threshold   = p_cca_cfg->ed_threshold;
+            m_data.cca.sliding_window = p_cca_cfg->sliding_window;
             break;
 
         case NRF_RADIO_CCA_MODE_CARRIER:
             m_data.cca.mode           = p_cca_cfg->mode;
             m_data.cca.corr_threshold = p_cca_cfg->corr_threshold;
             m_data.cca.corr_limit     = p_cca_cfg->corr_limit;
+            assert(!p_cca_cfg->sliding_window);
             break;
 
         case NRF_RADIO_CCA_MODE_CARRIER_AND_ED:
         case NRF_RADIO_CCA_MODE_CARRIER_OR_ED:
             memcpy(&m_data.cca, p_cca_cfg, sizeof(m_data.cca));
+            assert(!p_cca_cfg->sliding_window);
             break;
 
         default:
