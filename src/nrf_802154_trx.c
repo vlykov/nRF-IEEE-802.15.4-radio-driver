@@ -56,20 +56,21 @@
 #define EGU_HELPER1_TASK              NRF_EGU_TASK_TRIGGER3
 #define EGU_HELPER1_INTMASK           NRF_EGU_INT_TRIGGERED3
 
-#define PPI_CHGRP0                    NRF_802154_PPI_CORE_GROUP                     ///< PPI group used to disable self-disabling PPIs
-#define PPI_CHGRP0_DIS_TASK           NRF_PPI_TASK_CHG0_DIS                         ///< PPI task used to disable self-disabling PPIs
+#define PPI_CHGRP0                    NRF_802154_PPI_CORE_GROUP                      ///< PPI group used to disable self-disabling PPIs
+#define PPI_CHGRP0_DIS_TASK           NRF_PPI_TASK_CHG0_DIS                          ///< PPI task used to disable self-disabling PPIs
 
-#define PPI_DISABLED_EGU              NRF_802154_PPI_RADIO_DISABLED_TO_EGU          ///< PPI that connects RADIO DISABLED event with EGU task
-#define PPI_EGU_RAMP_UP               NRF_802154_PPI_EGU_TO_RADIO_RAMP_UP           ///< PPI that connects EGU event with RADIO TXEN or RXEN task
-#define PPI_EGU_TIMER_START           NRF_802154_PPI_EGU_TO_TIMER_START             ///< PPI that connects EGU event with TIMER START task
-#define PPI_CCAIDLE_FEM               NRF_802154_PPI_RADIO_CCAIDLE_TO_FEM_GPIOTE    ///< PPI that connects RADIO CCAIDLE event with GPIOTE tasks used by FEM
-#define PPI_TIMER_TX_ACK              NRF_802154_PPI_TIMER_COMPARE_TO_RADIO_TXEN    ///< PPI that connects TIMER COMPARE event with RADIO TXEN task
+#define PPI_DISABLED_EGU              NRF_802154_PPI_RADIO_DISABLED_TO_EGU           ///< PPI that connects RADIO DISABLED event with EGU task
+#define PPI_EGU_RAMP_UP               NRF_802154_PPI_EGU_TO_RADIO_RAMP_UP            ///< PPI that connects EGU event with RADIO TXEN or RXEN task
+#define PPI_EGU_TIMER_START           NRF_802154_PPI_EGU_TO_TIMER_START              ///< PPI that connects EGU event with TIMER START task
+#define PPI_CCAIDLE_FEM               NRF_802154_PPI_RADIO_CCAIDLE_TO_FEM_GPIOTE     ///< PPI that connects RADIO CCAIDLE event with GPIOTE tasks used by FEM
+#define PPI_TIMER_TX_ACK              NRF_802154_PPI_TIMER_COMPARE_TO_RADIO_TXEN     ///< PPI that connects TIMER COMPARE event with RADIO TXEN task
+#define PPI_CCABUSY_CCASTART          NRF_802154_PPI_RADIO_CCABUSY_TO_RADIO_CCASTART ///< PPI that connects RADIO CCABUSY event with RADIO CCASTART task
 
 #if NRF_802154_DISABLE_BCC_MATCHING
-#define PPI_CRCOK_DIS_PPI             NRF_802154_PPI_RADIO_CRCOK_TO_PPI_GRP_DISABLE ///< PPI that connects RADIO CRCOK event with task that disables PPI group
-#define PPI_CRCERROR_CLEAR            NRF_802154_PPI_RADIO_CRCERROR_TO_TIMER_CLEAR  ///< PPI that connects RADIO CRCERROR event with TIMER CLEAR task
-#define PPI_ADDRESS_COUNTER_COUNT     NRF_802154_PPI_RADIO_ADDR_TO_COUNTER_COUNT    ///< PPI that connects RADIO ADDRESS event with TIMER COUNT task
-#define PPI_CRCERROR_COUNTER_CLEAR    NRF_802154_PPI_RADIO_CRCERROR_COUNTER_CLEAR   ///< PPI that connects RADIO CRCERROR event with TIMER CLEAR task
+#define PPI_CRCOK_DIS_PPI             NRF_802154_PPI_RADIO_CRCOK_TO_PPI_GRP_DISABLE  ///< PPI that connects RADIO CRCOK event with task that disables PPI group
+#define PPI_CRCERROR_CLEAR            NRF_802154_PPI_RADIO_CRCERROR_TO_TIMER_CLEAR   ///< PPI that connects RADIO CRCERROR event with TIMER CLEAR task
+#define PPI_ADDRESS_COUNTER_COUNT     NRF_802154_PPI_RADIO_ADDR_TO_COUNTER_COUNT     ///< PPI that connects RADIO ADDRESS event with TIMER COUNT task
+#define PPI_CRCERROR_COUNTER_CLEAR    NRF_802154_PPI_RADIO_CRCERROR_COUNTER_CLEAR    ///< PPI that connects RADIO CRCERROR event with TIMER CLEAR task
 
 #define PPI_NO_BCC_MATCHING_USED_MASK ((1U << PPI_CRCOK_DIS_PPI) |         \
                                        (1U << PPI_CRCERROR_CLEAR) |        \
@@ -82,11 +83,12 @@
 #endif  // NRF_802154_DISABLE_BCC_MATCHING
 
 /**@brief Mask of all PPI channels used directly by trx module. */
-#define PPI_ALL_USED_MASK ((1U << PPI_DISABLED_EGU) |    \
-                           (1U << PPI_EGU_RAMP_UP) |     \
-                           (1U << PPI_EGU_TIMER_START) | \
-                           (1U << PPI_CCAIDLE_FEM) |     \
-                           (1U << PPI_TIMER_TX_ACK) |    \
+#define PPI_ALL_USED_MASK ((1U << PPI_DISABLED_EGU) |     \
+                           (1U << PPI_EGU_RAMP_UP) |      \
+                           (1U << PPI_EGU_TIMER_START) |  \
+                           (1U << PPI_CCAIDLE_FEM) |      \
+                           (1U << PPI_TIMER_TX_ACK) |     \
+                           (1U << PPI_CCABUSY_CCASTART) | \
                            PPI_NO_BCC_MATCHING_USED_MASK)
 
 #if ((PPI_ALL_USED_MASK & NRF_802154_PPI_CHANNELS_USED_MASK) != PPI_ALL_USED_MASK)
@@ -118,6 +120,11 @@
                                NRF_RADIO_SHORT_TXREADY_START_MASK |    \
                                NRF_RADIO_SHORT_PHYEND_DISABLE_MASK)
 
+#define SHORTS_CCA_SLIDING_TX (NRF_RADIO_SHORT_RXREADY_CCASTART_MASK | \
+                               NRF_RADIO_SHORT_CCAIDLE_TXEN_MASK |     \
+                               NRF_RADIO_SHORT_TXREADY_START_MASK |    \
+                               NRF_RADIO_SHORT_PHYEND_DISABLE_MASK)
+
 #define SHORTS_TX             (NRF_RADIO_SHORT_TXREADY_START_MASK | \
                                NRF_RADIO_SHORT_PHYEND_DISABLE_MASK)
 
@@ -131,6 +138,8 @@
 
 #define SHORTS_CCA            (NRF_RADIO_SHORT_RXREADY_CCASTART_MASK | \
                                NRF_RADIO_SHORT_CCABUSY_DISABLE_MASK)
+
+#define SHORTS_CCA_SLIDING    (NRF_RADIO_SHORT_RXREADY_CCASTART_MASK)
 
 #define CRC_LENGTH            2        ///< Length of CRC in 802.15.4 frames [bytes]
 #define CRC_POLYNOMIAL        0x011021 ///< Polynomial used for CRC calculation in 802.15.4 frames
@@ -299,6 +308,14 @@ static void cca_configuration_update(void)
                             nrf_802154_rssi_cca_ed_threshold_corrected_get(cca_cfg.ed_threshold),
                             cca_cfg.corr_threshold,
                             cca_cfg.corr_limit);
+}
+
+static bool is_sliding_window_enabled(void)
+{
+    nrf_802154_cca_cfg_t cca_cfg;
+
+    nrf_802154_pib_cca_cfg_get(&cca_cfg);
+    return cca_cfg.sliding_window;
 }
 
 /** Initialize interrupts for radio peripheral. */
@@ -1025,6 +1042,7 @@ void nrf_802154_trx_transmit_frame(const void                            * p_tra
                                    nrf_802154_trx_transmit_notifications_t notifications_mask)
 {
     uint32_t ints_to_enable = 0U;
+    bool     sliding_window = is_sliding_window_enabled();
 
     // Force the TIMER to be stopped and count from 0.
     nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
@@ -1036,7 +1054,21 @@ void nrf_802154_trx_transmit_frame(const void                            * p_tra
     nrf_radio_packetptr_set(p_transmit_buffer);
 
     // Set shorts
-    nrf_radio_shorts_set(cca ? SHORTS_CCA_TX : SHORTS_TX);
+    if (cca)
+    {
+        if (sliding_window)
+        {
+            nrf_radio_shorts_set(SHORTS_CCA_SLIDING_TX);
+        }
+        else
+        {
+            nrf_radio_shorts_set(SHORTS_CCA_TX);
+        }
+    }
+    else
+    {
+        nrf_radio_shorts_set(SHORTS_TX);
+    }
 
     // Enable IRQs
     nrf_radio_event_clear(NRF_RADIO_EVENT_PHYEND);
@@ -1045,7 +1077,20 @@ void nrf_802154_trx_transmit_frame(const void                            * p_tra
     if (cca)
     {
         nrf_radio_event_clear(NRF_RADIO_EVENT_CCABUSY);
-        ints_to_enable |= NRF_RADIO_INT_CCABUSY_MASK;
+
+        if (sliding_window)
+        {
+            nrf_ppi_channel_endpoint_setup(PPI_CCABUSY_CCASTART,
+                                           (uint32_t)nrf_radio_event_address_get(
+                                               NRF_RADIO_EVENT_CCABUSY),
+                                           (uint32_t)nrf_radio_task_address_get(
+                                               NRF_RADIO_TASK_CCASTART));
+            nrf_ppi_channel_enable(PPI_CCABUSY_CCASTART);
+        }
+        else
+        {
+            ints_to_enable |= NRF_RADIO_INT_CCABUSY_MASK;
+        }
 
         if ((notifications_mask & TRX_TRANSMIT_NOTIFICATION_CCAIDLE) != 0U)
         {
@@ -1504,15 +1549,28 @@ void nrf_802154_trx_standalone_cca(void)
 {
     assert((m_trx_state == TRX_STATE_IDLE) || (m_trx_state == TRX_STATE_FINISHED));
 
+    bool sliding_window = is_sliding_window_enabled();
+
     m_trx_state = TRX_STATE_STANDALONE_CCA;
 
     // Set shorts
-    nrf_radio_shorts_set(SHORTS_CCA);
+    nrf_radio_shorts_set(sliding_window ? SHORTS_CCA_SLIDING : SHORTS_CCA);
 
     // Enable IRQs
     nrf_radio_event_clear(NRF_RADIO_EVENT_CCABUSY);
     nrf_radio_event_clear(NRF_RADIO_EVENT_CCAIDLE);
-    nrf_radio_int_enable(NRF_RADIO_INT_CCABUSY_MASK | NRF_RADIO_INT_CCAIDLE_MASK);
+    nrf_radio_int_enable(
+        (sliding_window ? 0 : NRF_RADIO_INT_CCABUSY_MASK) | NRF_RADIO_INT_CCAIDLE_MASK);
+
+    if (sliding_window)
+    {
+        nrf_ppi_channel_endpoint_setup(PPI_CCABUSY_CCASTART,
+                                       (uint32_t)nrf_radio_event_address_get(
+                                           NRF_RADIO_EVENT_CCABUSY),
+                                       (uint32_t)nrf_radio_task_address_get(
+                                           NRF_RADIO_TASK_CCASTART));
+        nrf_ppi_channel_enable(PPI_CCABUSY_CCASTART);
+    }
 
     // Set FEM
     fem_for_lna_set();
@@ -1530,6 +1588,7 @@ static void standalone_cca_finish(void)
 {
     nrf_ppi_channel_disable(PPI_DISABLED_EGU);
     nrf_ppi_channel_disable(PPI_EGU_RAMP_UP);
+    nrf_ppi_channel_disable(PPI_CCABUSY_CCASTART);
     nrf_ppi_channel_remove_from_group(PPI_EGU_RAMP_UP, PPI_CHGRP0);
 
     nrf_radio_shorts_set(SHORTS_IDLE);
@@ -1826,6 +1885,7 @@ static void txframe_finish_disable_ppis(void)
     nrf_ppi_channel_disable(PPI_EGU_RAMP_UP);
     nrf_ppi_fork_endpoint_setup(PPI_EGU_RAMP_UP, 0);
     nrf_ppi_channel_remove_from_group(PPI_EGU_RAMP_UP, PPI_CHGRP0);
+    nrf_ppi_channel_disable(PPI_CCABUSY_CCASTART);
 }
 
 static void txframe_finish_disable_ints(void)
