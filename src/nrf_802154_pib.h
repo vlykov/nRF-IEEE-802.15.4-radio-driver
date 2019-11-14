@@ -220,6 +220,7 @@ bool nrf_802154_pib_coex_tx_request_mode_set(nrf_802154_coex_tx_request_mode_t m
  */
 nrf_802154_coex_tx_request_mode_t nrf_802154_pib_coex_tx_request_mode_get(void);
 
+#if NRF_802154_CSMA_CA_ENABLED
 /**
  * @brief Sets the minimum value of the backoff exponent (BE) in the CSMA-CA algorithm.
  *
@@ -269,7 +270,9 @@ void nrf_802154_pib_csmaca_max_backoffs_set(uint8_t max_backoffs);
  * @return Current maximum number of backoffs.
  */
 uint8_t nrf_802154_pib_csmaca_max_backoffs_get(void);
+#endif // NRF_802154_CSMA_CA_ENABLED
 
+#if NRF_802154_IFS_ENABLED
 /**
  * @brief Gets IFS operation mode.
  *
@@ -314,6 +317,7 @@ uint16_t nrf_802154_pib_ifs_min_lifs_period_get(void);
  * @param[in] period Long IFS period in microseconds.
  */
 void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period);
+#endif // NRF_802154_IFS_ENABLED
 
 #ifdef __cplusplus
 }

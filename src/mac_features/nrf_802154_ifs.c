@@ -45,6 +45,7 @@
 #include "mac_features/nrf_802154_frame_parser.h"
 #include "timer_scheduler/nrf_802154_timer_sched.h"
 
+#if NRF_802154_IFS_ENABLED
 typedef struct
 {
     uint8_t * p_data;
@@ -236,3 +237,5 @@ bool nrf_802154_ifs_abort(nrf_802154_term_t term_lvl, req_originator_t req_orig)
 
     return result;
 }
+
+#endif // NRF_802154_IFS_ENABLED

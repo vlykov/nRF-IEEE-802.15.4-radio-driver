@@ -1858,8 +1858,9 @@ static void txframe_finish(void)
     txframe_finish_disable_ints();
 
     nrf_radio_shorts_set(SHORTS_IDLE);
-
-    m_flags.tx_started             = false;
+#if NRF_802154_TX_STARTED_NOTIFY_ENABLED
+    m_flags.tx_started = false;
+#endif
     m_flags.missing_receive_buffer = false;
 
     /* Current state of peripherals
@@ -1879,8 +1880,9 @@ static void transmit_frame_abort(void)
     fem_for_tx_reset(m_transmit_with_cca, true);
 
     txframe_finish_disable_ints();
-
-    m_flags.tx_started             = false;
+#if NRF_802154_TX_STARTED_NOTIFY_ENABLED
+    m_flags.tx_started = false;
+#endif
     m_flags.missing_receive_buffer = false;
 
     nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
