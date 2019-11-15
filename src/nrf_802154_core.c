@@ -712,20 +712,12 @@ static bool current_operation_terminate(nrf_802154_term_t term_lvl,
 /** Enter Sleep state. */
 static void sleep_init(void)
 {
-    nrf_802154_trx_disable();
     nrf_802154_timer_coord_stop();
 }
 
 /** Initialize Falling Asleep operation. */
 static void falling_asleep_init(void)
 {
-    if (!timeslot_is_granted())
-    {
-        sleep_init();
-        state_set(RADIO_STATE_SLEEP);
-        return;
-    }
-
     if (nrf_802154_trx_go_idle())
     {
         // There will be nrf_802154_trx_in_idle call, where we will continue processing
@@ -951,6 +943,8 @@ static void on_timeslot_ended(void)
 
         nrf_802154_timer_coord_stop();
 
+        nrf_802154_rsch_continuous_ended();
+
         result = nrf_802154_core_hooks_terminate(NRF_802154_TERM_802154, REQ_ORIG_RSCH);
         assert(result);
         (void)result;
@@ -1124,6 +1118,18 @@ void nrf_802154_rsch_crit_sect_prio_changed(rsch_prio_t prio)
         // We are giving back timeslot.
         on_timeslot_ended();
         return;
+    }
+    else if (prio == RSCH_PRIO_IDLE)
+    {
+        // It might happen that even though IDLE has already been notified, this function is called
+        // again as a result of preemptions caused by unexpected timeslot change (e.g. the application
+        // requested transition to sleep while out of timeslot and RAAL notified timeslot start
+        // in the middle of that sleep request). The following block makes RAAL finish its processing.
+        nrf_802154_rsch_continuous_ended();
+    }
+    else
+    {
+        // Intentionally empty
     }
 
     int_fast8_t transition = action_needed(old_prio, prio, m_state);
@@ -1748,8 +1754,17 @@ bool nrf_802154_core_sleep(nrf_802154_term_t term_lvl)
 
             if (result)
             {
-                state_set(RADIO_STATE_FALLING_ASLEEP);
-                falling_asleep_init();
+                // The order of calls in the following blocks is inverted to avoid RAAL races.
+                if (timeslot_is_granted())
+                {
+                    state_set(RADIO_STATE_FALLING_ASLEEP);
+                    falling_asleep_init();
+                }
+                else
+                {
+                    sleep_init();
+                    state_set(RADIO_STATE_SLEEP);
+                }
             }
         }
 
@@ -1880,9 +1895,10 @@ bool nrf_802154_core_energy_detection(nrf_802154_term_t term_lvl, uint32_t time_
                 time_us = ED_ITER_DURATION;
             }
 
-            state_set(RADIO_STATE_ED);
             m_ed_time_left = time_us;
             m_ed_result    = 0;
+
+            state_set(RADIO_STATE_ED);
             ed_init(true);
         }
 

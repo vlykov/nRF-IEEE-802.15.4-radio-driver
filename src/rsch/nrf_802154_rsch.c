@@ -287,19 +287,23 @@ static inline bool requested_prio_lvl_is_at_least(rsch_prio_t prio)
 }
 
 /** @brief Notify core if preconditions are approved or denied if current state differs from last reported.
+ *
+ * @retval true   Core was notified.
+ * @retval false  Otherwise.
  */
-static inline void notify_core(void)
+static inline bool notify_core(void)
 {
     nrf_802154_log_entry(notify_core, 2);
 
     rsch_prio_t approved_prio_lvl;
     uint8_t     temp_mon;
+    bool        notified = false;
 
     do
     {
         if (!mutex_trylock(&m_ntf_mutex, &m_ntf_mutex_monitor))
         {
-            return;
+            break;
         }
 
         /* It is possible that preemption is not detected (m_ntf_mutex_monitor is read after
@@ -315,6 +319,8 @@ static inline void notify_core(void)
             m_last_notified_prio = approved_prio_lvl;
 
             nrf_802154_rsch_continuous_prio_changed(approved_prio_lvl);
+
+            notified = true;
         }
 
         mutex_unlock(&m_ntf_mutex);
@@ -322,6 +328,8 @@ static inline void notify_core(void)
     while (temp_mon != m_ntf_mutex_monitor);
 
     nrf_802154_log_exit(notify_core, 2);
+
+    return notified;
 }
 
 /** Timer callback used to trigger delayed timeslot.
@@ -390,9 +398,10 @@ static bool precise_delayed_timeslot_request(dly_ts_t                  * p_dly_t
     uint32_t now    = nrf_802154_timer_sched_time_get();
     uint32_t req_dt = p_param->dt - PREC_RAMP_UP_TIME;
 
-    // There is enough time for preconditions ramp-up no matter their current state.
     if (nrf_802154_timer_sched_time_is_in_future(now, p_param->t0, req_dt))
     {
+        // There is enough time for preconditions ramp-up no matter their current state.
+
         p_dly_ts->param = *p_param;
 
         p_dly_ts->timer.t0        = p_param->t0;
@@ -404,11 +413,12 @@ static bool precise_delayed_timeslot_request(dly_ts_t                  * p_dly_t
 
         return true;
     }
-    // There is not enough time to perform full precondition ramp-up.
-    // Try with the currently approved preconditions
     else if (requested_prio_lvl_is_at_least(RSCH_PRIO_IDLE_LISTENING) &&
              nrf_802154_timer_sched_time_is_in_future(now, p_param->t0, p_param->dt))
     {
+        // There is not enough time to perform full precondition ramp-up.
+        // Try with the currently approved preconditions
+
         p_dly_ts->param = *p_param;
 
         p_dly_ts->timer.t0        = p_param->t0;
@@ -421,9 +431,9 @@ static bool precise_delayed_timeslot_request(dly_ts_t                  * p_dly_t
 
         return true;
     }
-    // The requested time is in the past.
     else
     {
+        // The requested time is in the past.
         return false;
     }
 }
@@ -558,9 +568,12 @@ bool nrf_802154_rsch_delayed_timeslot_cancel(rsch_dly_ts_id_t dly_ts_id)
 
     nrf_802154_timer_sched_remove(&p_dly_ts->timer, &was_running);
 
-    p_dly_ts->param.prio = RSCH_PRIO_IDLE;
-    all_prec_update();
-    notify_core();
+    if (p_dly_ts->param.prio != RSCH_PRIO_IDLE)
+    {
+        p_dly_ts->param.prio = RSCH_PRIO_IDLE;
+        all_prec_update();
+        notify_core();
+    }
 
     switch (p_dly_ts->param.type)
     {
@@ -644,7 +657,12 @@ void nrf_raal_timeslot_ended(void)
     nrf_802154_log(EVENT_TRACE_ENTER, FUNCTION_RSCH_TIMESLOT_ENDED);
 
     prec_approved_prio_set(RSCH_PREC_RAAL, RSCH_PRIO_IDLE);
-    notify_core();
+
+    // Ensure that RAAL can finish its processing even if core is not informed about it.
+    if (!notify_core())
+    {
+        nrf_802154_rsch_continuous_ended();
+    }
 
     nrf_802154_log(EVENT_TRACE_EXIT, FUNCTION_RSCH_TIMESLOT_ENDED);
 }
