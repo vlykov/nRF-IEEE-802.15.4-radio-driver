@@ -214,6 +214,12 @@ typedef struct
 {
     /**@brief Number of failed CCA attempts. */
     uint32_t cca_failed_attempts;
+    /**@brief Number of frames received with correct CRC and with filtering passing. */
+    uint32_t received_frames;
+    /**@brief Number of times energy was detected in receive mode.*/
+    uint32_t received_energy_events;
+    /**@brief Number of times a preamble was received in receive mode. */
+    uint32_t received_preambles;
 } nrf_802154_stat_counters_t;
 
 /**
