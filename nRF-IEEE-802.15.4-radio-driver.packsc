@@ -7,6 +7,7 @@
         ],
         "_headers": [
             "src/nrf_802154.h",
+            "src/nrf_802154_ant_div.h",
             "src/nrf_802154_core_hooks.h",
             "src/nrf_802154_critical_section.h",
             "src/nrf_802154_debug.h",
@@ -46,6 +47,7 @@
                 ],
                 "_files": [
                     "src/nrf_802154.c",
+                    "src/nrf_802154_ant_div.c",
                     "src/nrf_802154_core.c",
                     "src/nrf_802154_core_hooks.c",
                     "src/nrf_802154_critical_section.c",
@@ -97,6 +99,7 @@
                 ],
                 "_files": [
                     "src/nrf_802154.c",
+                    "src/nrf_802154_ant_div.c",
                     "src/nrf_802154_core.c",
                     "src/nrf_802154_core_hooks.c",
                     "src/nrf_802154_critical_section.c",
@@ -145,6 +148,7 @@
                 ],
                 "_files": [
                     "src/nrf_802154.c",
+                    "src/nrf_802154_ant_div.c",
                     "src/nrf_802154_core.c",
                     "src/nrf_802154_core_hooks.c",
                     "src/nrf_802154_critical_section.c",
@@ -463,6 +467,14 @@
         "_description": "This option enables CLI.",
         "_defines": [
             "ENABLE_CLI"
+        ]
+    },
+
+    "ant_div": {
+        "_class": "nRF_drv_radio_802_15_4",
+        "_description": "This option enables antenna diversity.",
+        "_defines": [
+            "ENABLE_ANT_DIV"
         ]
     },
 
