@@ -43,6 +43,7 @@
 
 #include "nrf_802154_config.h"
 #include "nrf_802154_debug.h"
+#include "nrf_802154_utils.h"
 #include "nrf_radio.h"
 #include "rsch/nrf_802154_rsch.h"
 #include "platform/lp_timer/nrf_802154_lp_timer.h"
@@ -118,6 +119,10 @@ static bool critical_section_enter(bool forced)
         (m_nested_critical_section_counter == 0) ||
         nested_critical_section_is_allowed_in_this_context())
     {
+        nrf_802154_mcu_critical_state_t mcu_cs;
+
+        nrf_802154_mcu_critical_enter(mcu_cs);
+
         do
         {
             cnt = __LDREXB(&m_nested_critical_section_counter);
@@ -131,6 +136,8 @@ static bool critical_section_enter(bool forced)
         radio_critical_section_enter();
         __DSB();
         __ISB();
+
+        nrf_802154_mcu_critical_exit(mcu_cs);
 
         m_critical_section_monitor++;
 

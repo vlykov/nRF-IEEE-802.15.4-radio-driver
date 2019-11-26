@@ -153,9 +153,6 @@ typedef struct
 /**@brief Defines if module has been initialized. */
 static bool m_initialized = false;
 
-/**@brief Request parameters. */
-static nrf_radio_request_t m_request;
-
 /**@brief Return parameter for SD radio signal handler. */
 static nrf_radio_signal_callback_return_param_t m_ret_param;
 
@@ -167,6 +164,9 @@ static volatile bool m_continuous = false;
 
 /**@brief Defines if RAAL is currently in a timeslot. */
 static volatile timeslot_state_t m_timeslot_state;
+
+/**@brief Defines if SoftDevice session is currently idle. */
+static volatile bool m_session_idle;
 
 /**@brief Current action of the timer. */
 static timer_action_t m_timer_action;
@@ -338,12 +338,33 @@ static inline void timeslot_data_init(void)
 static inline void timeslot_state_set(timeslot_state_t state)
 {
     m_timeslot_state = state;
+    __DMB();
 }
 
 /**@brief Indicate if timeslot is in the provided state. */
 static inline bool timeslot_state_is(timeslot_state_t state)
 {
     return (m_timeslot_state == state);
+}
+
+/**@brief Atomically check if timeslot can be requested safely. */
+static bool timeslot_can_be_requested(void)
+{
+    bool                            result = false;
+    nrf_802154_mcu_critical_state_t mcu_cs;
+
+    nrf_802154_mcu_critical_enter(mcu_cs);
+
+    if (m_continuous && m_session_idle && timeslot_state_is(TIMESLOT_STATE_IDLE))
+    {
+        // Continuous mode is on, the session and timeslot are idle. Allow for timeslot request
+        timeslot_state_set(TIMESLOT_STATE_REQUESTED);
+        result = true;
+    }
+
+    nrf_802154_mcu_critical_exit(mcu_cs);
+
+    return result;
 }
 
 /**@brief Notify driver that timeslot has been started. */
@@ -365,34 +386,35 @@ static inline void margin_reached_notify(void)
 }
 
 /**@brief Prepare earliest timeslot request. */
-static void timeslot_request_prepare(void)
+static void timeslot_request_prepare(nrf_radio_request_t * p_request)
 {
-    memset(&m_request, 0, sizeof(m_request));
-    m_request.request_type               = NRF_RADIO_REQ_TYPE_EARLIEST;
-    m_request.params.earliest.hfclk      = NRF_RADIO_HFCLK_CFG_NO_GUARANTEE;
-    m_request.params.earliest.priority   = NRF_RADIO_PRIORITY_NORMAL;
-    m_request.params.earliest.length_us  = m_timeslot_length;
-    m_request.params.earliest.timeout_us = m_config.sd_cfg.timeslot_timeout;
+    memset(p_request, 0, sizeof(nrf_radio_request_t));
+    p_request->request_type               = NRF_RADIO_REQ_TYPE_EARLIEST;
+    p_request->params.earliest.hfclk      = NRF_RADIO_HFCLK_CFG_NO_GUARANTEE;
+    p_request->params.earliest.priority   = NRF_RADIO_PRIORITY_NORMAL;
+    p_request->params.earliest.length_us  = m_timeslot_length;
+    p_request->params.earliest.timeout_us = m_config.sd_cfg.timeslot_timeout;
 }
 
 /**@brief Request earliest timeslot. */
 static void timeslot_request(void)
 {
-    timeslot_request_prepare();
+    nrf_radio_request_t radio_request;
+    uint32_t            err_code;
 
-    m_timeslot_state = TIMESLOT_STATE_REQUESTED;
+    timeslot_request_prepare(&radio_request);
 
     // Request timeslot from SoftDevice.
-    uint32_t err_code = sd_radio_request(&m_request);
+    err_code = sd_radio_request(&radio_request);
 
     if (err_code != NRF_SUCCESS)
     {
-        m_timeslot_state = TIMESLOT_STATE_IDLE;
+        timeslot_state_set(TIMESLOT_STATE_IDLE);
     }
 
     nrf_802154_log_local_event(NRF_802154_LOG_VERBOSITY_LOW,
                                NRF_802154_LOG_LOCAL_EVENT_ID_RAAL_TIMESLOT_REQUEST,
-                               m_request.params.earliest.length_us);
+                               radio_request.params.earliest.length_us);
     nrf_802154_log_local_event(NRF_802154_LOG_VERBOSITY_LOW,
                                NRF_802154_LOG_LOCAL_EVENT_ID_RAAL_TIMESLOT_REQUEST_RESULT,
                                err_code);
@@ -561,6 +583,9 @@ static void timeslot_started_handle(void)
 
     assert(timeslot_state_is(TIMESLOT_STATE_REQUESTED));
 
+    // Session is not idle anymore
+    m_session_idle = false;
+
     // First, set up a timer to fire immediately after leaving the signal handler
     timer_start();
 
@@ -672,7 +697,7 @@ static void timeslot_extend_succeeded_handle(void)
     if (timeslot_state_is(TIMESLOT_STATE_REQUESTED))
     {
         // Timeslot has been started and extended successfully. Notify the higher layer
-        m_timeslot_state = TIMESLOT_STATE_GRANTED;
+        timeslot_state_set(TIMESLOT_STATE_GRANTED);
         timeslot_started_notify();
     }
 
@@ -688,7 +713,9 @@ static void timeslot_busy_handle(void)
 
     timeslot_state_set(TIMESLOT_STATE_IDLE);
 
-    if (m_continuous)
+    m_session_idle = true;
+
+    if (timeslot_can_be_requested())
     {
         timeslot_request();
     }
@@ -701,7 +728,9 @@ static void timeslot_available_handle(void)
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
 
-    if (m_continuous && timeslot_state_is(TIMESLOT_STATE_IDLE))
+    m_session_idle = true;
+
+    if (timeslot_can_be_requested())
     {
         timeslot_data_init();
         timeslot_request();
@@ -826,6 +855,8 @@ void nrf_raal_init(void)
     assert(err_code == NRF_SUCCESS);
     (void)err_code;
 
+    m_session_idle = true;
+
 #if (SD_VERSION == BLE_ADV_SCHED_CFG_SUPPORT_SD_VERSION)
     // Ensure that correct SoftDevice version is flashed.
     if (SD_VERSION_GET(MBR_SIZE) == BLE_ADV_SCHED_CFG_SUPPORT_SD_VERSION)
@@ -876,7 +907,7 @@ void nrf_raal_continuous_mode_enter(void)
 
     m_continuous = true;
 
-    if (timeslot_state_is(TIMESLOT_STATE_IDLE))
+    if (timeslot_can_be_requested())
     {
         timeslot_data_init();
         timeslot_request();
@@ -899,8 +930,7 @@ void nrf_raal_continuous_mode_exit(void)
         timer_reset();
 
         // Be cautious - most likely this is not an interrupt context
-        m_timeslot_state = TIMESLOT_STATE_DROPPED;
-        __DMB();
+        timeslot_state_set(TIMESLOT_STATE_DROPPED);
 
         nrf_raal_timeslot_ended();
     }
