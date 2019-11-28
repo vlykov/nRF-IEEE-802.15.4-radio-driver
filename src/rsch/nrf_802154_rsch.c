@@ -10,6 +10,7 @@
 
 #include "../nrf_802154_debug.h"
 #include "nrf_802154_priority_drop.h"
+#include "nrf_802154_stats.h"
 #include "platform/clock/nrf_802154_clock.h"
 #include "platform/coex/nrf_802154_wifi_coex.h"
 #include "raal/nrf_raal_api.h"
@@ -692,7 +693,7 @@ void nrf_802154_clock_hfclk_ready(void)
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 
-void nrf_802154_wifi_coex_granted(void)
+void nrf_802154_wifi_coex_granted(nrf_802154_wifi_coex_request_state_t curr_request_state)
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
 
@@ -700,15 +701,46 @@ void nrf_802154_wifi_coex_granted(void)
     // TODO: make conditional on CONFIG/PRIORITY pin: tx/rx granted
     notify_core();
 
+    if (curr_request_state != WIFI_COEX_REQUEST_STATE_NO_REQUEST)
+    {
+        nrf_802154_stat_counter_increment(coex_granted_requests);
+    }
+    else
+    {
+        nrf_802154_stat_counter_increment(coex_unsolicited_grants);
+    }
+
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 
-void nrf_802154_wifi_coex_denied(void)
+void nrf_802154_wifi_coex_denied(nrf_802154_wifi_coex_request_state_t curr_request_state)
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
 
     prec_approved_prio_set(RSCH_PREC_COEX, RSCH_PRIO_RX);
     notify_core();
 
+    if (curr_request_state != WIFI_COEX_REQUEST_STATE_NO_REQUEST)
+    {
+        nrf_802154_stat_counter_increment(coex_denied_requests);
+    }
+
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
+}
+
+void nrf_802154_wifi_coex_request_changed(
+    nrf_802154_wifi_coex_request_state_t curr_request_state,
+    nrf_802154_wifi_coex_request_state_t prev_request_state,
+    bool                                 grant_state)
+{
+    if ((prev_request_state == WIFI_COEX_REQUEST_STATE_NO_REQUEST) &&
+        (curr_request_state != WIFI_COEX_REQUEST_STATE_NO_REQUEST))
+    {
+        nrf_802154_stat_counter_increment(coex_requests);
+
+        if (grant_state)
+        {
+            nrf_802154_stat_counter_increment(coex_granted_requests);
+        }
+    }
 }
