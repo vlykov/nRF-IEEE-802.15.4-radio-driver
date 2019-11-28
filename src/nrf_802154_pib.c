@@ -74,6 +74,14 @@ typedef struct
 
 #endif  // NRF_802154_IFS_ENABLED
 
+#if ENABLE_ANT_DIV
+typedef struct
+{
+    bool                      enabled; //< Whether the antenna diversity module is enabled.
+    nrf_802154_ant_div_mode_t mode;    //< Mode of antenna diversity.
+} nrf_802154_pib_ant_div_t;
+#endif // ENABLE_ANT_DIV
+
 typedef struct
 {
     int8_t                  tx_power;                             ///< Transmit power.
@@ -92,9 +100,13 @@ typedef struct
 
 #endif
 #if NRF_802154_IFS_ENABLED
-    nrf_802154_pib_ifs_t ifs; ///< IFS-related fields.
+    nrf_802154_pib_ifs_t ifs;                                     ///< IFS-related fields.
 
 #endif
+#if ENABLE_ANT_DIV
+    nrf_802154_pib_ant_div_t ant_div;                             ///< Antenna diversity related fields.
+    
+#endif // ENABLE_ANT_DIV
 } nrf_802154_pib_data_t;
 
 // Static variables.
@@ -492,3 +504,26 @@ void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period)
 }
 
 #endif // NRF_802154_IFS_ENABLED
+
+#if ENABLE_ANT_DIV
+uint32_t nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
+{
+    m_data.ant_div.mode = mode;
+    return NRF_SUCCESS;
+}
+uint32_t nrf_802154_pib_ant_div_mode_get(nrf_802154_ant_div_mode_t *p_mode)
+{
+    *p_mode = m_data.ant_div.mode;
+    return NRF_SUCCESS;
+}
+uint32_t nrf_802154_pib_ant_div_enable_set(bool enabled)
+{
+    m_data.ant_div.enabled = enabled;
+    return NRF_SUCCESS;
+}
+uint32_t nrf_802154_pib_ant_div_enable_get(bool *p_enabled)
+{
+    *p_enabled = m_data.ant_div.enabled;
+    return NRF_SUCCESS;
+}
+#endif // ENABLE_ANT_DIV

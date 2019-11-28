@@ -49,6 +49,10 @@
 #include "fem/nrf_fem_protocol_api.h"
 #endif
 
+#if ENABLE_ANT_DIV
+#include "nrf_802154_ant_div.h"
+#endif // ENABLE_ANT_DIV
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -189,7 +193,7 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg);
  * @retval ::NRF_SUCCESS             Antenna diversity mode set successfuly
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
-uint32_t nrf_802154_ant_div_mode_set(nrf_802154_pib_ant_div_mode_t mode);
+uint32_t nrf_802154_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
 
 /**
  * @brief Gets the current antenna diversity mode
@@ -199,7 +203,7 @@ uint32_t nrf_802154_ant_div_mode_set(nrf_802154_pib_ant_div_mode_t mode);
  * @retval ::NRF_SUCCESS             Antenna diversity mode retrieved successfuly
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
-uint32_t nrf_802154_ant_div_mode_get(nrf_802154_pib_ant_div_mode_t *p_mode);
+uint32_t nrf_802154_ant_div_mode_get(nrf_802154_ant_div_mode_t *p_mode);
 
 /** 
  * @brief Manually select antenna used
@@ -227,6 +231,26 @@ uint32_t nrf_802154_antenna_set(nrf_802154_ant_div_antenna_t antenna);
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
 uint32_t nrf_802154_antenna_get(nrf_802154_ant_div_antenna_t * p_antenna);
+
+/** 
+ * @brief Set antenna diversity configuration
+ * 
+ * @param[in] p_config Configuration of antenna diversity module to be set
+ * 
+ * @retval ::NRF_SUCCESS             Antenna diversity configured successfuly
+ * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ */
+uint32_t nrf_802154_ant_div_cfg_set(const nrf_802154_ant_div_config_t *p_config);
+
+/** 
+ * @brief Get current antenna diversity configuration
+ * 
+ * @param[out] p_config Configuration of antenna diversity module
+ * 
+ * @retval ::NRF_SUCCESS             Antenna diversity configuration read successfully
+ * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ */
+uint32_t nrf_802154_ant_div_cfg_get(nrf_802154_ant_div_config_t *p_config);
 
 /**
  * @brief Enables or disables antenna diversity.

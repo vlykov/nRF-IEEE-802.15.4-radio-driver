@@ -319,6 +319,45 @@ uint16_t nrf_802154_pib_ifs_min_lifs_period_get(void);
 void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period);
 #endif // NRF_802154_IFS_ENABLED
 
+#if ENABLE_ANT_DIV
+/**
+ * @brief Sets the antenna diversity mode
+ * 
+ * @param[in] mode Antenna diversity mode to be set
+ * 
+ * @retval ::NRF_SUCCESS             Antenna diversity mode set successfuly
+ * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ */
+uint32_t nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
+/**
+ * @brief Gets the antenna diversity mode
+ *
+ * @param[out] mode Current antenna diversity mode
+ * 
+ * @retval ::NRF_SUCCESS             Antenna diversity mode retrieved successfuly
+ * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ */
+uint32_t nrf_802154_pib_ant_div_mode_get(nrf_802154_ant_div_mode_t *p_mode);
+/**
+ * @brief Enables or disables antenna diversity.
+ *
+ * @param[in] enabled  Whether the antenna diversity module is to be enabled
+ * 
+ * @retval ::NRF_SUCCESS             Antenna diversity enabled successfuly
+ * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ */
+uint32_t nrf_802154_pib_ant_div_enable_set(bool enabled);
+/**
+ * @brief Gets current state of the antenna diversity module.
+ *
+ * @param[in] p_enabled  Whether the antenna diversity module is enabled
+ * 
+ * @retval ::NRF_SUCCESS             Antenna diversity state read successfuly
+ * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ */
+uint32_t nrf_802154_pib_ant_div_enable_get(bool *p_enabled);
+#endif // ENABLE_ANT_DIV
+
 #ifdef __cplusplus
 }
 #endif

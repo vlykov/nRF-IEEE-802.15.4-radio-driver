@@ -269,6 +269,67 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg)
 
 #endif // ENABLE_FEM
 
+#if ENABLE_ANT_DIV
+
+uint32_t nrf_802154_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
+{
+    return nrf_802154_pib_ant_div_mode_set(mode);
+}
+
+uint32_t nrf_802154_ant_div_mode_get(nrf_802154_ant_div_mode_t *p_mode)
+{
+    return nrf_802154_pib_ant_div_mode_get(p_mode);
+}
+
+uint32_t nrf_802154_antenna_set(nrf_802154_ant_div_antenna_t antenna)
+{
+    nrf_802154_ant_div_mode_t mode;
+    uint32_t result;
+    
+    result = nrf_802154_pib_ant_div_mode_get(&mode);
+    
+    // Check if antenna diversity is supported
+    if (result == NRF_SUCCESS)
+    {
+        // Check if antenna diversity is in manual mode
+        if (mode != NRF_ANT_DIV_MODE_MANUAL)
+        {
+            result = NRF_ERROR_INVALID_STATE;
+        }
+        else
+        {
+            result = nr_802154_ant_div_antenna_set(antenna);
+        }
+    }
+
+    return result;
+}
+
+uint32_t nrf_802154_antenna_get(nrf_802154_ant_div_antenna_t * p_antenna)
+{
+    return nrf_802154_ant_div_antenna_get(p_antenna);
+}
+
+uint32_t nrf_802154_ant_div_cfg_set(const nrf_802154_ant_div_config_t *p_config)
+{
+    return nrf_802154_ant_div_config_set(p_config);
+}
+
+uint32_t nrf_802154_ant_div_cfg_get(nrf_802154_ant_div_config_t *p_config)
+{
+    return nrf_802154_ant_div_config_get(p_config);
+}
+
+uint32_t nrf_802154_ant_div_enable(bool enabled)
+{
+    return nrf_802154_pib_ant_div_enable_set(enabled);
+}
+uint32_t nrf_802154_ant_div_is_enabled(bool *p_enabled)
+{
+    return nrf_802154_pib_ant_div_enable_get(p_enabled);
+}
+#endif // ENABLE_ANT_DIV
+
 nrf_802154_state_t nrf_802154_state_get(void)
 {
     switch (nrf_802154_core_state_get())
