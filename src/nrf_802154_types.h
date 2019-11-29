@@ -207,17 +207,31 @@ typedef uint8_t nrf_802154_ifs_mode_t;
 
 /**
  * @brief Mode of the antenna diversity module.
- * 
+ *
  * Possible values:
+ * - @ref NRF_802154_ANT_DIV_MODE_DISABLED,
  * - @ref NRF_802154_ANT_DIV_MODE_ANTENNA_1,
  * - @ref NRF_802154_ANT_DIV_MODE_ANTENNA_2,
  * - @ref NRF_802154_ANT_DIV_MODE_MANUAL
  */
 typedef uint8_t nrf_802154_ant_div_mode_t;
- 
-#define NRF_802154_ANT_DIV_MODE_MANUAL     0x00 // !< Antenna is selected manually
-#define NRF_802154_ANT_DIV_MODE_ANTENNA_1  0x01 // !< First antenna is used
-#define NRF_802154_ANT_DIV_MODE_ANTENNA_2  0x02 // !< Second antenna is used
+
+#define NRF_802154_ANT_DIV_MODE_DISABLED  0x00 // !< Antenna diversity is disabled
+#define NRF_802154_ANT_DIV_MODE_ANTENNA_1 0x01 // !< First antenna is used
+#define NRF_802154_ANT_DIV_MODE_ANTENNA_2 0x02 // !< Second antenna is used
+#define NRF_802154_ANT_DIV_MODE_MANUAL    0x03 // !< Antenna is selected manually
+
+/**
+ * @brief Available antennas
+ *
+ * Possible values:
+ * - @ref NRF_ANT_DIV_ANTENNA_1,
+ * - @ref NRF_ANT_DIV_ANTENNA_2
+ */
+typedef uint8_t nrf_802154_ant_div_antenna_t;
+
+#define NRF_ANT_DIV_ANTENNA_1 0 // !< First antenna
+#define NRF_ANT_DIV_ANTENNA_2 1 // !< Second antenna
 
 /**
  * @brief Type of structure holding statistic counters.

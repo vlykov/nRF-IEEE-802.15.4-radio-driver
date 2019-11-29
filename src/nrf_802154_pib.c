@@ -77,10 +77,11 @@ typedef struct
 #if ENABLE_ANT_DIV
 typedef struct
 {
-    bool                      enabled; //< Whether the antenna diversity module is enabled.
-    nrf_802154_ant_div_mode_t mode;    //< Mode of antenna diversity.
+    nrf_802154_ant_div_mode_t    mode;    // < Mode of antenna diversity.
+    nrf_802154_ant_div_antenna_t antenna; // < Antenna selected - only used in manual mode.
 } nrf_802154_pib_ant_div_t;
-#endif // ENABLE_ANT_DIV
+
+#endif  // ENABLE_ANT_DIV
 
 typedef struct
 {
@@ -100,13 +101,13 @@ typedef struct
 
 #endif
 #if NRF_802154_IFS_ENABLED
-    nrf_802154_pib_ifs_t ifs;                                     ///< IFS-related fields.
+    nrf_802154_pib_ifs_t ifs; ///< IFS-related fields.
 
 #endif
 #if ENABLE_ANT_DIV
-    nrf_802154_pib_ant_div_t ant_div;                             ///< Antenna diversity related fields.
-    
-#endif // ENABLE_ANT_DIV
+    nrf_802154_pib_ant_div_t ant_div; ///< Antenna diversity related fields.
+
+#endif  // ENABLE_ANT_DIV
 } nrf_802154_pib_data_t;
 
 // Static variables.
@@ -511,19 +512,23 @@ uint32_t nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
     m_data.ant_div.mode = mode;
     return NRF_SUCCESS;
 }
-uint32_t nrf_802154_pib_ant_div_mode_get(nrf_802154_ant_div_mode_t *p_mode)
+
+uint32_t nrf_802154_pib_ant_div_mode_get(nrf_802154_ant_div_mode_t * p_mode)
 {
     *p_mode = m_data.ant_div.mode;
     return NRF_SUCCESS;
 }
-uint32_t nrf_802154_pib_ant_div_enable_set(bool enabled)
+
+uint32_t nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
 {
-    m_data.ant_div.enabled = enabled;
+    m_data.ant_div.antenna = antenna;
     return NRF_SUCCESS;
 }
-uint32_t nrf_802154_pib_ant_div_enable_get(bool *p_enabled)
+
+uint32_t nrf_802154_pib_ant_div_antenna_get(nrf_802154_ant_div_antenna_t * p_antenna)
 {
-    *p_enabled = m_data.ant_div.enabled;
+    *p_antenna = m_data.ant_div.antenna;
     return NRF_SUCCESS;
 }
+
 #endif // ENABLE_ANT_DIV

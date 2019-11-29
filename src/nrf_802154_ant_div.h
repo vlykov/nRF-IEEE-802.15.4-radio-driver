@@ -38,6 +38,7 @@
 #include <stdint.h>
 
 #include "nrf_error.h"
+#include "nrf_802154_types.h"
 
 #ifndef NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN
 #define NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN 23
@@ -51,15 +52,6 @@ typedef struct
     uint8_t ant_sel_pin; /* Pin used for antenna selection */
 } nrf_802154_ant_div_config_t;
 
-/**
- * @brief Available antennas
- */
-typedef enum
-{
-    NRF_ANT_DIV_ANTENNA_1 = 0,
-    NRF_ANT_DIV_ANTENNA_2 = 1
-} nrf_802154_ant_div_antenna_t;
-
 #if ENABLE_ANT_DIV
 /**
  * @brief Initializes antenna diversity module.
@@ -67,7 +59,7 @@ typedef enum
  * If pinout other than default is to be used, @ref nrf_802154_ant_div_set_config
  * should be called before this function.
  *
- * @retval ::NRF_SUCCESS             Antenna diversity module initialized successfuly
+ * @retval ::NRF_SUCCESS             Antenna diversity module initialized successfully
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
 uint32_t nrf_802154_ant_div_init(void);
@@ -110,7 +102,7 @@ uint32_t nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna);
  *
  * @param[out] antenna  Currently used antenna. Not modified if antenna diversity is not supported.
  *
- * @retval ::NRF_SUCCESS             Current antenna retrieved successfuly
+ * @retval ::NRF_SUCCESS             Current antenna retrieved successfully
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
 uint32_t nrf_802154_ant_div_antenna_get(nrf_802154_ant_div_antenna_t * p_antenna);
