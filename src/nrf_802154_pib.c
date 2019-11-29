@@ -46,6 +46,10 @@
 #include "nrf_802154_utils.h"
 #include "fal/nrf_802154_fal.h"
 
+#if ENABLE_ANT_DIV
+#include "nrf_802154_ant_div.h"
+#endif // ENABLE_ANT_DIV
+
 #define CSMACA_BE_MAXIMUM 8 ///< The maximum allowed CSMA-CA backoff exponent (BE) that results from the implementation
 
 typedef struct
@@ -522,6 +526,10 @@ uint32_t nrf_802154_pib_ant_div_mode_get(nrf_802154_ant_div_mode_t * p_mode)
 uint32_t nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
 {
     m_data.ant_div.antenna = antenna;
+    if(NRF_802154_ANT_DIV_MODE_MANUAL == m_data.ant_div.mode)
+    {
+        nrf_802154_ant_div_antenna_set(antenna);
+    }
     return NRF_SUCCESS;
 }
 

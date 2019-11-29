@@ -38,7 +38,7 @@
 #include "nrf_802154_ant_div.h"
 #include "nrf_gpio.h"
 
-#ifdef ENABLE_ANT_DIV
+#if ENABLE_ANT_DIV
 
 static nrf_802154_ant_div_config_t m_ant_div_config = /**< Antenna Diversity configuration */
 {

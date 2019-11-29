@@ -48,6 +48,9 @@
 #include "nrf_802154_procedures_duration.h"
 #include "nrf_802154_critical_section.h"
 #include "fem/nrf_fem_protocol_api.h"
+#if ENABLE_ANT_DIV
+#include "nrf_802154_ant_div.h"
+#endif // ENABLE_ANT_DIV
 
 #include "nrf_802154_trx.h"
 
@@ -357,6 +360,40 @@ static void trigger_disable_to_start_rampup(void)
         nrf_radio_task_trigger(NRF_RADIO_TASK_DISABLE);
     }
 }
+
+#if ENABLE_ANT_DIV
+static void antenna_for_rx_select(void)
+{
+    nrf_802154_ant_div_mode_t    mode = NRF_802154_ANT_DIV_MODE_DISABLED;
+    nrf_802154_ant_div_antenna_t ant = NRF_ANT_DIV_ANTENNA_1;
+
+    nrf_802154_pib_ant_div_mode_get(&mode);
+
+    switch(mode)
+    {
+        case NRF_802154_ANT_DIV_MODE_DISABLED:
+            ant = NRF_ANT_DIV_ANTENNA_1;
+            break;
+
+        case NRF_802154_ANT_DIV_MODE_ANTENNA_1:
+            ant = NRF_ANT_DIV_ANTENNA_1;
+            break;
+
+        case NRF_802154_ANT_DIV_MODE_ANTENNA_2:
+            ant = NRF_ANT_DIV_ANTENNA_2;
+            break;
+
+        case NRF_802154_ANT_DIV_MODE_MANUAL:
+            nrf_802154_pib_ant_div_antenna_get(&ant);
+            break;
+        default:
+            assert(false);
+    }
+
+    nrf_802154_ant_div_antenna_set(ant);
+}
+#endif // ENABLE_ANT_DIV
+
 
 /** Configure FEM to set LNA at appropriate time. */
 static void fem_for_lna_set(void)
@@ -869,6 +906,11 @@ void nrf_802154_trx_receive_frame(uint8_t                                bcc,
     }
 
     m_timer_value_on_radio_end_event = delta_time;
+
+    #if ENABLE_ANT_DIV
+    // Select antenna
+    antenna_for_rx_select();
+    #endif // ENABLE_ANT_DIV
 
     // Let the TIMER stop on last event required by a FEM
     nrf_timer_shorts_enable(NRF_802154_TIMER_INSTANCE,
@@ -1898,6 +1940,11 @@ void nrf_802154_trx_energy_detection(uint32_t ed_count)
     // Set FEM
     fem_for_lna_set();
 
+    #if ENABLE_ANT_DIV
+    // Select antenna
+    antenna_for_rx_select();
+    #endif // ENABLE_ANT_DIV
+    
     // Clr event EGU
     nrf_egu_event_clear(NRF_802154_SWI_EGU_INSTANCE, EGU_EVENT);
 
