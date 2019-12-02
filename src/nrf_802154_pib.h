@@ -328,7 +328,7 @@ void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period);
  * @retval ::NRF_SUCCESS             Antenna diversity mode set successfully
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
-uint32_t nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
+bool nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
 /**
  * @brief Gets the antenna diversity mode
  *
@@ -337,7 +337,7 @@ uint32_t nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
  * @retval ::NRF_SUCCESS             Antenna diversity mode retrieved successfully
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
-uint32_t nrf_802154_pib_ant_div_mode_get(nrf_802154_ant_div_mode_t * p_mode);
+nrf_802154_ant_div_mode_t nrf_802154_pib_ant_div_mode_get(void);
 /**
  * @brief Select antenna to be used
  *
@@ -350,7 +350,7 @@ uint32_t nrf_802154_pib_ant_div_mode_get(nrf_802154_ant_div_mode_t * p_mode);
  * @retval ::NRF_SUCCESS             Antenna selected successfully
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
-uint32_t nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna);
+bool nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna);
 /**
  * @brief Read the antenna currently used
  *
@@ -363,7 +363,7 @@ uint32_t nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna
  * @retval ::NRF_SUCCESS             Currently selected antenna read successfully
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
-uint32_t nrf_802154_pib_ant_div_antenna_get(nrf_802154_ant_div_antenna_t * p_antenna);
+nrf_802154_ant_div_antenna_t nrf_802154_pib_ant_div_antenna_get();
 #endif // ENABLE_ANT_DIV
 
 #ifdef __cplusplus

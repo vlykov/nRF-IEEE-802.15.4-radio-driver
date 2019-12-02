@@ -193,7 +193,7 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg);
  * @retval ::NRF_SUCCESS             Antenna diversity mode set successfully
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
-uint32_t nrf_802154_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
+bool nrf_802154_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
 
 /**
  * @brief Gets the current antenna diversity mode
@@ -203,7 +203,7 @@ uint32_t nrf_802154_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
  * @retval ::NRF_SUCCESS             Antenna diversity mode retrieved successfully
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
-uint32_t nrf_802154_ant_div_mode_get(nrf_802154_ant_div_mode_t * p_mode);
+nrf_802154_ant_div_mode_t nrf_802154_ant_div_mode_get(void);
 
 /**
  * @brief Manually select antenna used
@@ -218,7 +218,7 @@ uint32_t nrf_802154_ant_div_mode_get(nrf_802154_ant_div_mode_t * p_mode);
  * @retval ::NRF_ERROR_INVALID_STATE Antenna diversity module is not in manual mode
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
-uint32_t nrf_802154_antenna_set(nrf_802154_ant_div_antenna_t antenna);
+bool nrf_802154_antenna_set(nrf_802154_ant_div_antenna_t antenna);
 
 /**
  * @brief Get currently used antenna
@@ -230,7 +230,7 @@ uint32_t nrf_802154_antenna_set(nrf_802154_ant_div_antenna_t antenna);
  * @retval ::NRF_SUCCESS             Current antenna retrieved successfully
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
-uint32_t nrf_802154_antenna_get(nrf_802154_ant_div_antenna_t * p_antenna);
+nrf_802154_ant_div_antenna_t nrf_802154_antenna_get(void);
 
 /**
  * @brief Set antenna diversity configuration
@@ -240,7 +240,7 @@ uint32_t nrf_802154_antenna_get(nrf_802154_ant_div_antenna_t * p_antenna);
  * @retval ::NRF_SUCCESS             Antenna diversity configured successfully
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
-uint32_t nrf_802154_ant_div_cfg_set(const nrf_802154_ant_div_config_t * p_config);
+void nrf_802154_ant_div_cfg_set(nrf_802154_ant_div_config_t config);
 
 /**
  * @brief Get current antenna diversity configuration
@@ -250,7 +250,7 @@ uint32_t nrf_802154_ant_div_cfg_set(const nrf_802154_ant_div_config_t * p_config
  * @retval ::NRF_SUCCESS             Antenna diversity configuration read successfully
  * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
-uint32_t nrf_802154_ant_div_cfg_get(nrf_802154_ant_div_config_t * p_config);
+nrf_802154_ant_div_config_t nrf_802154_ant_div_cfg_get(void);
 
 #endif // ENABLE_ANT_DIV
 

@@ -271,34 +271,34 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg)
 
 #if ENABLE_ANT_DIV
 
-uint32_t nrf_802154_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
+bool nrf_802154_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
 {
     return nrf_802154_pib_ant_div_mode_set(mode);
 }
 
-uint32_t nrf_802154_ant_div_mode_get(nrf_802154_ant_div_mode_t * p_mode)
+nrf_802154_ant_div_mode_t nrf_802154_ant_div_mode_get(void)
 {
-    return nrf_802154_pib_ant_div_mode_get(p_mode);
+    return nrf_802154_pib_ant_div_mode_get();
 }
 
-uint32_t nrf_802154_antenna_set(nrf_802154_ant_div_antenna_t antenna)
+bool nrf_802154_antenna_set(nrf_802154_ant_div_antenna_t antenna)
 {
     return nrf_802154_pib_ant_div_antenna_set(antenna);
 }
 
-uint32_t nrf_802154_antenna_get(nrf_802154_ant_div_antenna_t * p_antenna)
+nrf_802154_ant_div_antenna_t nrf_802154_antenna_get(void)
 {
-    return nrf_802154_pib_ant_div_antenna_get(p_antenna);
+    return nrf_802154_pib_ant_div_antenna_get();
 }
 
-uint32_t nrf_802154_ant_div_cfg_set(const nrf_802154_ant_div_config_t * p_config)
+void nrf_802154_ant_div_cfg_set(nrf_802154_ant_div_config_t config)
 {
-    return nrf_802154_ant_div_config_set(p_config);
+    nrf_802154_ant_div_config_set(config);
 }
 
-uint32_t nrf_802154_ant_div_cfg_get(nrf_802154_ant_div_config_t * p_config)
+nrf_802154_ant_div_config_t nrf_802154_ant_div_cfg_get(void)
 {
-    return nrf_802154_ant_div_config_get(p_config);
+    return nrf_802154_ant_div_config_get();
 }
 
 #endif // ENABLE_ANT_DIV

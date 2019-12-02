@@ -38,53 +38,43 @@
 #include "nrf_802154_ant_div.h"
 #include "nrf_gpio.h"
 
-#if ENABLE_ANT_DIV
-
 static nrf_802154_ant_div_config_t m_ant_div_config = /**< Antenna Diversity configuration */
 {
     .ant_sel_pin = NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN
 };
 
-uint32_t nrf_802154_ant_div_init(void)
+void nrf_802154_ant_div_init(void)
 {
     nrf_gpio_cfg_output(m_ant_div_config.ant_sel_pin);
-    return NRF_SUCCESS;
 }
 
-uint32_t nrf_802154_ant_div_config_set(const nrf_802154_ant_div_config_t * p_ant_div_config)
+void nrf_802154_ant_div_config_set(nrf_802154_ant_div_config_t ant_div_config)
 {
-    assert(p_ant_div_config != NULL);
-    m_ant_div_config = *p_ant_div_config;
-    return NRF_SUCCESS;
+    m_ant_div_config = ant_div_config;
 }
 
-uint32_t nrf_802154_ant_div_config_get(nrf_802154_ant_div_config_t * p_ant_div_config)
+nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void)
 {
-    assert(p_ant_div_config != NULL);
-    *p_ant_div_config = m_ant_div_config;
-    return NRF_SUCCESS;
+    return m_ant_div_config;
 }
 
-uint32_t nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
+bool nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
 {
-    uint32_t status = NRF_SUCCESS;
+    bool status = true;
 
-    if ((NRF_ANT_DIV_ANTENNA_1 == antenna) || (NRF_ANT_DIV_ANTENNA_2 == antenna))
+    if ((NRF_802154_ANT_DIV_ANTENNA_1 == antenna) || (NRF_802154_ANT_DIV_ANTENNA_2 == antenna))
     {
         nrf_gpio_pin_write(m_ant_div_config.ant_sel_pin, antenna);
     }
     else
     {
-        status = NRF_ERROR_INVALID_PARAM;
+        status = false;
     }
 
     return status;
 }
 
-uint32_t nrf_802154_ant_div_antenna_get(nrf_802154_ant_div_antenna_t * p_antenna)
+nrf_802154_ant_div_antenna_t nrf_802154_ant_div_antenna_get(void)
 {
-    *p_antenna = nrf_gpio_pin_out_read(m_ant_div_config.ant_sel_pin);
-    return NRF_SUCCESS;
+    return nrf_gpio_pin_out_read(m_ant_div_config.ant_sel_pin);
 }
-
-#endif // ENABLE_ANT_DIV

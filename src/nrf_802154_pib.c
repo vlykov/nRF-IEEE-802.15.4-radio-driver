@@ -50,7 +50,7 @@
 #include "nrf_802154_ant_div.h"
 #endif // ENABLE_ANT_DIV
 
-#define CSMACA_BE_MAXIMUM 8 ///< The maximum allowed CSMA-CA backoff exponent (BE) that results from the implementation
+#define CSMACA_BE_MAXIMUM 8  ///< The maximum allowed CSMA-CA backoff exponent (BE) that results from the implementation
 
 typedef struct
 {
@@ -511,32 +511,58 @@ void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period)
 #endif // NRF_802154_IFS_ENABLED
 
 #if ENABLE_ANT_DIV
-uint32_t nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
+bool nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
 {
-    m_data.ant_div.mode = mode;
-    return NRF_SUCCESS;
-}
+    bool result = true;
 
-uint32_t nrf_802154_pib_ant_div_mode_get(nrf_802154_ant_div_mode_t * p_mode)
-{
-    *p_mode = m_data.ant_div.mode;
-    return NRF_SUCCESS;
-}
-
-uint32_t nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
-{
-    m_data.ant_div.antenna = antenna;
-    if(NRF_802154_ANT_DIV_MODE_MANUAL == m_data.ant_div.mode)
+    switch (mode)
     {
-        nrf_802154_ant_div_antenna_set(antenna);
+        case NRF_802154_ANT_DIV_MODE_DISABLED:
+        case NRF_802154_ANT_DIV_MODE_ANTENNA_1:
+        case NRF_802154_ANT_DIV_MODE_ANTENNA_2:
+        case NRF_802154_ANT_DIV_MODE_MANUAL:
+            m_data.ant_div.mode = mode;
+            break;
+
+        default:
+            result = false;
     }
-    return NRF_SUCCESS;
+    return result;
 }
 
-uint32_t nrf_802154_pib_ant_div_antenna_get(nrf_802154_ant_div_antenna_t * p_antenna)
+nrf_802154_ant_div_mode_t nrf_802154_pib_ant_div_mode_get(void)
 {
-    *p_antenna = m_data.ant_div.antenna;
-    return NRF_SUCCESS;
+    return m_data.ant_div.mode;
+}
+
+bool nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
+{
+    bool status = true;
+
+    if (NRF_802154_ANT_DIV_ANTENNA_1 == antenna || NRF_802154_ANT_DIV_ANTENNA_2 == antenna)
+    {
+        m_data.ant_div.antenna = antenna;
+        /*
+         * Manual setting of the antenna is required for immediate update
+         * when ant_div is already in manual mode and trx is in RX state. Otherwise,
+         * reading of the pib antenna configuration and antenna update will happen after
+         * the next frame is received and RX_EN is reset.
+         */
+        if (NRF_802154_ANT_DIV_MODE_MANUAL == m_data.ant_div.mode)
+        {
+            status = nrf_802154_ant_div_antenna_set(antenna);
+        }
+    }
+    else
+    {
+        status = false;
+    }
+    return status;
+}
+
+nrf_802154_ant_div_antenna_t nrf_802154_pib_ant_div_antenna_get(void)
+{
+    return m_data.ant_div.antenna;
 }
 
 #endif // ENABLE_ANT_DIV

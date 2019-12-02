@@ -225,13 +225,13 @@ typedef uint8_t nrf_802154_ant_div_mode_t;
  * @brief Available antennas
  *
  * Possible values:
- * - @ref NRF_ANT_DIV_ANTENNA_1,
- * - @ref NRF_ANT_DIV_ANTENNA_2
+ * - @ref NRF_802154_ANT_DIV_ANTENNA_1,
+ * - @ref NRF_802154_ANT_DIV_ANTENNA_2
  */
 typedef uint8_t nrf_802154_ant_div_antenna_t;
 
-#define NRF_ANT_DIV_ANTENNA_1 0 // !< First antenna
-#define NRF_ANT_DIV_ANTENNA_2 1 // !< Second antenna
+#define NRF_802154_ANT_DIV_ANTENNA_1 0 // !< First antenna
+#define NRF_802154_ANT_DIV_ANTENNA_2 1 // !< Second antenna
 
 /**
  * @brief Type of structure holding statistic counters.
