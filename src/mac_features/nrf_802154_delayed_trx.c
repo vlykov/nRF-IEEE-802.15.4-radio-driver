@@ -377,12 +377,13 @@ static void rx_timeslot_started_callback(rsch_dly_ts_id_t dly_ts_id)
         case DELAYED_TRX_OP_STATE_PENDING:
         {
             nrf_802154_pib_channel_set(m_rx_channel);
-            
+
             #if ENABLE_ANT_DIV
-            update_result = nrf_802154_request_channel_update() && nrf_802154_request_antenna_update();
+            update_result = nrf_802154_request_channel_update() &&
+                            nrf_802154_request_antenna_update();
             #else // ENABLE_ANT_DIV
             update_result = nrf_802154_request_channel_update();
-            #endif // ENABLE_ANT_DIV
+            #endif  // ENABLE_ANT_DIV
 
             if (update_result)
             {

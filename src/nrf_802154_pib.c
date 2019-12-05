@@ -514,6 +514,7 @@ void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period)
 bool nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
 {
     bool result = true;
+
     switch (mode)
     {
         /* Fall-through.*/

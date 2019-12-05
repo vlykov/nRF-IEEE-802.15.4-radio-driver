@@ -671,8 +671,8 @@ void nrf_802154_trx_disable(void)
 #if ENABLE_ANT_DIV
 void nrf_802154_trx_antenna_update(void)
 {
-    bool result = true;
-    nrf_802154_ant_div_mode_t    mode = nrf_802154_pib_ant_div_mode_get();
+    bool                      result = true;
+    nrf_802154_ant_div_mode_t mode   = nrf_802154_pib_ant_div_mode_get();
 
     switch (mode)
     {
