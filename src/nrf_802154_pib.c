@@ -518,6 +518,10 @@ bool nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
     switch (mode)
     {
         case NRF_802154_ANT_DIV_MODE_DISABLED:
+            /* Set antenna to the default antenna */
+            nrf_802154_ant_div_antenna_set(NRF_802154_ANT_DIV_MODE_ANTENNA_1);
+
+        /* Intentional fall-through */
         case NRF_802154_ANT_DIV_MODE_ANTENNA_1:
         case NRF_802154_ANT_DIV_MODE_ANTENNA_2:
         case NRF_802154_ANT_DIV_MODE_MANUAL:
@@ -537,7 +541,7 @@ nrf_802154_ant_div_mode_t nrf_802154_pib_ant_div_mode_get(void)
 
 bool nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
 {
-    bool status = true;
+    bool result = true;
 
     if (NRF_802154_ANT_DIV_ANTENNA_1 == antenna || NRF_802154_ANT_DIV_ANTENNA_2 == antenna)
     {
@@ -550,14 +554,14 @@ bool nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
          */
         if (NRF_802154_ANT_DIV_MODE_MANUAL == m_data.ant_div.mode)
         {
-            status = nrf_802154_ant_div_antenna_set(antenna);
+            result = nrf_802154_ant_div_antenna_set(antenna);
         }
     }
     else
     {
-        status = false;
+        result = false;
     }
-    return status;
+    return result;
 }
 
 nrf_802154_ant_div_antenna_t nrf_802154_pib_ant_div_antenna_get(void)

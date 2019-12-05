@@ -370,7 +370,7 @@ static void antenna_for_rx_select(void)
     switch (mode)
     {
         case NRF_802154_ANT_DIV_MODE_DISABLED:
-            ant = NRF_802154_ANT_DIV_ANTENNA_1;
+            /* Intentionally empty. */
             break;
 
         case NRF_802154_ANT_DIV_MODE_ANTENNA_1:

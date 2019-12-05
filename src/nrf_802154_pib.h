@@ -325,43 +325,40 @@ void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period);
  *
  * @param[in] mode Antenna diversity mode to be set
  *
- * @retval ::NRF_SUCCESS             Antenna diversity mode set successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @retval true  Antenna diversity mode set successfully
+ * @retval false Invalid antenna diversity mode passed as argument
  */
 bool nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
+
 /**
  * @brief Gets the antenna diversity mode
  *
- * @param[out] mode Current antenna diversity mode
- *
- * @retval ::NRF_SUCCESS             Antenna diversity mode retrieved successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @returns Current antenna diversity mode
  */
 nrf_802154_ant_div_mode_t nrf_802154_pib_ant_div_mode_get(void);
+
 /**
  * @brief Select antenna to be used
  *
  * @note Takes effect only is antenna diversity mode is set to
- * @ref NRF_802154_ANT_DIV_MODE_MANUAL. Otherwise, the changes will take effect
- * only after the antenna diversity is set to @ref NRF_802154_ANT_DIV_MODE_MANUAL.
+ * @ref NRF_802154_ANT_DIV_MODE_MANUAL. Otherwise, the changes will take effect only
+ * after the antenna diversity is enabled and set to @ref NRF_802154_ANT_DIV_MODE_MANUAL mode.
  *
  * @param[in] antenna  Antenna to be selected
  *
- * @retval ::NRF_SUCCESS             Antenna selected successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @retval true  Antenna selected successfully
+ * @retval false Invalid antenna passed as argument
  */
 bool nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna);
+
 /**
- * @brief Read the antenna currently used
+ * @brief Read the currently used antenna
  *
  * @note The antenna read by this function is currently used antenna only if
  * antenna diversity mode is set to @ref NRF_802154_ANT_DIV_MODE_MANUAL. Otherwise,
  * currently used antenna may be different.
  *
- * @param[in] p_antenna  Currently selected antenna
- *
- * @retval ::NRF_SUCCESS             Currently selected antenna read successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @returns Currently selected antenna
  */
 nrf_802154_ant_div_antenna_t nrf_802154_pib_ant_div_antenna_get();
 #endif // ENABLE_ANT_DIV

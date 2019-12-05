@@ -57,9 +57,6 @@ typedef struct
  *
  * If pinout other than default is to be used, @ref nrf_802154_ant_div_set_config
  * should be called before this function.
- *
- * @retval ::NRF_SUCCESS             Antenna diversity module initialized successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
  */
 void nrf_802154_ant_div_init(void);
 
@@ -68,20 +65,14 @@ void nrf_802154_ant_div_init(void);
  *
  * Should not be called after @ref nrf_802154_ant_div_init.
  *
- * @param[in] ant_div_config  Pointer to the antenna diversity configuration structure.
- *
- * @retval ::NRF_SUCCESS             Configuration set successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @param[in] ant_div_config  Antenna diversity configuration structure.
  */
 void nrf_802154_ant_div_config_set(nrf_802154_ant_div_config_t ant_div_config);
 
 /**
- * @brief Retrieves te antenna diversity configuration.
+ * @brief Retrieves the antenna diversity configuration.
  *
- * @param[out] ant_div_config  Pointer to configuration structure to be populated.
- *
- * @retval ::NRF_SUCCESS             Configuration retrieved successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @return Current antenna diversity module configuration.
  */
 nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void);
 
@@ -98,10 +89,7 @@ bool nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna);
 /**
  * @brief Get currently used antenna.
  *
- * @param[out] antenna  Currently used antenna. Not modified if antenna diversity is not supported.
- *
- * @retval ::NRF_SUCCESS             Current antenna retrieved successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @return Currently used antenna.
  */
 nrf_802154_ant_div_antenna_t nrf_802154_ant_div_antenna_get(void);
 

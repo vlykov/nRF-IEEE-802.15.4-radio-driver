@@ -181,7 +181,7 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg);
 #if ENABLE_ANT_DIV
 
 /**
- * @brief Sets the antenna diversity mode
+ * @brief Set the antenna diversity mode
  *
  * Sets the mode of antenna diversity module. Should only be called
  * before starting trx or during sleep periods. Can be called while antenna diversity
@@ -190,67 +190,55 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg);
  *
  * @param[in] mode Antenna diversity mode to be set
  *
- * @retval ::NRF_SUCCESS             Antenna diversity mode set successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @retval true  Antenna diversity mode set successfully.
+ * @retval false Invalid mode passed as argument.
  */
 bool nrf_802154_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
 
 /**
- * @brief Gets the current antenna diversity mode
+ * @brief Get current antenna diversity mode
  *
- * @param[out] mode Current antenna diversity mode
- *
- * @retval ::NRF_SUCCESS             Antenna diversity mode retrieved successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @returns Current antenna diversity mode
  */
 nrf_802154_ant_div_mode_t nrf_802154_ant_div_mode_get(void);
 
 /**
  * @brief Manually select antenna used
  *
- * Has no effect if antenna diversity is disabled or antenna diversity mode
- * is other than NRF_ANT_DIV_MODE_MANUAL.
+ * For antenna to be switched, antenna diversity module needs to be enabled
+ * and antenna diversity mode needs to be @ref NRF_802154_ANT_DIV_MODE_MANUAL.
+ * In any other case, antenna change will be applied only after these conditions are met.
  *
  * @param[in] antenna Antenna to be selected
  *
- * @retval ::NRF_SUCCESS             Antenna switched successfully
- * @retval ::NRF_ERROR_INVALID_PARAM Invalid antenna passed to the function
- * @retval ::NRF_ERROR_INVALID_STATE Antenna diversity module is not in manual mode
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @retval true  Antenna set successfully.
+ * @retval false Invalid antenna passed as argument.
  */
 bool nrf_802154_antenna_set(nrf_802154_ant_div_antenna_t antenna);
 
 /**
  * @brief Get currently used antenna
  *
- * @note This function may be called while antenna_diversity is disabled
+ * @note This function should not called while antenna_diversity is disabled or while
+ * mode is other than @ref NRF_802154_ANT_DIV_MODE_MANUAL.
  *
- * @param[out] p_antenna Currently used antenna.
- *
- * @retval ::NRF_SUCCESS             Current antenna retrieved successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @returns Currently used antenna.
  */
 nrf_802154_ant_div_antenna_t nrf_802154_antenna_get(void);
 
 /**
  * @brief Set antenna diversity configuration
  *
- * @param[in] p_config Configuration of antenna diversity module to be set
- *
- * @retval ::NRF_SUCCESS             Antenna diversity configured successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @param[in] config Configuration of antenna diversity module to be set
  */
-void nrf_802154_ant_div_cfg_set(nrf_802154_ant_div_config_t config);
+void nrf_802154_antenna_config_set(nrf_802154_ant_div_config_t config);
 
 /**
  * @brief Get current antenna diversity configuration
  *
- * @param[out] p_config Configuration of antenna diversity module
- *
- * @retval ::NRF_SUCCESS             Antenna diversity configuration read successfully
- * @retval ::NRF_ERROR_NOT_SUPPORTED Antenna diversity module is not supported
+ * @returns Configuration of antenna diversity module
  */
-nrf_802154_ant_div_config_t nrf_802154_ant_div_cfg_get(void);
+nrf_802154_ant_div_config_t nrf_802154_antenna_config_get(void);
 
 #endif // ENABLE_ANT_DIV
 
