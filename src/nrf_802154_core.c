@@ -2712,3 +2712,28 @@ bool nrf_802154_core_last_rssi_measurement_get(int8_t * p_rssi)
 
     return result;
 }
+
+#if ENABLE_ANT_DIV
+
+bool nrf_802154_core_antenna_update(void)
+{
+    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
+    bool result = critical_section_enter_and_verify_timeslot_length();
+
+    if (result)
+    {
+        if (timeslot_is_granted())
+        {
+            nrf_802154_trx_antenna_update();
+        }
+
+        nrf_802154_critical_section_exit();
+    }
+
+    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
+
+    return result;
+}
+
+#endif // ENABLE_ANT_DIV

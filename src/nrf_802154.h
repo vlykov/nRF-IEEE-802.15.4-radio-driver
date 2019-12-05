@@ -184,9 +184,7 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg);
  * @brief Set the antenna diversity mode
  *
  * Sets the mode of antenna diversity module. Should only be called
- * before starting trx or during sleep periods. Can be called while antenna diversity
- * is disabled, but will only take effect after the antenna diversity
- * module is enabled. See @ref nrf_802154_ant_div_enable.
+ * before starting trx or during sleep periods.
  *
  * @param[in] mode Antenna diversity mode to be set
  *
@@ -205,9 +203,9 @@ nrf_802154_ant_div_mode_t nrf_802154_ant_div_mode_get(void);
 /**
  * @brief Manually select antenna used
  *
- * For antenna to be switched, antenna diversity module needs to be enabled
- * and antenna diversity mode needs to be @ref NRF_802154_ANT_DIV_MODE_MANUAL.
- * In any other case, antenna change will be applied only after these conditions are met.
+ * For antenna to be switched, antenna diversity mode needs
+ * to be @ref NRF_802154_ANT_DIV_MODE_MANUAL. Otherwise, antenna will
+ * be only switched after @ref NRF_802154_ANT_DIV_MODE_MANUAL is set.
  *
  * @param[in] antenna Antenna to be selected
  *
@@ -219,7 +217,7 @@ bool nrf_802154_antenna_set(nrf_802154_ant_div_antenna_t antenna);
 /**
  * @brief Get currently used antenna
  *
- * @note This function should not called while antenna_diversity is disabled or while
+ * @note This function should not called while
  * mode is other than @ref NRF_802154_ANT_DIV_MODE_MANUAL.
  *
  * @returns Currently used antenna.

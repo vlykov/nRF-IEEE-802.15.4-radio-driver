@@ -361,42 +361,6 @@ static void trigger_disable_to_start_rampup(void)
     }
 }
 
-#if ENABLE_ANT_DIV
-static void antenna_for_rx_select(void)
-{
-    nrf_802154_ant_div_mode_t    mode = nrf_802154_pib_ant_div_mode_get();
-    nrf_802154_ant_div_antenna_t ant  = NRF_802154_ANT_DIV_ANTENNA_1;
-
-    switch (mode)
-    {
-        case NRF_802154_ANT_DIV_MODE_DISABLED:
-            /* Intentionally empty. */
-            break;
-
-        case NRF_802154_ANT_DIV_MODE_ANTENNA_1:
-            ant = NRF_802154_ANT_DIV_ANTENNA_1;
-            break;
-
-        case NRF_802154_ANT_DIV_MODE_ANTENNA_2:
-            ant = NRF_802154_ANT_DIV_ANTENNA_2;
-            break;
-
-        case NRF_802154_ANT_DIV_MODE_MANUAL:
-            ant = nrf_802154_pib_ant_div_antenna_get();
-            break;
-
-        default:
-            assert(false);
-    }
-
-    if (!nrf_802154_ant_div_antenna_set(ant))
-    {
-        assert(false);
-    }
-}
-
-#endif // ENABLE_ANT_DIV
-
 /** Configure FEM to set LNA at appropriate time. */
 static void fem_for_lna_set(void)
 {
@@ -704,6 +668,42 @@ void nrf_802154_trx_disable(void)
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 
+#if ENABLE_ANT_DIV
+void nrf_802154_trx_antenna_update(void)
+{
+    bool result = true;
+    nrf_802154_ant_div_mode_t    mode = nrf_802154_pib_ant_div_mode_get();
+
+    switch (mode)
+    {
+        case NRF_802154_ANT_DIV_MODE_DISABLED:
+            /* Intentionally empty. */
+            break;
+
+        case NRF_802154_ANT_DIV_MODE_ANTENNA_1:
+            result = nrf_802154_ant_div_antenna_set(NRF_802154_ANT_DIV_ANTENNA_1);
+            break;
+
+        case NRF_802154_ANT_DIV_MODE_ANTENNA_2:
+            result = nrf_802154_ant_div_antenna_set(NRF_802154_ANT_DIV_ANTENNA_2);
+            break;
+
+        case NRF_802154_ANT_DIV_MODE_MANUAL:
+            result = nrf_802154_ant_div_antenna_set(nrf_802154_pib_ant_div_antenna_get());
+            break;
+
+        default:
+            assert(false);
+    }
+
+    if (!result)
+    {
+        assert(false);
+    }
+}
+
+#endif // ENABLE_ANT_DIV
+
 void nrf_802154_trx_channel_set(uint8_t channel)
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
@@ -911,7 +911,7 @@ void nrf_802154_trx_receive_frame(uint8_t                                bcc,
 
     #if ENABLE_ANT_DIV
     // Select antenna
-    antenna_for_rx_select();
+    nrf_802154_trx_antenna_update();
     #endif // ENABLE_ANT_DIV
 
     // Let the TIMER stop on last event required by a FEM
@@ -1944,7 +1944,7 @@ void nrf_802154_trx_energy_detection(uint32_t ed_count)
 
     #if ENABLE_ANT_DIV
     // Select antenna
-    antenna_for_rx_select();
+    nrf_802154_trx_antenna_update();
     #endif // ENABLE_ANT_DIV
 
     // Clr event EGU

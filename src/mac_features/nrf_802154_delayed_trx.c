@@ -368,6 +368,7 @@ static void tx_timeslot_started_callback(rsch_dly_ts_id_t dly_ts_id)
 static void rx_timeslot_started_callback(rsch_dly_ts_id_t dly_ts_id)
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_HIGH);
+    bool update_result;
 
     assert(dly_ts_id == RSCH_DLY_RX);
 
@@ -376,8 +377,14 @@ static void rx_timeslot_started_callback(rsch_dly_ts_id_t dly_ts_id)
         case DELAYED_TRX_OP_STATE_PENDING:
         {
             nrf_802154_pib_channel_set(m_rx_channel);
+            
+            #if ENABLE_ANT_DIV
+            update_result = nrf_802154_request_channel_update() && nrf_802154_request_antenna_update();
+            #else // ENABLE_ANT_DIV
+            update_result = nrf_802154_request_channel_update();
+            #endif // ENABLE_ANT_DIV
 
-            if (nrf_802154_request_channel_update())
+            if (update_result)
             {
                 (void)nrf_802154_request_receive(NRF_802154_TERM_802154,
                                                  REQ_ORIG_DELAYED_TRX,

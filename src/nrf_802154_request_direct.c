@@ -109,6 +109,14 @@ bool nrf_802154_request_buffer_free(uint8_t * p_data)
     REQUEST_FUNCTION(nrf_802154_core_notify_buffer_free, p_data)
 }
 
+#if ENABLE_ANT_DIV
+bool nrf_802154_request_antenna_update(void)
+{
+    REQUEST_FUNCTION(nrf_802154_core_antenna_update)
+}
+
+#endif // ENABLE_ANT_DIV
+
 bool nrf_802154_request_channel_update(void)
 {
     REQUEST_FUNCTION(nrf_802154_core_channel_update)

@@ -514,14 +514,10 @@ void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period)
 bool nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
 {
     bool result = true;
-
     switch (mode)
     {
+        /* Fall-through.*/
         case NRF_802154_ANT_DIV_MODE_DISABLED:
-            /* Set antenna to the default antenna */
-            nrf_802154_ant_div_antenna_set(NRF_802154_ANT_DIV_MODE_ANTENNA_1);
-
-        /* Intentional fall-through */
         case NRF_802154_ANT_DIV_MODE_ANTENNA_1:
         case NRF_802154_ANT_DIV_MODE_ANTENNA_2:
         case NRF_802154_ANT_DIV_MODE_MANUAL:
@@ -543,23 +539,16 @@ bool nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
 {
     bool result = true;
 
-    if (NRF_802154_ANT_DIV_ANTENNA_1 == antenna || NRF_802154_ANT_DIV_ANTENNA_2 == antenna)
+    switch (antenna)
     {
-        m_data.ant_div.antenna = antenna;
-        /*
-         * Manual setting of the antenna is required for immediate update
-         * when ant_div is already in manual mode and trx is in RX state. Otherwise,
-         * reading of the pib antenna configuration and antenna update will happen after
-         * the next frame is received and RX_EN is reset.
-         */
-        if (NRF_802154_ANT_DIV_MODE_MANUAL == m_data.ant_div.mode)
-        {
-            result = nrf_802154_ant_div_antenna_set(antenna);
-        }
-    }
-    else
-    {
-        result = false;
+        /* Fall-through.*/
+        case NRF_802154_ANT_DIV_ANTENNA_1:
+        case NRF_802154_ANT_DIV_ANTENNA_2:
+            m_data.ant_div.antenna = antenna;
+            break;
+
+        default:
+            result = false;
     }
     return result;
 }

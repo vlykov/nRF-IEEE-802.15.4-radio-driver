@@ -242,6 +242,13 @@ bool nrf_802154_core_rssi_measure(void);
  */
 bool nrf_802154_core_last_rssi_measurement_get(int8_t * p_rssi);
 
+#if ENABLE_ANT_DIV
+/**
+ * @brief Notifies the core module that the next higher layer requested the change of the antenna.
+ */
+bool nrf_802154_core_antenna_update(void);
+#endif // ENABLE_ANT_DIV
+
 #if !NRF_802154_INTERNAL_IRQ_HANDLING
 /**
  * @brief Notifies the core module that there is a pending IRQ to be handled.

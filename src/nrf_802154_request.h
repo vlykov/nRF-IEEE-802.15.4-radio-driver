@@ -151,6 +151,13 @@ bool nrf_802154_request_modulated_carrier(nrf_802154_term_t term_lvl,
  */
 bool nrf_802154_request_buffer_free(uint8_t * p_data);
 
+#if ENABLE_ANT_DIV
+/**
+ * @brief Requests the driver to update the antenna used.
+ */
+bool nrf_802154_request_antenna_update(void);
+#endif // ENABLE_ANT_DIV
+
 /**
  * @brief Requests the driver to update the channel number used by the RADIO peripheral.
  */

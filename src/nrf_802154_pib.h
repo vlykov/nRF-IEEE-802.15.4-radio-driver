@@ -343,6 +343,7 @@ nrf_802154_ant_div_mode_t nrf_802154_pib_ant_div_mode_get(void);
  * @note Takes effect only is antenna diversity mode is set to
  * @ref NRF_802154_ANT_DIV_MODE_MANUAL. Otherwise, the changes will take effect only
  * after the antenna diversity is enabled and set to @ref NRF_802154_ANT_DIV_MODE_MANUAL mode.
+ * See @ref nrf_802154_pib_ant_div_mode_set
  *
  * @param[in] antenna  Antenna to be selected
  *

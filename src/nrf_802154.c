@@ -273,7 +273,13 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg)
 
 bool nrf_802154_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
 {
-    return nrf_802154_pib_ant_div_mode_set(mode);
+    bool result = nrf_802154_pib_ant_div_mode_set(mode);
+
+    if (result)
+    {
+        nrf_802154_request_antenna_update();
+    }
+    return result;
 }
 
 nrf_802154_ant_div_mode_t nrf_802154_ant_div_mode_get(void)
@@ -283,7 +289,13 @@ nrf_802154_ant_div_mode_t nrf_802154_ant_div_mode_get(void)
 
 bool nrf_802154_antenna_set(nrf_802154_ant_div_antenna_t antenna)
 {
-    return nrf_802154_pib_ant_div_antenna_set(antenna);
+    bool result = nrf_802154_pib_ant_div_antenna_set(antenna);
+
+    if (result && NRF_802154_ANT_DIV_MODE_MANUAL == nrf_802154_pib_ant_div_mode_get())
+    {
+        nrf_802154_request_antenna_update();
+    }
+    return result;
 }
 
 nrf_802154_ant_div_antenna_t nrf_802154_antenna_get(void)
