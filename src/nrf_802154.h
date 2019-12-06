@@ -49,9 +49,9 @@
 #include "fem/nrf_fem_protocol_api.h"
 #endif
 
-#if ENABLE_ANT_DIV
-#include "nrf_802154_ant_div.h"
-#endif // ENABLE_ANT_DIV
+#if ENABLE_ANT_DIVERSITY
+#include "nrf_802154_ant_diversity.h"
+#endif // ENABLE_ANT_DIVERSITY
 
 #ifdef __cplusplus
 extern "C" {
@@ -178,15 +178,14 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg);
 
 #endif // ENABLE_FEM
 
-#if ENABLE_ANT_DIV
-
+#if ENABLE_ANT_DIVERSITY
 /**
  * @brief Set the antenna diversity mode
  *
- * Sets the mode of antenna diversity module. Should only be called
+ * Sets the mode of the antenna diversity module. Should only be called
  * before starting trx or during sleep periods.
  *
- * @param[in] mode Antenna diversity mode to be set
+ * @param[in] mode Antenna diversity mode to be set.
  *
  * @retval true  Antenna diversity mode set successfully.
  * @retval false Invalid mode passed as argument.
@@ -194,20 +193,20 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg);
 bool nrf_802154_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
 
 /**
- * @brief Get current antenna diversity mode
+ * @brief Get current antenna diversity mode.
  *
- * @returns Current antenna diversity mode
+ * @return Current antenna diversity mode.
  */
 nrf_802154_ant_div_mode_t nrf_802154_ant_div_mode_get(void);
 
 /**
- * @brief Manually select antenna used
+ * @brief Manually select the antenna to be used.
  *
  * For antenna to be switched, antenna diversity mode needs
  * to be @ref NRF_802154_ANT_DIV_MODE_MANUAL. Otherwise, antenna will
  * be only switched after @ref NRF_802154_ANT_DIV_MODE_MANUAL is set.
  *
- * @param[in] antenna Antenna to be selected
+ * @param[in] antenna Antenna to be used.
  *
  * @retval true  Antenna set successfully.
  * @retval false Invalid antenna passed as argument.
@@ -215,30 +214,40 @@ nrf_802154_ant_div_mode_t nrf_802154_ant_div_mode_get(void);
 bool nrf_802154_antenna_set(nrf_802154_ant_div_antenna_t antenna);
 
 /**
- * @brief Get currently used antenna
+ * @brief Get currently used antenna.
  *
  * @note This function should not called while
  * mode is other than @ref NRF_802154_ANT_DIV_MODE_MANUAL.
  *
- * @returns Currently used antenna.
+ * @return Currently used antenna.
  */
 nrf_802154_ant_div_antenna_t nrf_802154_antenna_get(void);
 
 /**
- * @brief Set antenna diversity configuration
+ * @brief Set antenna diversity configuration.
  *
- * @param[in] config Configuration of antenna diversity module to be set
+ * If configuration other than default is required, this should be called
+ * before @ref nrf_802154_antenna_diversity_init.
+ *
+ * @param[in] config Configuration of antenna diversity module to be set.
  */
 void nrf_802154_antenna_config_set(nrf_802154_ant_div_config_t config);
 
 /**
- * @brief Get current antenna diversity configuration
+ * @brief Get current antenna diversity configuration.
  *
- * @returns Configuration of antenna diversity module
+ * @return Configuration of antenna diversity module.
  */
 nrf_802154_ant_div_config_t nrf_802154_antenna_config_get(void);
 
-#endif // ENABLE_ANT_DIV
+/**
+ * @brief Initializes antenna diversity module.
+ *
+ * If any configuration other thatn default is requred, it should be set before
+ * calling this function. See @ref nrf_802154_antenna_config_set.
+ */
+void nrf_802154_antenna_diversity_init(void);
+#endif // ENABLE_ANT_DIVERSITY
 
 /**
  * @}

@@ -149,15 +149,15 @@ void nrf_802154_trx_enable(void);
  */
 void nrf_802154_trx_disable(void);
 
-#if ENABLE_ANT_DIV
+#if ENABLE_ANT_DIVERSITY
 /**
  * @brief Updates currently used antenna
  *
- * This function sets the antenna to be used during reception based on PIB configuration.
- * See @ref nrf_802154_pib_ant_div_mode_set, @ref nrf_802154_pib_ant_div_antenna_set
+ * This function sets the antenna to be used based on PIB configuration and TRX state.
+ * See @ref nrf_802154_pib_ant_div_mode_set, @ref nrf_802154_pib_ant_div_antenna_set.
  */
 void nrf_802154_trx_antenna_update(void);
-#endif // ENABLE_ANT_DIV
+#endif // ENABLE_ANT_DIVERSITY
 
 /**@brief Sets radio channel to use.
  *

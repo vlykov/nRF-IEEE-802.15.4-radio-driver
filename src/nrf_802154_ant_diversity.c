@@ -29,68 +29,52 @@
  */
 
 /**
- * @brief 802.15.4 antenna diversity module.
+ * @file
+ *   This file implements the 802.15.4 antenna diversity module.
+ *
  */
+#include <assert.h>
 
-#ifndef NRF_802154_ANT_DIV_H
-#define NRF_802154_ANT_DIV_H
+#include "nrf_802154_ant_diversity.h"
+#include "nrf_gpio.h"
 
-#include <stdint.h>
-
-#include "nrf_error.h"
-#include "nrf_802154_types.h"
-
-#ifndef NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN
-#define NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN 23
-#endif
-
-/**
- * @brief Configuration structure for antenna diversity
- */
-typedef struct
+static nrf_802154_ant_div_config_t m_ant_div_config = /**< Antenna Diversity configuration. */
 {
-    uint8_t ant_sel_pin; /* Pin used for antenna selection */
-} nrf_802154_ant_div_config_t;
+    .ant_sel_pin = NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN
+};
 
-/**
- * @brief Initializes antenna diversity module.
- *
- * If pinout other than default is to be used, @ref nrf_802154_ant_div_set_config
- * should be called before this function.
- */
-void nrf_802154_ant_div_init(void);
+void nrf_802154_ant_div_init(void)
+{
+    nrf_gpio_cfg_output(m_ant_div_config.ant_sel_pin);
+}
 
-/**
- * @brief Sets the antenna diversity configuration.
- *
- * Should not be called after @ref nrf_802154_ant_div_init.
- *
- * @param[in] ant_div_config  Antenna diversity configuration structure.
- */
-void nrf_802154_ant_div_config_set(nrf_802154_ant_div_config_t ant_div_config);
+void nrf_802154_ant_div_config_set(nrf_802154_ant_div_config_t ant_div_config)
+{
+    m_ant_div_config = ant_div_config;
+}
 
-/**
- * @brief Retrieves the antenna diversity configuration.
- *
- * @return Current antenna diversity module configuration.
- */
-nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void);
+nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void)
+{
+    return m_ant_div_config;
+}
 
-/**
- * @brief Select an antenna to use.
- *
- * @param[in] antenna  Antenna to be used
- *
- * @retval true  Antenna switched successfully
- * @retval false Invalid antenna passed to the function
- */
-bool nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna);
+bool nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
+{
+    bool status = true;
 
-/**
- * @brief Get currently used antenna.
- *
- * @return Currently used antenna.
- */
-nrf_802154_ant_div_antenna_t nrf_802154_ant_div_antenna_get(void);
+    if ((NRF_802154_ANT_DIV_ANTENNA_1 == antenna) || (NRF_802154_ANT_DIV_ANTENNA_2 == antenna))
+    {
+        nrf_gpio_pin_write(m_ant_div_config.ant_sel_pin, antenna);
+    }
+    else
+    {
+        status = false;
+    }
 
-#endif // NRF_802154_ANT_DIV_H
+    return status;
+}
+
+nrf_802154_ant_div_antenna_t nrf_802154_ant_div_antenna_get(void)
+{
+    return nrf_gpio_pin_out_read(m_ant_div_config.ant_sel_pin);
+}

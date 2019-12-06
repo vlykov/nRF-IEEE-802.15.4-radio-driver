@@ -2713,8 +2713,7 @@ bool nrf_802154_core_last_rssi_measurement_get(int8_t * p_rssi)
     return result;
 }
 
-#if ENABLE_ANT_DIV
-
+#if ENABLE_ANT_DIVERSITY
 bool nrf_802154_core_antenna_update(void)
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
@@ -2736,4 +2735,4 @@ bool nrf_802154_core_antenna_update(void)
     return result;
 }
 
-#endif // ENABLE_ANT_DIV
+#endif // ENABLE_ANT_DIVERSITY

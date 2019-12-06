@@ -210,16 +210,13 @@ typedef uint8_t nrf_802154_ifs_mode_t;
  *
  * Possible values:
  * - @ref NRF_802154_ANT_DIV_MODE_DISABLED,
- * - @ref NRF_802154_ANT_DIV_MODE_ANTENNA_1,
- * - @ref NRF_802154_ANT_DIV_MODE_ANTENNA_2,
  * - @ref NRF_802154_ANT_DIV_MODE_MANUAL
  */
 typedef uint8_t nrf_802154_ant_div_mode_t;
 
-#define NRF_802154_ANT_DIV_MODE_DISABLED  0x00 // !< Antenna diversity is disabled
-#define NRF_802154_ANT_DIV_MODE_ANTENNA_1 0x01 // !< First antenna is used
-#define NRF_802154_ANT_DIV_MODE_ANTENNA_2 0x02 // !< Second antenna is used
-#define NRF_802154_ANT_DIV_MODE_MANUAL    0x03 // !< Antenna is selected manually
+#define NRF_802154_ANT_DIV_MODE_DISABLED 0x00 // !< Antenna diversity is disabled - Antenna will not be controlled by ant_div module.
+                                              // !< Upon entering this mode, antenna 1 will be selected.
+#define NRF_802154_ANT_DIV_MODE_MANUAL   0x01 // !< Antenna is selected manually
 
 /**
  * @brief Available antennas

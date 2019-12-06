@@ -319,50 +319,49 @@ uint16_t nrf_802154_pib_ifs_min_lifs_period_get(void);
 void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period);
 #endif // NRF_802154_IFS_ENABLED
 
-#if ENABLE_ANT_DIV
+#if ENABLE_ANT_DIVERSITY
 /**
- * @brief Sets the antenna diversity mode
+ * @brief Sets the antenna diversity mode.
  *
- * @param[in] mode Antenna diversity mode to be set
+ * @param[in] mode Antenna diversity mode to be set.
  *
- * @retval true  Antenna diversity mode set successfully
- * @retval false Invalid antenna diversity mode passed as argument
+ * @retval true  Antenna diversity mode set successfully.
+ * @retval false Invalid antenna diversity mode passed as argument.
  */
 bool nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
 
 /**
- * @brief Gets the antenna diversity mode
+ * @brief Gets the antenna diversity mode.
  *
- * @returns Current antenna diversity mode
+ * @return Current antenna diversity mode.
  */
 nrf_802154_ant_div_mode_t nrf_802154_pib_ant_div_mode_get(void);
 
 /**
- * @brief Select antenna to be used
+ * @brief Select antenna to be used.
  *
- * @note Takes effect only is antenna diversity mode is set to
- * @ref NRF_802154_ANT_DIV_MODE_MANUAL. Otherwise, the changes will take effect only
- * after the antenna diversity is enabled and set to @ref NRF_802154_ANT_DIV_MODE_MANUAL mode.
- * See @ref nrf_802154_pib_ant_div_mode_set
+ * @note Takes effect only if antenna diversity mode is set to
+ * @ref NRF_802154_ANT_DIV_MODE_MANUAL.
+ * See @ref nrf_802154_pib_ant_div_mode_set.
  *
- * @param[in] antenna  Antenna to be selected
+ * @param[in] antenna  Antenna to be selected.
  *
- * @retval true  Antenna selected successfully
- * @retval false Invalid antenna passed as argument
+ * @retval true  Antenna selected successfully.
+ * @retval false Invalid antenna passed as argument.
  */
 bool nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna);
 
 /**
- * @brief Read the currently used antenna
+ * @brief Read the currently used antenna.
  *
  * @note The antenna read by this function is currently used antenna only if
  * antenna diversity mode is set to @ref NRF_802154_ANT_DIV_MODE_MANUAL. Otherwise,
  * currently used antenna may be different.
  *
- * @returns Currently selected antenna
+ * @return Currently selected antenna.
  */
 nrf_802154_ant_div_antenna_t nrf_802154_pib_ant_div_antenna_get();
-#endif // ENABLE_ANT_DIV
+#endif // ENABLE_ANT_DIVERSITY
 
 #ifdef __cplusplus
 }
