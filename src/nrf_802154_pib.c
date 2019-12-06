@@ -552,6 +552,7 @@ bool nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
             result = false;
             break;
     }
+
     return result;
 }
 

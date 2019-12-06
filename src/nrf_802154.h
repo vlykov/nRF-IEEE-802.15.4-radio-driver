@@ -243,7 +243,7 @@ nrf_802154_ant_div_config_t nrf_802154_antenna_config_get(void);
 /**
  * @brief Initializes antenna diversity module.
  *
- * If any configuration other thatn default is requred, it should be set before
+ * If any configuration other than default is requred, it should be set before
  * calling this function. See @ref nrf_802154_antenna_config_set.
  */
 void nrf_802154_antenna_diversity_init(void);
