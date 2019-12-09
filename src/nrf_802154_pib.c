@@ -269,6 +269,12 @@ void nrf_802154_pib_init(void)
     m_data.ifs.min_lifs_period_us = MIN_LIFS_PERIOD_US;
     m_data.ifs.mode               = NRF_802154_IFS_MODE_DISABLED;
 #endif // NRF_802154_IFS_ENABLED
+
+#if ENABLE_ANT_DIVERSITY
+    m_data.ant_div.mode    = NRF_802154_ANT_DIV_MODE_DISABLED;
+    m_data.ant_div.antenna = NRF_802154_ANT_DIV_ANTENNA_1;
+#endif // ENABLE_ANT_DIVERSITY
+
 }
 
 bool nrf_802154_pib_promiscuous_get(void)
