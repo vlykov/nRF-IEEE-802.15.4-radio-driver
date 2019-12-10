@@ -46,11 +46,9 @@
 #include "nrf_802154_utils.h"
 #include "fal/nrf_802154_fal.h"
 
-#if ENABLE_ANT_DIVERSITY
 #include "nrf_802154_ant_diversity.h"
-#endif // ENABLE_ANT_DIVERSITY
 
-#define CSMACA_BE_MAXIMUM 8  ///< The maximum allowed CSMA-CA backoff exponent (BE) that results from the implementation
+#define CSMACA_BE_MAXIMUM 8 ///< The maximum allowed CSMA-CA backoff exponent (BE) that results from the implementation
 
 typedef struct
 {

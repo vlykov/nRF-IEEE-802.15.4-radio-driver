@@ -48,9 +48,7 @@
 #include "nrf_802154_procedures_duration.h"
 #include "nrf_802154_critical_section.h"
 #include "fem/nrf_fem_protocol_api.h"
-#if ENABLE_ANT_DIVERSITY
 #include "nrf_802154_ant_diversity.h"
-#endif // ENABLE_ANT_DIVERSITY
 
 #include "nrf_802154_trx.h"
 
