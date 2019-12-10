@@ -338,7 +338,7 @@ bool nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
 nrf_802154_ant_div_mode_t nrf_802154_pib_ant_div_mode_get(void);
 
 /**
- * @brief Select antenna to be used.
+ * @brief Selects antenna to be used.
  *
  * @note Takes effect only if antenna diversity mode is set to
  * @ref NRF_802154_ANT_DIV_MODE_MANUAL.
@@ -352,11 +352,12 @@ nrf_802154_ant_div_mode_t nrf_802154_pib_ant_div_mode_get(void);
 bool nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna);
 
 /**
- * @brief Read the currently used antenna.
+ * @brief Reads the currently used antenna.
  *
  * @note The antenna read by this function is currently used antenna only if
  * antenna diversity mode is set to @ref NRF_802154_ANT_DIV_MODE_MANUAL. Otherwise,
  * currently used antenna may be different.
+ * @sa nrf_802154_pib_ant_div_mode_set
  *
  * @return Currently selected antenna.
  */

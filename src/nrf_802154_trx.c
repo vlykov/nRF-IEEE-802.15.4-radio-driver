@@ -669,6 +669,9 @@ void nrf_802154_trx_disable(void)
 }
 
 #if ENABLE_ANT_DIVERSITY
+/**
+ * Updates the antenna for reception, according to ant_diversity settings in PIB.
+ */
 static void rx_antenna_update(void)
 {
     bool                      result = true;
@@ -695,6 +698,12 @@ static void rx_antenna_update(void)
     }
 }
 
+/**
+ * Updates the antenna for transmission, according to ant_diversity settings in PIB.
+ *
+ * Antenna diversity for tx is not currently supported. If antenna diversity is not in disabled state,
+ * default antenna will always be used for transmission.
+ */
 static void tx_antenna_update(void)
 {
     bool                      result = true;
@@ -740,10 +749,6 @@ void nrf_802154_trx_antenna_update(void)
         case TRX_STATE_CONTINUOUS_CARRIER:
         case TRX_STATE_MODULATED_CARRIER:
             tx_antenna_update();
-            break;
-
-        case TRX_STATE_DISABLED:
-            assert(false);
             break;
 
         default:

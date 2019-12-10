@@ -87,7 +87,7 @@ nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void);
 bool nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna);
 
 /**
- * @brief Get currently used antenna.
+ * @brief Gets currently used antenna.
  *
  * @return Currently used antenna.
  */
