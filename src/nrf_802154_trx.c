@@ -48,7 +48,10 @@
 #include "nrf_802154_procedures_duration.h"
 #include "nrf_802154_critical_section.h"
 #include "fem/nrf_fem_protocol_api.h"
-#include "nrf_802154_ant_diversity.h"
+
+#if ENABLE_ANT_DIVERSITY
+#include "ant_diversity/nrf_802154_ant_diversity.h"
+#endif // ENABLE_ANT_DIVERSITY
 
 #include "nrf_802154_trx.h"
 
@@ -678,11 +681,25 @@ static void rx_antenna_update(void)
     switch (mode)
     {
         case NRF_802154_ANT_DIV_MODE_DISABLED:
-            /* Intentionally empty. */
+            if (nrf_8021514_ant_div_sweep_is_running())
+            {
+                nrf_8021514_ant_div_sweep_stop();
+            }
             break;
 
         case NRF_802154_ANT_DIV_MODE_MANUAL:
+            if (nrf_8021514_ant_div_sweep_is_running())
+            {
+                nrf_8021514_ant_div_sweep_stop();
+            }
             result = nrf_802154_ant_div_antenna_set(nrf_802154_pib_ant_div_antenna_get());
+            break;
+
+        case NRF_802154_ANT_DIV_MODE_AUTO:
+            if (!nrf_8021514_ant_div_sweep_is_running())
+            {
+                nrf_8021514_ant_div_sweep_start();
+            }
             break;
 
         default:
@@ -714,6 +731,7 @@ static void tx_antenna_update(void)
             break;
 
         case NRF_802154_ANT_DIV_MODE_MANUAL:
+        case NRF_802154_ANT_DIV_MODE_AUTO:
             result = nrf_802154_ant_div_antenna_set(NRF_802154_ANT_DIV_ANTENNA_1);
             break;
 
@@ -923,9 +941,16 @@ void nrf_802154_trx_receive_frame(uint8_t                                bcc,
         ints_to_enable |= NRF_RADIO_INT_ADDRESS_MASK;
     }
 
-    if ((notifications_mask & TRX_RECEIVE_NOTIFICATION_PRESTARTED) != 0U)
+    bool allow_helper1_swi = (notifications_mask & TRX_RECEIVE_NOTIFICATION_PRESTARTED) != 0U;
+
+#if ENABLE_ANT_DIVERSITY
+    // Always allow for helper1 interrupts, as they are used by antenna diversity for preamble detection.
+    allow_helper1_swi = true;
+#endif
+
+    if (allow_helper1_swi)
     {
-#if NRF_802154_DISABLE_BCC_MATCHING || !defined(NRF_RADIO_EVENT_HELPER1)
+#if (NRF_802154_DISABLE_BCC_MATCHING && !defined(ENABLE_ANT_DIVERSITY)) || !defined(NRF_RADIO_EVENT_HELPER1)
         assert(false);
 #else
         // The RADIO can't generate interrupt on EVENTS_HELPER1. Path to generate interrupt:
@@ -2531,7 +2556,7 @@ void nrf_802154_radio_irq_handler(void)
     // That's why we check here EGU's EGU_HELPER1_INTMASK.
     // The RADIO does not have interrupt from HELPER1 event.
     if (nrf_egu_int_enable_check(NRF_802154_SWI_EGU_INSTANCE, EGU_HELPER1_INTMASK) &&
-        nrf_radio_event_check(NRF_RADIO_EVENT_HELPER1))
+        nrf_radio_event_check(NRF_RADIO_EVENT_HELPER1) && (m_trx_state == TRX_STATE_RXFRAME))
     {
         nrf_radio_event_clear(NRF_RADIO_EVENT_HELPER1);
         nrf_egu_event_clear(NRF_802154_SWI_EGU_INSTANCE, EGU_HELPER1_EVENT);

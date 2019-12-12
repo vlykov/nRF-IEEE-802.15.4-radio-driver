@@ -507,9 +507,18 @@ extern "C" {
 #endif
 
 /**
- *@}
- **/
+ * @}
+ * @defgroup nrf_802154_ant_diversity Antenna diversity feature configuration
+ * @{
+ */
 
+#ifndef NRF_802154_ANT_DIV_TOGGLE_TIME_DEFAULT
+#define NRF_802154_ANT_DIV_TOGGLE_TIME_DEFAULT 40
+#endif
+
+/**
+ * @}
+ */
 #ifdef __cplusplus
 }
 #endif

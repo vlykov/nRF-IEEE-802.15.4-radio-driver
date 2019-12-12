@@ -29,68 +29,22 @@
  */
 
 /**
- * @brief 802.15.4 antenna diversity module.
+ * @brief 802.15.4 antenna diversity automatic switching module. Variant with timer and ppi peripherals.
  */
-
-#ifndef NRF_802154_ANT_DIV_H
-#define NRF_802154_ANT_DIV_H
+#ifndef NRF_802154_AD_AUTO_CONFIG_H
+#define NRF_802154_AD_AUTO_CONFIG_H
 
 #include <stdint.h>
-
-#include "nrf_error.h"
-#include "nrf_802154_types.h"
-
-#ifndef NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN
-#define NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN 23
-#endif
-
+//ANT_DIV_TODO
 /**
- * @brief Configuration structure for antenna diversity.
+ * @brief Configuration for antenna diversity module in ppi variant.
+ * 
  */
-typedef struct
+typedef struct 
 {
-    uint8_t ant_sel_pin; /* Pin used for antenna selection. */
+    uint8_t          ant_sel_pin; // !< Pin used for antenna selection.
+    NRF_TIMER_Type * p_timer;     // !< Pointer to a timer instance used for toggling the 
+                                  // !< antenna in auto mode. 
 } nrf_802154_ant_div_config_t;
 
-/**
- * @brief Initializes antenna diversity module.
- *
- * If pinout other than default is to be used, @ref nrf_802154_ant_div_set_config
- * should be called before this function.
- */
-void nrf_802154_ant_div_init(void);
-
-/**
- * @brief Sets the antenna diversity configuration.
- *
- * Should not be called after @ref nrf_802154_ant_div_init.
- *
- * @param[in] ant_div_config  Antenna diversity configuration structure.
- */
-void nrf_802154_ant_div_config_set(nrf_802154_ant_div_config_t ant_div_config);
-
-/**
- * @brief Retrieves the antenna diversity configuration.
- *
- * @return Current antenna diversity module configuration.
- */
-nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void);
-
-/**
- * @brief Selects an antenna to use.
- *
- * @param[in] antenna  Antenna to be used.
- *
- * @retval true  Antenna switched successfully.
- * @retval false Invalid antenna passed to the function.
- */
-bool nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna);
-
-/**
- * @brief Gets currently used antenna.
- *
- * @return Currently used antenna.
- */
-nrf_802154_ant_div_antenna_t nrf_802154_ant_div_antenna_get(void);
-
-#endif // NRF_802154_ANT_DIV_H
+#endif // NRF_802154_AD_AUTO_CONFIG_H

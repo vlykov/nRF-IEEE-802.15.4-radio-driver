@@ -217,6 +217,7 @@ typedef uint8_t nrf_802154_ant_div_mode_t;
 #define NRF_802154_ANT_DIV_MODE_DISABLED 0x00 // !< Antenna diversity is disabled - Antenna will not be controlled by ant_div module.
                                               // !< Upon entering this mode, antenna 1 will be selected.
 #define NRF_802154_ANT_DIV_MODE_MANUAL   0x01 // !< Antenna is selected manually
+#define NRF_802154_ANT_DIV_MODE_AUTO     0x02 // !< Antenna is selected automatically based on RSSI.
 
 /**
  * @brief Available antennas
@@ -227,8 +228,9 @@ typedef uint8_t nrf_802154_ant_div_mode_t;
  */
 typedef uint8_t nrf_802154_ant_div_antenna_t;
 
-#define NRF_802154_ANT_DIV_ANTENNA_1 0 // !< First antenna
-#define NRF_802154_ANT_DIV_ANTENNA_2 1 // !< Second antenna
+#define NRF_802154_ANT_DIV_ANTENNA_1    0 // !< First antenna
+#define NRF_802154_ANT_DIV_ANTENNA_2    1 // !< Second antenna
+#define NRF_802154_ANT_DIV_ANTENNA_NONE 2 // !< No antenna - used for storing RSSI results if no RSSI has been measured.
 
 /**
  * @brief Type of structure holding statistic counters.

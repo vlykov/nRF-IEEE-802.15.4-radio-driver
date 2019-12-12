@@ -49,7 +49,9 @@
 #include "fem/nrf_fem_protocol_api.h"
 #endif
 
-#include "nrf_802154_ant_diversity.h"
+#if ENABLE_ANT_DIVERSITY
+#include "ant_diversity/nrf_802154_ant_diversity.h"
+#endif // ENABLE_ANT_DIVERSITY
 
 #ifdef __cplusplus
 extern "C" {
@@ -238,6 +240,22 @@ void nrf_802154_antenna_config_set(nrf_802154_ant_div_config_t config);
  * @return Configuration of antenna diversity module.
  */
 nrf_802154_ant_div_config_t nrf_802154_antenna_config_get(void);
+
+/**
+ * @brief Sets the antenna toggle time in automatic mode.
+ *
+ * See @ref nrf_802154_ant_div_mode_set.
+ *
+ * @param[in] toggle_time  Time between switching antennas in us.
+ */
+void nrf_802154_ant_div_toggle_time_set(uint32_t toggle_time);
+
+/**
+ * @brief Reads the current antenna toggle time in automatic mode.
+ *
+ * @return Current time between switching antennas in us.
+ */
+uint32_t nrf_802154_ant_div_toggle_time_get();
 
 /**
  * @brief Initializes antenna diversity module.

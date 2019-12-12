@@ -29,52 +29,20 @@
  */
 
 /**
- * @file
- *   This file implements the 802.15.4 antenna diversity module.
- *
+ * @brief 802.15.4 antenna diversity automatic switching module. Variant without peripherals used.
  */
-#include <assert.h>
+#ifndef NRF_802154_AD_AUTO_CONFIG_H
+#define NRF_802154_AD_AUTO_CONFIG_H
 
-#include "nrf_802154_ant_diversity.h"
-#include "nrf_gpio.h"
-
-static nrf_802154_ant_div_config_t m_ant_div_config = /**< Antenna Diversity configuration. */
+#include <stdint.h>
+//ANT_DIV_TODO
+/**
+ * @brief Configuration for antenna diversity module in scheduler variant.
+ * 
+ */
+typedef struct 
 {
-    .ant_sel_pin = NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN
-};
+    uint8_t          ant_sel_pin; // !< Pin used for antenna selection.
+} nrf_802154_ant_div_config_t;
 
-void nrf_802154_ant_div_init(void)
-{
-    nrf_gpio_cfg_output(m_ant_div_config.ant_sel_pin);
-}
-
-void nrf_802154_ant_div_config_set(nrf_802154_ant_div_config_t ant_div_config)
-{
-    m_ant_div_config = ant_div_config;
-}
-
-nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void)
-{
-    return m_ant_div_config;
-}
-
-bool nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
-{
-    bool status = true;
-
-    if ((NRF_802154_ANT_DIV_ANTENNA_1 == antenna) || (NRF_802154_ANT_DIV_ANTENNA_2 == antenna))
-    {
-        nrf_gpio_pin_write(m_ant_div_config.ant_sel_pin, antenna);
-    }
-    else
-    {
-        status = false;
-    }
-
-    return status;
-}
-
-nrf_802154_ant_div_antenna_t nrf_802154_ant_div_antenna_get(void)
-{
-    return nrf_gpio_pin_out_read(m_ant_div_config.ant_sel_pin);
-}
+#endif // NRF_802154_AD_AUTO_CONFIG_H

@@ -7,7 +7,6 @@
         ],
         "_headers": [
             "src/nrf_802154.h",
-            "src/nrf_802154_ant_diversity.h",
             "src/nrf_802154_core_hooks.h",
             "src/nrf_802154_critical_section.h",
             "src/nrf_802154_debug.h",
@@ -47,7 +46,6 @@
                 ],
                 "_files": [
                     "src/nrf_802154.c",
-                    "src/nrf_802154_ant_diversity.c",
                     "src/nrf_802154_core.c",
                     "src/nrf_802154_core_hooks.c",
                     "src/nrf_802154_critical_section.c",
@@ -99,7 +97,6 @@
                 ],
                 "_files": [
                     "src/nrf_802154.c",
-                    "src/nrf_802154_ant_diversity.c",
                     "src/nrf_802154_core.c",
                     "src/nrf_802154_core_hooks.c",
                     "src/nrf_802154_critical_section.c",
@@ -148,7 +145,6 @@
                 ],
                 "_files": [
                     "src/nrf_802154.c",
-                    "src/nrf_802154_ant_diversity.c",
                     "src/nrf_802154_core.c",
                     "src/nrf_802154_core_hooks.c",
                     "src/nrf_802154_critical_section.c",
@@ -475,6 +471,62 @@
         "_description": "This option enables antenna diversity.",
         "_defines": [
             "ENABLE_ANT_DIVERSITY"
+        ],
+        "_includes" : [
+            "src/ant_diversity"
+        ],
+        "_headers" : [
+            "src/ant_diversity/nrf_802154_ant_diversity.h"
+        ],
+        "_files" : [
+            "src/ant_diversity/nrf_802154_ant_diversity.c"
+        ],
+        "_variants" : [
+            {
+                "_defines": [
+                    "ANT_DIVERSITY_SCHEDULER"
+                ],
+                "_includes" : [
+                    "src/ant_diversity/ad_scheduler"
+                ],
+                "_headers" : [
+                    "src/ant_diversity/ad_scheduler/nrf_802154_ant_diversity_config.h"
+                ],
+                "_files" : [
+                    "src/ant_diversity/ad_scheduler/nrf_802154_ant_diversity_auto.c"
+                ],
+                "_name" : "scheduler"
+            },
+            {
+                "_defines": [
+                    "ANT_DIVERSITY_TIMER"
+                ],
+                "_includes" : [
+                    "src/ant_diversity/ad_timer"
+                ],
+                "_headers" : [
+                    "src/ant_diversity/ad_timer/nrf_802154_ant_diversity_config.h"
+                ],
+                "_files" : [
+                    "src/ant_diversity/ad_timer/nrf_802154_ant_diversity_auto.c"
+                ],
+                "_name" : "timer"
+            },
+            {
+                "_defines": [
+                    "ANT_DIVERSITY_PPI"
+                ],
+                "_includes" : [
+                    "src/ant_diversity/ad_ppi"
+                ],
+                "_headers" : [
+                    "src/ant_diversity/ad_ppi/nrf_802154_ant_diversity_config.h"
+                ],
+                "_files" : [
+                    "src/ant_diversity/ad_ppi/nrf_802154_ant_diversity_auto.c"
+                ],
+                "_name" : "ppi"
+            }
         ]
     },
 
