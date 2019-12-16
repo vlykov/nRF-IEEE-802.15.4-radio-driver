@@ -206,7 +206,7 @@ static void timer_start(void)
     nrf_timer_task_trigger(RAAL_TIMER, NRF_TIMER_TASK_STOP);
     nrf_timer_task_trigger(RAAL_TIMER, NRF_TIMER_TASK_CLEAR);
     nrf_timer_bit_width_set(RAAL_TIMER, NRF_TIMER_BIT_WIDTH_32);
-    nrf_timer_cc_write(RAAL_TIMER, TIMER_CC_ACTION, 0);
+    nrf_timer_cc_set(RAAL_TIMER, TIMER_CC_ACTION, 0);
 
     nrf_timer_task_trigger(RAAL_TIMER, NRF_TIMER_TASK_START);
     NVIC_EnableIRQ(RAAL_TIMER_IRQn);
@@ -227,7 +227,7 @@ static void timer_reset(void)
 static inline uint32_t timer_time_get(void)
 {
     nrf_timer_task_trigger(RAAL_TIMER, TIMER_CC_CAPTURE_TASK);
-    return nrf_timer_cc_read(RAAL_TIMER, TIMER_CC_CAPTURE);
+    return nrf_timer_cc_get(RAAL_TIMER, TIMER_CC_CAPTURE);
 }
 
 /**@brief Check if timer is set to margin.
@@ -283,7 +283,7 @@ static inline void timer_to_margin_set(void)
     m_timer_action = TIMER_ACTION_MARGIN;
 
     nrf_timer_event_clear(RAAL_TIMER, TIMER_CC_ACTION_EVENT);
-    nrf_timer_cc_write(RAAL_TIMER, TIMER_CC_ACTION, margin_cc);
+    nrf_timer_cc_set(RAAL_TIMER, TIMER_CC_ACTION, margin_cc);
     nrf_timer_int_enable(RAAL_TIMER, TIMER_CC_ACTION_INT);
 }
 
@@ -301,10 +301,10 @@ static void timer_on_extend_update(void)
 
     if (timer_is_set_to_margin())
     {
-        uint32_t margin_cc = nrf_timer_cc_read(RAAL_TIMER, TIMER_CC_ACTION);
+        uint32_t margin_cc = nrf_timer_cc_get(RAAL_TIMER, TIMER_CC_ACTION);
 
         margin_cc += m_timeslot_length;
-        nrf_timer_cc_write(RAAL_TIMER, TIMER_CC_ACTION, margin_cc);
+        nrf_timer_cc_set(RAAL_TIMER, TIMER_CC_ACTION, margin_cc);
     }
     else
     {
@@ -317,8 +317,8 @@ static void timer_on_extend_update(void)
             extension_interval = time_corrected_for_drift_get(m_prev_timeslot_length);
         }
 
-        nrf_timer_cc_write(RAAL_TIMER, TIMER_CC_ACTION,
-                           nrf_timer_cc_read(RAAL_TIMER, TIMER_CC_ACTION) + extension_interval);
+        nrf_timer_cc_set(RAAL_TIMER, TIMER_CC_ACTION,
+                           nrf_timer_cc_get(RAAL_TIMER, TIMER_CC_ACTION) + extension_interval);
         nrf_timer_int_enable(RAAL_TIMER, TIMER_CC_ACTION_INT);
     }
 }
@@ -496,7 +496,7 @@ static void extension_margin_exceeded_handle(void)
     nrf_timer_int_disable(RAAL_TIMER, TIMER_CC_ACTION_INT);
     nrf_timer_event_clear(RAAL_TIMER, TIMER_CC_ACTION_EVENT);
 
-    uint32_t elapsed_timeslot       = nrf_timer_cc_read(RAAL_TIMER, TIMER_CC_ACTION);
+    uint32_t elapsed_timeslot       = nrf_timer_cc_get(RAAL_TIMER, TIMER_CC_ACTION);
     bool     has_remaining_timeslot =
         m_config.sd_cfg.timeslot_max_length > (elapsed_timeslot + m_config.sd_cfg.timeslot_length);
 

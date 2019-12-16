@@ -197,9 +197,9 @@ static int32_t event_configuration_set(const nrf_802154_fal_event_t * const p_ev
                                            task_addr);
             nrf_ppi_channel_enable((nrf_ppi_channel_t)ppi_ch);
 
-            nrf_timer_cc_write(p_event->event.timer.p_timer_instance,
-                               (nrf_timer_cc_channel_t)compare_channel,
-                               p_event->event.timer.counter_value - time_delay);
+            nrf_timer_cc_set(p_event->event.timer.p_timer_instance,
+                             (nrf_timer_cc_channel_t)compare_channel,
+                             p_event->event.timer.counter_value - time_delay);
         }
         break;
 

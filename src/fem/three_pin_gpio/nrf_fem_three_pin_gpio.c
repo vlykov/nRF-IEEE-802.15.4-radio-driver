@@ -239,9 +239,9 @@ static int32_t event_configuration_set(const nrf_802154_fal_event_t * const p_ev
                                            task_addr);
             nrf_ppi_channel_enable((nrf_ppi_channel_t)ppi_ch);
 
-            nrf_timer_cc_write(p_event->event.timer.p_timer_instance,
-                               (nrf_timer_cc_channel_t)compare_channel,
-                               p_event->event.timer.counter_value - time_delay);
+            nrf_timer_cc_set(p_event->event.timer.p_timer_instance,
+                             (nrf_timer_cc_channel_t)compare_channel,
+                             p_event->event.timer.counter_value - time_delay);
 
             /* PDN pin */
             if (m_nrf_fem_interface_config.pdn_pin_config.active_high)
@@ -268,10 +268,10 @@ static int32_t event_configuration_set(const nrf_802154_fal_event_t * const p_ev
 
             nrf_ppi_channel_enable(m_nrf_fem_interface_config.ppi_ch_id_pdn);
 
-            nrf_timer_cc_write(p_event->event.timer.p_timer_instance,
-                               (nrf_timer_cc_channel_t)compare_channel,
-                               p_event->event.timer.counter_value - time_delay -
-                               m_nrf_fem_interface_config.fem_config.pdn_settle_us);
+            nrf_timer_cc_set(p_event->event.timer.p_timer_instance,
+                             (nrf_timer_cc_channel_t)compare_channel,
+                             p_event->event.timer.counter_value - time_delay -
+                             m_nrf_fem_interface_config.fem_config.pdn_settle_us);
             break;
         }
 
@@ -551,9 +551,9 @@ bool nrf_fem_prepare_powerdown(NRF_TIMER_Type  * p_instance,
                        ]);
     }
 
-    nrf_timer_cc_write(p_instance,
-                       compare_channel,
-                       m_nrf_fem_interface_config.fem_config.trx_hold_us + 1);
+    nrf_timer_cc_set(p_instance,
+                     compare_channel,
+                     m_nrf_fem_interface_config.fem_config.trx_hold_us + 1);
     nrf_ppi_channel_endpoint_setup(m_nrf_fem_interface_config.ppi_ch_id_pdn,
                                    (uint32_t)(&(p_instance->EVENTS_COMPARE[compare_channel])),
                                    pdn_task_addr);
