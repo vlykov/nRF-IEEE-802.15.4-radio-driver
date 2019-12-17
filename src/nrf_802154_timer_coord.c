@@ -137,7 +137,7 @@ void nrf_802154_timer_coord_timestamp_prepare(uint32_t event_addr)
                                             PPI_TIMESTAMP,
                                             event_addr,
                                             nrf_802154_hp_timer_timestamp_task_get(),
-                                            (uint32_t)nrf_ppi_task_group_disable_address_get(
+                                            nrf_ppi_task_group_disable_address_get(
                                                 NRF_PPI,
                                                 PPI_TIMESTAMP_GROUP));
 

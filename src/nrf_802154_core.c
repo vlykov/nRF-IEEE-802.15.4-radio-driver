@@ -973,8 +973,7 @@ static void rx_init(bool disabled_was_triggered)
         (uint32_t)nrf_radio_event_address_get(NRF_RADIO_EVENT_END));
 #else
     // Configure the timer coordinator to get a timestamp of the CRCOK event.
-    nrf_802154_timer_coord_timestamp_prepare(
-        (uint32_t)nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_CRCOK));
+    nrf_802154_timer_coord_timestamp_prepare(nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_CRCOK));
 #endif
 #endif
 
@@ -1007,14 +1006,12 @@ static bool tx_init(const uint8_t * p_data, bool cca, bool disabled_was_triggere
         // Configure the timer coordinator to get a time stamp of the READY event.
         // Note: This event triggers CCASTART, so the time stamp of READY event
         // is the time stamp when CCA started.
-        nrf_802154_timer_coord_timestamp_prepare(
-            (uint32_t)nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_READY));
+        nrf_802154_timer_coord_timestamp_prepare(nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_READY));
     }
     else
     {
         // Configure the timer coordinator to get a time stamp of the PHYEND event.
-        nrf_802154_timer_coord_timestamp_prepare(
-            (uint32_t)nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_PHYEND));
+        nrf_802154_timer_coord_timestamp_prepare(nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_PHYEND));
     }
 #endif
 
@@ -1979,8 +1976,7 @@ void nrf_802154_trx_transmit_frame_transmitted(void)
             (uint32_t)nrf_radio_event_address_get(NRF_RADIO_EVENT_END));
 #else
         // Configure the timer coordinator to get a timestamp of the CRCOK event.
-        nrf_802154_timer_coord_timestamp_prepare(
-            (uint32_t)nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_CRCOK));
+        nrf_802154_timer_coord_timestamp_prepare(nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_CRCOK));
 #endif
 #endif
 
@@ -2180,8 +2176,7 @@ void nrf_802154_trx_transmit_frame_ccaidle(void)
     uint32_t ts = timer_coord_timestamp_get();
 
     // Configure the timer coordinator to get a timestamp of the PHYEND event.
-    nrf_802154_timer_coord_timestamp_prepare(
-        (uint32_t)nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_PHYEND));
+    nrf_802154_timer_coord_timestamp_prepare(nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_PHYEND));
 
     // Update stat timestamp of CCASTART event
     nrf_802154_stat_timestamp_write(last_cca_start_timestamp, ts);
