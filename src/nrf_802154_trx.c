@@ -490,7 +490,8 @@ static void fem_for_tx_reset(bool cca, bool disable_ppi_egu_timer_start)
 
     if (cca)
     {
-        nrf_802154_fal_pa_configuration_clear(&m_activate_rx_cc0, &m_ccaidle);
+        nrf_802154_fal_lna_configuration_clear(&m_activate_rx_cc0, &m_ccaidle);
+        nrf_802154_fal_pa_configuration_clear(&m_ccaidle, NULL);
     }
     else
     {
@@ -1312,6 +1313,7 @@ bool nrf_802154_trx_transmit_ack(const void * p_transmit_buffer, uint32_t delay_
          * will not be triggered in future.
          */
         nrf_ppi_channel_disable(PPI_TIMER_TX_ACK);
+        nrf_ppi_channel_endpoint_setup(PPI_TIMER_TX_ACK, 0, 0);
 
         /* As the timer was running during operation, it is possible we were able to configure
          * FEM thus it may trigger in future or may started PA activation.
@@ -1381,6 +1383,8 @@ static void rxframe_finish_disable_ppis(void)
     nrf_ppi_channel_disable(PPI_CRCOK_DIS_PPI);
     nrf_ppi_channel_disable(PPI_ADDRESS_COUNTER_COUNT);
     nrf_ppi_channel_disable(PPI_CRCERROR_COUNTER_CLEAR);
+
+    nrf_ppi_channel_endpoint_setup(PPI_CRCERROR_CLEAR, 0, 0);
 #endif // NRF_802154_DISABLE_BCC_MATCHING
 
     nrf_ppi_channel_remove_from_group(PPI_EGU_RAMP_UP, PPI_CHGRP0);
@@ -2222,7 +2226,6 @@ static void txack_finish(void)
      */
     nrf_ppi_channel_disable(PPI_TIMER_TX_ACK);
     nrf_ppi_channel_endpoint_setup(PPI_TIMER_TX_ACK, 0, 0);
-    nrf_ppi_fork_endpoint_setup(PPI_TIMER_TX_ACK, 0);
 
     nrf_radio_shorts_set(SHORTS_IDLE);
 
@@ -2253,6 +2256,7 @@ static void transmit_ack_abort(void)
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_HIGH);
 
     nrf_ppi_channel_disable(PPI_TIMER_TX_ACK);
+    nrf_ppi_channel_endpoint_setup(PPI_TIMER_TX_ACK, 0, 0);
 
     nrf_radio_shorts_set(SHORTS_IDLE);
 
