@@ -276,7 +276,7 @@ static void * volatile mp_receive_buffer;
 void nrf_timer_init(void)
 {
     nrf_timer_mode_set(NRF_802154_TIMER_INSTANCE, NRF_TIMER_MODE_TIMER);
-    nrf_timer_bit_width_set(NRF_802154_TIMER_INSTANCE, NRF_TIMER_BIT_WIDTH_16);
+    nrf_timer_bit_width_set(NRF_802154_TIMER_INSTANCE, NRF_TIMER_BIT_WIDTH_32);
     nrf_timer_frequency_set(NRF_802154_TIMER_INSTANCE, NRF_TIMER_FREQ_1MHz);
 
 #if NRF_802154_DISABLE_BCC_MATCHING
@@ -1263,8 +1263,18 @@ bool nrf_802154_trx_transmit_ack(const void * p_transmit_buffer, uint32_t delay_
 
     // Detect if PPI will work in future or has just worked.
     nrf_timer_task_trigger(NRF_802154_TIMER_INSTANCE, NRF_TIMER_TASK_CAPTURE3);
-    if (nrf_timer_cc_read(NRF_802154_TIMER_INSTANCE, NRF_TIMER_CC_CHANNEL3) <
-        nrf_timer_cc_read(NRF_802154_TIMER_INSTANCE, NRF_TIMER_CC_CHANNEL1))
+    uint32_t timer_cc_now = nrf_timer_cc_read(NRF_802154_TIMER_INSTANCE,
+                                              NRF_TIMER_CC_CHANNEL3);
+    uint32_t timer_cc_fem_start = nrf_timer_cc_read(NRF_802154_TIMER_INSTANCE,
+                                                    NRF_TIMER_CC_CHANNEL0);
+
+    // When external PA uses a timer, it should be configured to a time later than ramp up time. In
+    // such case, the timer stops with shorts on PA timer. But if external PA does not use a timer,
+    // FEM time is set to a value in the past that was used by LNA. After the timer overflows,
+    // the timer stops with a short on the past value used by LNA. We have to detect if the current
+    // timer value is after the overflow.
+    if ((timer_cc_now < timer_cc_ramp_up_start) &&
+        ((timer_cc_fem_start >= timer_cc_ramp_up_start) || (timer_cc_now > timer_cc_fem_start)))
     {
         result = true;
     }
