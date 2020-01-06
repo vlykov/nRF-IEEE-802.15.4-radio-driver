@@ -123,4 +123,50 @@ bool nrf_8021514_ant_div_sweep_stop();
  */
 bool nrf_8021514_ant_div_sweep_is_running();
 
+/**
+ * @brief Notification to be called when antenna diversity auto mode is enabled.
+ * 
+ * @note Implementation is defined by antenna diversity automatic mode variant.
+ */
+void nrf_802154_ant_div_enable_notify();
+/**
+ * @brief Notification to be called when antenna diversity auto mode is disabled.
+ * 
+ * @note Implementation is defined by antenna diversity automatic mode variant.
+ */
+void nrf_802154_ant_div_disable_notify();
+/**
+ * @brief Notification to be called when radio rx is started.
+ * 
+ * @note Implementation is defined by antenna diversity automatic mode variant.
+ */
+void nrf_802154_ant_div_rx_started_notify();
+/**
+ * @brief Notification to be called when radio rx is aborted.
+ * 
+ * @note Implementation is defined by antenna diversity automatic mode variant.
+ */
+void nrf_802154_ant_div_rx_aborted_notify();
+/**
+ * @brief Notification to be called when preamble is detected.
+ * 
+ * @note Implementation is defined by antenna diversity automatic mode variant.
+ */
+void nrf_802154_ant_div_preamble_detected_notify();
+/**
+ * @brief Notification to be called when frame start is detected during reception.
+ * 
+ * @note Implementation is defined by antenna diversity automatic mode variant.
+ * 
+ * @retval true  RSSI measurements have finished and currently selected antenna is optimal for reception.
+ * @retval false RSSI measurements have not yet finished and currently selected antenna is random.
+ */
+bool nrf_802154_ant_div_frame_started_notify();
+/**
+ * @brief Notification to be called when timeout expires after preamble detection.
+ * 
+ * @note Implementation is defined by antenna diversity automatic mode variant.
+ */
+void nrf_802154_ant_div_preamble_timeout_notify();
+
 #endif // NRF_802154_ANT_DIV_H

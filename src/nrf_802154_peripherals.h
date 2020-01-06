@@ -106,6 +106,36 @@ extern "C" {
 #define NRF_802154_COUNTER_TIMER_INSTANCE \
     NRFX_CONCAT_2(NRF_TIMER, NRF_802154_COUNTER_TIMER_INSTANCE_NO)
 
+#if ANT_DIVERSITY_TIMER
+/**
+ * @def NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO
+ *
+ * Number of the timer instance used for detecting when PSDU is being received.
+ *
+ */
+#ifndef NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO
+#define NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO 3
+#endif
+
+/**
+ * @def NRF_802154_COUNTER_TIMER_INSTANCE
+ *
+ * The timer instance used by the driver for detecting when PSDU is being received.
+ *
+ * @note This configuration is used only when the NRF_RADIO_EVENT_BCMATCH event handling is disabled
+ *       (see @ref NRF_802154_DISABLE_BCC_MATCHING).
+ */
+#define NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE \
+    NRFX_CONCAT_2(NRF_TIMER, NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO)
+
+#define NRF_802154_ANT_DIVERSITY_TIMER_IRQHANDLER \
+    NRFX_CONCAT_3(TIMER, NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO, _IRQHandler)
+    
+#define NRF_802154_ANT_DIVERSITY_TIMER_IRQN                     \
+    NRFX_CONCAT_3(TIMER,  NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO, _IRQn)
+    
+#endif
+
 /**
  * @def NRF_802154_SWI_EGU_INSTANCE_NO
  *

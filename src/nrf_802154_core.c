@@ -158,7 +158,8 @@ static uint32_t m_listening_start_hp_timestamp;
 /** @brief Best antenna for current reception, based on RSSI measurement
  *  @note NRF_802154_ANT_DIV_ANTENNA_NONE indicates that no RSSI measurement has been performed yet.
  */
-static nrf_802154_ant_div_antenna_t m_rssi_best_antenna = NRF_802154_ANT_DIV_ANTENNA_NONE;
+//ANT_DIV_TODO
+// static nrf_802154_ant_div_antenna_t m_rssi_best_antenna = NRF_802154_ANT_DIV_ANTENNA_NONE;
 #endif // ENABLE_ANT_DIVERSITY
 /***************************************************************************************************
  * @section Common core operations
@@ -238,73 +239,74 @@ static uint8_t lqi_get(const uint8_t * p_data)
 }
 
 #if ENABLE_ANT_DIVERSITY
+// ANT_DIV_TODO cleanup
 // Antenna switch during reception should not exceed 200 ns, this functions
 // ensures that antenna is ready before any further operations are scheduled.
-static void antenna_switch_wait()
-{
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-    __ASM("nop");
-}
+// static void antenna_switch_wait()
+// {
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+//     __ASM("nop");
+// }
 
-static void check_for_best_antenna()
-{
-    int8_t rssi_first;
-    int8_t rssi_second;
-    bool result;
+// static void check_for_best_antenna()
+// {
+//     int8_t rssi_first;
+//     int8_t rssi_second;
+//     bool result;
 
-    // This function is supposed to be called after detecting frame prestarted event, but before
-    // detecting valid frame address. This means that we're currently in critical section, but the
-    // timeslot is not yet extended due to detecting valid frame. To avoid invalid timeslot extension
-    // due to blocking rssi measurements, antenna check can be aborted here if timeslot is about to end.
-    // Antenna switching takes 200 ns (250 ns with safety margin), while rssi measurement - 250, 
-    // which gives total time of 750 ns.
-    // 750 ns is less than safety margin, so check for time left different than 0 is sufficient.
-    if(!nrf_802154_rsch_timeslot_us_left_get())
-    {
-        return;
-    }
+//     // This function is supposed to be called after detecting frame prestarted event, but before
+//     // detecting valid frame address. This means that we're currently in critical section, but the
+//     // timeslot is not yet extended due to detecting valid frame. To avoid invalid timeslot extension
+//     // due to blocking rssi measurements, antenna check can be aborted here if timeslot is about to end.
+//     // Antenna switching takes 200 ns (250 ns with safety margin), while rssi measurement - 250, 
+//     // which gives total time of 750 ns.
+//     // 750 ns is less than safety margin, so check for time left different than 0 is sufficient.
+//     if(!nrf_802154_rsch_timeslot_us_left_get())
+//     {
+//         return;
+//     }
 
-    // This function should never be called from trx state other than TRX_STATE_RXFRAME, 
-    // which is the only condition for rssi measurement failing here, so assert is sufficient.
-    result = nrf_802154_trx_rssi_measure();
-    assert(result);
+//     // This function should never be called from trx state other than TRX_STATE_RXFRAME, 
+//     // which is the only condition for rssi measurement failing here, so assert is sufficient.
+//     result = nrf_802154_trx_rssi_measure();
+//     assert(result);
 
-    // nrf_802154_core_last_rssi_measurement_get(&rssi_first);
-    rssi_measurement_wait();
-    rssi_first = rssi_last_measurement_get();
+//     // nrf_802154_core_last_rssi_measurement_get(&rssi_first);
+//     rssi_measurement_wait();
+//     rssi_first = rssi_last_measurement_get();
 
-    nrf_802154_ant_div_antenna_toggle();
-    // Wait for antenna to fully switch before starting second RSSI measurement.
-    antenna_switch_wait();
+//     nrf_802154_ant_div_antenna_toggle();
+//     // Wait for antenna to fully switch before starting second RSSI measurement.
+//     antenna_switch_wait();
 
-    result = nrf_802154_trx_rssi_measure();
-    assert(result);
-    // To avoid compilation warnings in non-debug build.
-    (void)result;
+//     result = nrf_802154_trx_rssi_measure();
+//     assert(result);
+//     // To avoid compilation warnings in non-debug build.
+//     (void)result;
 
-    rssi_measurement_wait();
-    rssi_second = rssi_last_measurement_get();
+//     rssi_measurement_wait();
+//     rssi_second = rssi_last_measurement_get();
 
-    if (rssi_first >= rssi_second)
-    {
-        nrf_802154_ant_div_antenna_toggle();
-    }
-    m_rssi_best_antenna = nrf_802154_ant_div_antenna_get();
-}
+//     if (rssi_first >= rssi_second)
+//     {
+//         nrf_802154_ant_div_antenna_toggle();
+//     }
+//     m_rssi_best_antenna = nrf_802154_ant_div_antenna_get();
+// }
 #endif // ENABLE_ANT_DIVERSITY
 
 #if (NRF_802154_FRAME_TIMESTAMP_ENABLED)
@@ -899,6 +901,11 @@ static bool current_operation_terminate(nrf_802154_term_t term_lvl,
                  * have already been called. We need to stop counting timeout. */
                 nrf_802154_timer_sched_remove(&m_rx_prestarted_timer, NULL);
 
+#if ENABLE_ANT_DIVERSITY
+                /* Notify antenna diversity module that RX has been aborted. */
+                nrf_802154_ant_div_rx_aborted_notify();
+#endif // ENABLE_ANT_DIVERSITY
+
                 /* We might have boosted preconditions (to support coex) above level
                  * normally requested for current state by request_preconditions_for_state(m_state).
                  * When current operation is terminated we request preconditions back
@@ -1482,8 +1489,7 @@ static void on_rx_prestarted_timeout(void * p_context)
     #if ENABLE_ANT_DIVERSITY
         if (NRF_802154_ANT_DIV_MODE_AUTO == nrf_802154_ant_div_mode_get())
         {
-            m_rssi_best_antenna = NRF_802154_ANT_DIV_ANTENNA_NONE;
-            nrf_8021514_ant_div_sweep_start();
+            nrf_802154_ant_div_preamble_timeout_notify();
         }
     #endif // ENABLE_ANT_DIVERSITY
     /* nrf_802154_trx_receive_frame_prestarted boosted preconditions beyond those normally
@@ -1534,8 +1540,7 @@ void nrf_802154_trx_receive_frame_prestarted(void)
     #if ENABLE_ANT_DIVERSITY
         if (NRF_802154_ANT_DIV_MODE_AUTO == nrf_802154_ant_div_mode_get())
         {
-            nrf_8021514_ant_div_sweep_stop();
-            check_for_best_antenna();
+            nrf_802154_ant_div_preamble_detected_notify();
         }
     #endif // ENABLE_ANT_DIVERSITY
 
@@ -1571,7 +1576,7 @@ void nrf_802154_trx_receive_frame_started(void)
     /* If antenna diversity is enabled, rx_prestarted_timer would be started even
        in different coex rx request modes than NRF_802154_COEX_RX_REQUEST_MODE_ENERGY_DETECTION */
     nrf_802154_timer_sched_remove(&m_rx_prestarted_timer, NULL);
-    m_rssi_best_antenna = NRF_802154_ANT_DIV_ANTENNA_NONE;
+    nrf_802154_ant_div_frame_started_notify();
 #endif // ENABLE_ANT_DIVERSITY
 
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);

@@ -525,10 +525,14 @@ bool nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
 
     switch (mode)
     {
-        /* Fall-through.*/
         case NRF_802154_ANT_DIV_MODE_DISABLED:
         case NRF_802154_ANT_DIV_MODE_MANUAL:
+            nrf_802154_ant_div_disable_notify();
+            m_data.ant_div.mode = mode;
+            break;
+
         case NRF_802154_ANT_DIV_MODE_AUTO:
+            nrf_802154_ant_div_enable_notify();
             m_data.ant_div.mode = mode;
             break;
 

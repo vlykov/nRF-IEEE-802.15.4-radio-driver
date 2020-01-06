@@ -681,25 +681,14 @@ static void rx_antenna_update(void)
     switch (mode)
     {
         case NRF_802154_ANT_DIV_MODE_DISABLED:
-            if (nrf_8021514_ant_div_sweep_is_running())
-            {
-                nrf_8021514_ant_div_sweep_stop();
-            }
             break;
 
         case NRF_802154_ANT_DIV_MODE_MANUAL:
-            if (nrf_8021514_ant_div_sweep_is_running())
-            {
-                nrf_8021514_ant_div_sweep_stop();
-            }
             result = nrf_802154_ant_div_antenna_set(nrf_802154_pib_ant_div_antenna_get());
             break;
 
         case NRF_802154_ANT_DIV_MODE_AUTO:
-            if (!nrf_8021514_ant_div_sweep_is_running())
-            {
-                nrf_8021514_ant_div_sweep_start();
-            }
+            nrf_802154_ant_div_rx_started_notify();
             break;
 
         default:
