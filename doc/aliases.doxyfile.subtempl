@@ -1,0 +1,155 @@
+ALIASES += \
+tag51="<div class=\"whichnRF nRF51\"><span>This information applies to the <b>nRF51 Series</b> only.</span></div>" \
+tag52="" \
+tag52832="<div class=\"whichnRF nRF52\"><span>This information applies to the <b>nRF52832 SoC</b> only.</span></div>" \
+tag52840="<div class=\"whichnRF nRF52840\"><span>This information applies to the <b>nRF52840 SoC</b> only.</span></div>" \
+tag52840and52833="<div class=\"whichnRF nRF52840\"><span>This information applies to the following SoCs: <b>nRF52833</b> and <b>nRF52840</b>.</span></div>" \
+tagAPI51="<span class=\"whichnRF nRF51\">nRF51 Series only:</span>" \
+tagAPI52="" \
+tagAPI52832="<span class=\"whichnRF nRF52\">nRF52832 only:</span>" \
+tagAPI52840="<span class=\"whichnRF nRF52840\">nRF52840 only:</span>" \
+tag51OV="&nbsp;<span class=\"whichnRF nRF51\">nRF51 Series only</span>" \
+tag52OV="" \
+tag52832OV="&nbsp;<span class=\"whichnRF nRF52\">nRF52832 only</span>" \
+tag52840OV="&nbsp;<span class=\"whichnRF nRF52840\">nRF52840 only</span>" \
+tag52832label="&nbsp;<span class=\"whichnRF nRF52\">nRF52832</span>" \
+tag52840label="&nbsp;<span class=\"whichnRF nRF52840\">nRF52840</span>" \
+softdevice="<i>SoftDevice</i>" \
+nRFXX="nRF5" \
+s21x="212" \
+zipfile="nRF5_SDK_{{SDK_Ver_Base}}_1a2b3c4.zip" \
+packsfile="nRF5_SDK_{{SDK_Ver_Base}}_1a2b3c4_packs.zip" \
+sdtarget="flash_s132_nrf52_2.0.0_softdevice" \
+noSESsupport="<div class=\"whichSDs nRF51\"><span>This example does not support the SES compiler.</span></div>" \
+exsdNONE="<div class=\"whichSDs\"><span>The examples in this section <b>do not use a SoftDevice</b>.</span></div>" \
+sdBLE="<div class=\"whichSDs\"><span>This information applies to the following SoftDevices: <b>S132, S140</b></span></div>" \
+sdANT="<div class=\"whichSDs\"><span>This information applies to the following SoftDevice: <b>S212</b></span></div>" \
+sdBLEonly="<div class=\"whichSDs\"><span>This information applies to the following SoftDevices: <b>S132, S140</b></span></div>" \
+sd132="<div class=\"whichSDs\"><span>This information applies to the following SoftDevice: <b>S132</b></span></div>" \
+exsd140only="<div class=\"whichSDs\"><span>This information applies to the following SoftDevice: <b>S140</b></span></div>" \
+exsd140="<div class=\"whichSDs\"><span>This example requires the following SoftDevice: <b>S140</b></span></div>@b Important: Before you run this example, make sure to <a href=\"http://infocenter.nordicsemi.com/topic/com.nordic.infocenter.sdk5.v15.3.0/getting_started_softdevice.html#getting_started_sd\" target=\"_blank\">program the SoftDevice</a>." \
+sdserialization="<div class=\"whichSDs\"><span>This information applies to the following SoftDevices: <b>S132, S140, S212, S332</b></span></div>" \
+sd21x="<div class=\"whichSDs\"><span>This information applies to the following SoftDevice: <b>S212</b></span></div>" \
+sd3xx="<div class=\"whichSDs\"><span>This information applies to the following SoftDevices: <b>S312, S332, S340</b></span></div>" \
+exsdANT="<div class=\"whichSDs\"><span>This example requires one of the following SoftDevices: <b>S212, S312, S332, S340</b></span></div>@b Important: Before you run this example, make sure to @ref getting_started_softdevice \"program a SoftDevice\"." \
+exsdBLEall="<div class=\"whichSDs\"><span>This example requires one of the following SoftDevices: <b>S112, S132, S140</b></span></div>@b Important: Before you run this example, make sure to @ref getting_started_sd \"program the SoftDevice\"." \
+exsdBLE_ANT_S132_S140_S332_S340="<div class=\"whichSDs\"><span>This example requires one of the following SoftDevices: <b>S132, S140, S332, S340</b></span></div>@b Important: Before you run this example, make sure to @ref getting_started_sd \"program the SoftDevice\"." \
+exsdBLE_ANT_S132_S140_S312_S332_S340="<div class=\"whichSDs\"><span>This example requires one of the following SoftDevices: <b>S132, S140, S312, S332, S340</b></span></div>@b Important: Before you run this example, make sure to @ref getting_started_sd \"program the SoftDevice\"." \
+exsdBLE_S112_S132_S140="<div class=\"whichSDs\"><span>This example requires one of the following SoftDevices: <b>S112, S132, S140</b></span></div>@b Important: Before you run this example, make sure to @ref getting_started_sd \"program the SoftDevice\"." \
+exsdBLE_S132_S140="<div class=\"whichSDs\"><span>This example requires one of the following SoftDevices: <b>S132, S140</b></span></div>@b Important: Before you run this example, make sure to @ref getting_started_sd \"program the SoftDevice\"." \
+exsdBLE_S112_S132="<div class=\"whichSDs\"><span>This example requires one of the following SoftDevices: <b>S112, S132</b></span></div>@b Important: Before you run this example, make sure to @ref getting_started_sd \"program the SoftDevice\"." \
+exsd132="<div class=\"whichSDs\"><span>This example requires the following SoftDevice: <b>S132</b></span></div>@b Important: Before you run this example, make sure to @ref getting_started_sd \"program the SoftDevice\"." \
+exsd21x="<div class=\"whichSDs\"><span>This example requires the following SoftDevice: <b>S212</b></span></div>@b Important: Before you run this example, make sure to @ref getting_started_softdevice \"program the SoftDevice\"." \
+exsd212="<div class=\"whichSDs\"><span>This example requires the following SoftDevice: <b>S212</b></span></div>@b Important: Before you run this example, make sure to @ref getting_started_softdevice \"program the SoftDevice\"." \
+exsd3xx="<div class=\"whichSDs\"><span>This example requires one of the following SoftDevices: <b>S312, S332, S340</b></span></div>@b Important: Before you run this example, make sure to @ref getting_started_softdevice \"program the SoftDevice\"." \
+nRF21540multiprotocol="nRF21540 on PCA10112 is not supported by SoftDevice, and for this reason PCA10112 does not support multiprotocol examples." \
+endifblank="@endif &nbsp;" \
+ANTnetworkkey="The ANT+ Network Key and ANT+ Simulator tools are available for ANT+ Adopters. Go to @linkANT to become an ANT+ Adopter and access the key." \
+linkBLEMSCgap="[GAP Message Sequence Charts](PLUGINS_ROOT/com.nordic.infocenter.s132.api.{{s132_Ver_Base}}/group___b_l_e___g_a_p___m_s_c.html)" \
+SDK_Ver="{{SDK_Ver}}" \
+s110_Ver="{{s110_Ver}}" \
+s120_Ver="{{s120_Ver}}" \
+s130_Ver="{{s130_Ver}}" \
+s132_Ver="{{s132_Ver}}" \
+s140_Ver="{{s140_Ver}}" \
+s210_Ver="{{s210_Ver}}" \
+s212_Ver="{{s212_Ver}}" \
+s310_Ver="{{s310_Ver}}" \
+s332_Ver="{{s332_Ver}}" \
+cryptocellAPIfix{1}="@file \n @defgroup \1 \1\n @{ \n @ingroup cryptocell_api" \
+action{1}="<i><b>Action:</b> \1</i>" \
+removedAPI{1}="<b>Removed API:</b> @c \1" \
+newAPI{1}="<b>New API:</b> @ref \1" \
+changedAPI{1}="<b>Changed API:</b> \1" \
+cryptocellAPIfix{1}="@file \n @defgroup \1 \1\n @{ \n @ingroup cryptocell_api" \
+tagGoldTick="@htmlonly<CENTER><font color=\"#DAA520\">✔</font></CENTER>@endhtmlonly" \
+tagGoldTickUnaligned="@htmlonly<font color=\"#DAA520\">✔</font>@endhtmlonly" \
+tagGreenTick="@htmlonly<CENTER><font color=\"green\">✔</font></CENTER>@endhtmlonly" \
+tagGreenTickUnaligned="@htmlonly<font color=\"green\">✔</font>@endhtmlonly" \
+tagGreenTickAsterisk="@htmlonly<CENTER><font color=\"green\">✔*</font></CENTER>@endhtmlonly" \
+tagGreenTickAsteriskUnaligned="@htmlonly<font color=\"green\">✔*</font>@endhtmlonly" \
+tagRedCross="@htmlonly<CENTER><font color=\"red\">✖</font></CENTER>@endhtmlonly" \
+micro_ecc_note="This example demonstrates the use of Low Energy Secure Connections (LESC). The default cryptographic backend used for LESC is CC310 (when run on nRF52840) or Oberon (for other SoCs). To use micro-ecc instead, follow the steps in @ref nrf_crypto_default_backends_micro_ecc." \
+tagnRF5SDKversion="v16.0.0" \
+tagnRF5SDKfull="nRF5 SDK v16.0.0" \
+tagThreadSDKversion="v4.0.0" \
+tagThreadSDKfull="nRF5 SDK for Thread and Zigbee v4.0.0" \
+linkThreadGCCver="7-2018-q2-update"
+
+### CryptoCell library
+ALIASES += \
+CC310on840only="CryptoCell hardware is present only in nRF52840." \
+CC310description="The CryptoCell library is used by OpenThread to accelerate cryptographic operations (AES-EBC, ECJ-PAKE, and SHA256) in the Mbed TLS library."
+
+### Example setup
+ALIASES += \
+examplesrcboard{1}="You can find the source code and the project file of the example in the following folder: @c \<InstallFolder\>/examples/\1\n" \
+examplesrcs{3}="You can find the source code and the project file of the examples in the following folder: @c \<InstallFolder\>/examples/\1\n" \
+examplesrcs{4}="You can find the source code and the project file of the examples in the following folder: @c \<InstallFolder\>/examples/\1\n" \
+examplesrc{2}="You can find the source code and the project file of the example in the following folder: @c \<InstallFolder\>/examples/\1\n" \
+examplesrcboard{2}="You can find the source code and the project file of the example in the following folder: @c \<InstallFolder\>/examples/\1\n" \
+examplesrcsdboard{2}="You can find the source code and the project file of the example in the following folder: @c \<InstallFolder\>/examples/\1\n"
+
+### Flashing
+ALIASES += \
+flashingnRF52840Dongle="To flash the firmware on the dongle:<ol><li>Insert the nRF52840 Dongle into an USB port.</li><li>Press the reset button to enter the DFU mode. The LD2 LED starts blinking red.</li><li>Launch @linknrfconnect for Desktop and start the Programmer application.</li><li>From the list of devices, select Nordic Semiconductor DFU Bootloader.</li><li>Click <b>Add HEX file</b> and select the correct firmware for the dongle.</li><li>Ensure that the beginning of the address of the firmware image is 0x00001000. If a wrong hex file is selected, the MBR section might be overwritten.</li><li>Click <b>Write</b> to flash the firmware.</li><li>Remove the dongle from USB port and insert it again. Do not press the Reset button.</li></ol>"
+
+### Snippets
+ALIASES += \
+noteZigbeeSnippets="@note When developing products using the Zigbee stack, in several .h files you will come across references to snippets. The files containing these snippets are not included in the SDK package. Check the API reference for the related .h file to see the snippet code usage."
+
+
+### Example test
+ALIASES += \
+exampletest{1}="Test the \1 application by performing the following steps:" \
+exampletesttb{1}="Test the \1 with the nRF Toolbox app, which is available on both iOS (App Store) and Android (Google Play)." \
+exampletestnrfc="You can also test the application with @linknrfconnect by performing the following steps:" \
+exampletestnrfc{1}="Test the \1 with @linknrfconnect by performing the following steps:" \
+exampletestmcp="You can also test the application with the Master Control Panel by performing the following steps:" \
+exampletestmcp{1}="Test the \1 with the Master Control Panel by performing the following steps:" \
+exampletestnfc{1}="Test the \1 with a smartphone or a tablet with NFC support by performing the following steps:" \
+exampleantbtn="If a time-out occurs during search (30 seconds by default), the ANT channel is closed and the device is put into sleep mode. To wake it up, press Button 4. You can also put the device in sleep mode by pressing Button 4 while it is searching (see @ref examples_bsp_btn_ant)." \
+uartsettingstep="Start a terminal emulator like PuTTY and connect to the used COM port with the following UART settings:<ul><li>Baud rate: 115200</li><li>8 data bits</li><li>1 stop bit</li><li>No parity</li><li>HW flow control: None</li></ul>" \
+uartsettingstepHC="Start a terminal emulator like PuTTY and connect to the used COM port with the following UART settings:<ul><li>Baud rate: 115200</li><li>8 data bits</li><li>1 stop bit</li><li>No parity</li><li>HW flow control: RTS/CTS</li></ul>" \
+uartsettingstep{1}="Start a terminal emulator like PuTTY and connect to the used COM port \1 with the following UART settings:<ul><li>Baud rate: 115200</li><li>8 data bits</li><li>1 stop bit</li><li>No parity</li><li>HW flow control: None</li></ul>" \
+uartsetting="The application uses the following UART settings:<ul><li>Baud rate: 115200</li><li>8 data bits</li><li>1 stop bit</li><li>No parity</li><li>HW flow control: None</li></ul>" \
+uartparams="<ul><li>Baud rate: 115200</li><li>8 data bits</li><li>1 stop bit</li><li>No parity</li><li>HW flow control: None</li></ul>" \
+ANTstack="<b>Note:</b> You can use a custom channel or encryption when running any of the ANT examples. When adding a new channel or encryption, remember to update @ref nrf_sdh_ant_config." \
+cdcdriverinstall="To install the driver on Windows 7, follow these steps:<ul><li>Open Device Manager</li><li>Right-click the development kit (look for the name \"nRF52 ...\" depending on the example)</li><li>Click \"Update Driver Software...\"</li><li>Click \"Browse my computer for driver software\"</li><li>Click \"Browse...\" and choose the folder sdk/nrf5/examples/usb_drivers</li><li>Click \"Ok\"</li><li>Click \"Next\"</li><li>Click \"Install\"</li><li>Click \"Close\"</li></ul>"
+
+### Eddystone
+ALIASES += parameternoteslot="@note If the slot number is bigger than the maximum allowed value (defined in the broadcast capabilites characteristic), the highest slot is used." \
+parameternoteadv="@note If the provided advertisement interval is not reasonable (thus outside of the BLE specification), the data pointed to is quietly modified to a reasonable value. The updated data is used to write to the slot, and it should also be used to write to the advertising interval characteristic." \
+parameternotetxpower="@note If the provided TX power is not reasonable (thus outside of the BLE or hardware specification), the data pointed to is quietly modified to a reasonable value. The updated data is used to write to the slot, and it should also be used to write to the TX power characteristic."
+
+### Aliases from Dragoon
+ALIASES += events="<dl class="params"><dt>Events generated</dt><dd><table class="params">"
+ALIASES += event{1}="<tr><td colspan=2>\1</td></tr>"
+ALIASES += event{2}="<tr><td class="paramname">\1</td><td>\2</td></tr>"
+ALIASES += endevents="</table></dd></dl>"
+
+# @msc is reserved, use @mmsc as "my @msc"
+ALIASES += mscs="<dl class="params"><dt>Relevant Message Sequence Charts</dt><dd><table class="params">"
+ALIASES += mmsc{1}="<tr><td class="paramname">\1</td></tr>"
+ALIASES += endmscs="</table></dd></dl>"
+
+
+
+### FYI: SoftDevice groups
+# sdBLEonly: S132, S140
+# sd21x: S212
+# sd3xx: S332
+# sdBLE: S132, S140, (S332)
+# sdANT: S212, (S332)
+# sdserialization: can be updated for convenience
+
+### IoT aliases
+ALIASES += \
+cfgparams="The following configuration parameters should be defined in @c sdk_config.h." \
+cfgparams_trace="Disables debug tracing in the module. To enable tracing, this flag must be set to 0 and NRF_LOG_ENABLED must be set to 1.\n| Description | Value |\n|-------|-------------------|\n| Enable debug trace | 0 |\n| Disable debug trace | 1 |\n| Dependencies | NRF_LOG_ENABLED |\n" \
+cfgparams_check="Disables API parameter checks in the module. Set this define to 1 to disable checks on API parameters in the module.\n\nAPI parameter checks are added to ensure that the correct parameters are passed to the module. These checks are useful during development phase, but they might be redundant when the application is finalized. Disabling these checks might improve performance.\n| Description | Value |\n|------|-----------|\n| Enable API parameters check | 0 |\n| Disable API parameters check | 1 |\n| Dependencies | None |\n" \
+cfgparams_max="Maximum number of interfaces that can be managed by the module. This is usually as many 6LoWPAN channels as the application is configured to support. \n" \
+cfgparams_interfaces="@cfgparams_max\n| Restriction | Value |\n|-----|--------|\n| Minimum value | 1 |\n| Maximum value | 255 |\n| Dependencies | None |\n"
+
+ALIASES += \
+nRFXX="nRF5"
