@@ -1440,6 +1440,10 @@ void nrf_802154_trx_receive_frame_prestarted(void)
     nrf_802154_stat_counter_increment(received_energy_events);
 #endif
 
+    #if ENABLE_ANT_DIVERSITY
+    nrf_802154_ant_div_preamble_detected_notify();
+    #endif // ENABLE_ANT_DIVERSITY
+
     if (nrf_802154_pib_coex_rx_request_mode_get() ==
         NRF_802154_COEX_RX_REQUEST_MODE_ENERGY_DETECTION)
     {
@@ -1462,10 +1466,6 @@ void nrf_802154_trx_receive_frame_prestarted(void)
 
         nrf_802154_timer_sched_add(&m_rx_prestarted_timer, true);
     }
-
-    #if ENABLE_ANT_DIVERSITY
-    nrf_802154_ant_div_preamble_detected_notify();
-    #endif // ENABLE_ANT_DIVERSITY
 
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }

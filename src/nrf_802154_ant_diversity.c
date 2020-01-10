@@ -41,10 +41,13 @@
 #include "nrf_802154_pib.h"
 #include "nrf_802154_rssi.h"
 #include "nrf_802154_trx.h"
+#include "nrf_gpiote.h"
+#include "nrf_ppi.h"
 #include "nrf_timer.h"
 #include "rsch/nrf_802154_rsch.h"
 
 #define ANT_DIV_TIMER NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE
+#define ANT_DIV_PPI   NRF_802154_PPI_TIMER_COMPARE_TO_ANTENNA_TOGGLE
 
 typedef enum
 {
@@ -58,7 +61,7 @@ typedef enum
 
 static nrf_802154_ant_div_config_t m_ant_div_config = /**< Antenna Diversity configuration. */
 {
-    .ant_sel_pin = NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN
+    .ant_sel_pin            = NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN,
 };
 
 static ad_state_t m_ad_state            = AD_STATE_DISABLED; /// Automatic switcher state machine current state.
@@ -74,11 +77,34 @@ static void ad_timer_init()
     nrf_timer_frequency_set(ANT_DIV_TIMER, NRF_TIMER_FREQ_1MHz);
 }
 
+#if ANT_DIVERSITY_PPI
+static void ad_ppi_and_gpiote_init()
+{
+    nrf_gpiote_task_configure(NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL,
+                              m_ant_div_config.ant_sel_pin, 
+                              (nrf_gpiote_polarity_t)GPIOTE_CONFIG_POLARITY_Toggle,
+                              (nrf_gpiote_outinit_t) (nrf_802154_ant_div_antenna_get() ? 
+                                                      NRF_GPIOTE_INITIAL_VALUE_HIGH : 
+                                                      NRF_GPIOTE_INITIAL_VALUE_LOW));
+
+    nrf_ppi_channel_endpoint_setup(ANT_DIV_PPI,
+                                    (uint32_t)nrf_timer_event_address_get(
+                                        ANT_DIV_TIMER,
+                                        NRF_TIMER_EVENT_COMPARE0),
+                                    (uint32_t)nrf_gpiote_task_addr_get(
+                                        NRF_802154_ANT_DIVERSITY_GPIOTE_TASK));
+}
+#endif // ANT_DIVERSITY_PPI
+
 void nrf_802154_ant_div_init(void)
 {
     nrf_802154_ant_div_config_t cfg = nrf_802154_ant_div_config_get();
 
     ad_timer_init();
+#if ANT_DIVERSITY_PPI
+    ad_ppi_and_gpiote_init();
+#endif // ANT_DIVERSITY_PPI
+
     nrf_gpio_cfg_output(cfg.ant_sel_pin);
 }
 
@@ -125,25 +151,28 @@ nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void)
 
 static void ad_timer_rssi_configure()
 {
+    // Anomaly 78: CLEAR instead of STOP, SHUTDOWN triggered manually in IRQHandler.
     nrf_timer_shorts_enable(ANT_DIV_TIMER,
-                            NRF_TIMER_SHORT_COMPARE0_STOP_MASK);
+                            NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK);
     nrf_timer_cc_write(ANT_DIV_TIMER,
                        NRF_TIMER_CC_CHANNEL0,
                        nrf_timer_us_to_ticks(RSSI_SETTLE_TIME_US, NRF_TIMER_FREQ_1MHz));
-    nrf_timer_int_enable(ANT_DIV_TIMER, NRF_TIMER_INT_COMPARE0_MASK);
 
-    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_CLEAR);
-    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_START);
+    nrf_timer_int_enable(ANT_DIV_TIMER, NRF_TIMER_INT_COMPARE0_MASK);
 
     NVIC_SetPriority(NRF_802154_ANT_DIVERSITY_TIMER_IRQN, 1);
     NVIC_ClearPendingIRQ(NRF_802154_ANT_DIVERSITY_TIMER_IRQN);
     NVIC_EnableIRQ(NRF_802154_ANT_DIVERSITY_TIMER_IRQN);
+
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_CLEAR);
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_START);
 }
 
 static void ad_timer_rssi_deconfigure()
 {
+    // Anomaly 78: CLEAR instead of STOP, SHUTDOWN triggered manually in IRQHandler.
     nrf_timer_shorts_disable(ANT_DIV_TIMER,
-                             NRF_TIMER_SHORT_COMPARE0_STOP_MASK);
+                             NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK);
     nrf_timer_int_disable(ANT_DIV_TIMER, NRF_TIMER_INT_COMPARE0_MASK);
 
     // Anomaly 78: use SHUTDOWN instead of STOP.
@@ -164,29 +193,42 @@ static void ad_timer_toggle_configure()
                        nrf_timer_us_to_ticks(nrf_802154_pib_ant_div_toggle_time_get(),
                                              NRF_TIMER_FREQ_1MHz));
 
+#if ANT_DIVERSITY_SW
     nrf_timer_int_enable(ANT_DIV_TIMER, NRF_TIMER_INT_COMPARE0_MASK);
-
-    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_CLEAR);
-    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_START);
 
     NVIC_SetPriority(NRF_802154_ANT_DIVERSITY_TIMER_IRQN, 1);
     NVIC_ClearPendingIRQ(NRF_802154_ANT_DIVERSITY_TIMER_IRQN);
     NVIC_EnableIRQ(NRF_802154_ANT_DIVERSITY_TIMER_IRQN);
+#elif ANT_DIVERSITY_PPI
+    nrf_gpiote_task_enable(NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL);
+    nrf_ppi_channel_enable(ANT_DIV_PPI);
+#else 
+    assert(false);
+#endif
 
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_CLEAR);
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_START);
 }
 
 static void ad_timer_toggle_deconfigure()
 {
     nrf_timer_shorts_disable(ANT_DIV_TIMER,
                              NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK);
+#if ANT_DIVERSITY_SW
     nrf_timer_int_disable(ANT_DIV_TIMER, NRF_TIMER_INT_COMPARE0_MASK);
-
-    // Anomaly 78: use SHUTDOWN instead of STOP.
-    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_SHUTDOWN);
-
     NVIC_DisableIRQ(NRF_802154_ANT_DIVERSITY_TIMER_IRQN);
     __DSB();
     __ISB();
+#elif ANT_DIVERSITY_PPI
+    // Set GPIO output pin value to the same as currently set by GPIOTE module
+    // This prevents pin switching after control of the pin is ceded by GPIOTE
+    nrf_gpio_pin_write(m_ant_div_config.ant_sel_pin, nrf_gpio_pin_read(m_ant_div_config.ant_sel_pin));
+    nrf_gpiote_task_disable(NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL);
+    nrf_ppi_channel_disable(ANT_DIV_PPI);
+#endif
+    // Anomaly 78: use SHUTDOWN instead of STOP.
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_SHUTDOWN);
+
 }
 
 /**
@@ -233,6 +275,9 @@ static int8_t ad_rssi_measure()
 
 static void ad_rssi_first_measure()
 {
+    // Anomaly 78: SHUTDOWN has to be triggered manually here, as no short to SHUTDOWN is present
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_SHUTDOWN);
+
     m_prev_rssi = ad_rssi_measure();
     // If timeslot has ended, switch to sleep state, rx will not take place.
     if ( m_prev_rssi == NRF_802154_RSSI_INVALID)
@@ -249,6 +294,9 @@ static void ad_rssi_first_measure()
 
 static void ad_rssi_second_measure()
 {
+    // Anomaly 78: SHUTDOWN has to be triggered manually here, as no short to SHUTDOWN is present
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_SHUTDOWN);
+    
     int8_t rssi_current = ad_rssi_measure();
 
     if ( rssi_current != NRF_802154_RSSI_INVALID)

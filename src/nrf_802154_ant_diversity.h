@@ -53,7 +53,7 @@
  */
 typedef struct
 {
-    uint8_t ant_sel_pin; // !< Pin used for antenna selection.
+    uint8_t ant_sel_pin;            // !< Pin used for antenna selection.
 } nrf_802154_ant_div_config_t;
 
 /**
