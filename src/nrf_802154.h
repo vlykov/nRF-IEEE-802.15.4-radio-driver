@@ -248,7 +248,7 @@ nrf_802154_ant_div_config_t nrf_802154_antenna_config_get(void);
  *
  * @param[in] toggle_time  Time between switching antennas in us.
  */
-void nrf_802154_ant_div_toggle_time_set(uint32_t toggle_time);
+void nrf_802154_ant_div_toggle_time_set(uint8_t toggle_time);
 
 /**
  * @brief Reads the current antenna toggle time in automatic mode.

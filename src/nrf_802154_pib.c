@@ -50,7 +50,7 @@
 #include "nrf_802154_ant_diversity.h"
 #endif // ENABLE_ANT_DIVERSITY
 
-#define CSMACA_BE_MAXIMUM 8 ///< The maximum allowed CSMA-CA backoff exponent (BE) that results from the implementation
+#define CSMACA_BE_MAXIMUM 8  ///< The maximum allowed CSMA-CA backoff exponent (BE) that results from the implementation
 
 typedef struct
 {
@@ -83,7 +83,7 @@ typedef struct
 {
     nrf_802154_ant_div_mode_t    mode;        // < Mode of antenna diversity.
     nrf_802154_ant_div_antenna_t antenna;     // < Antenna selected - only used in manual mode.
-    uint32_t                     toggle_time; // < Time between antenna switches in automatic mode [us].
+    uint8_t                      toggle_time; // < Time between antenna switches in automatic mode [us].
 } nrf_802154_pib_ant_div_t;
 
 #endif  // ENABLE_ANT_DIVERSITY
@@ -272,8 +272,8 @@ void nrf_802154_pib_init(void)
 #endif // NRF_802154_IFS_ENABLED
 
 #if ENABLE_ANT_DIVERSITY
-    m_data.ant_div.mode    = NRF_802154_ANT_DIV_MODE_DISABLED;
-    m_data.ant_div.antenna = NRF_802154_ANT_DIV_ANTENNA_1;
+    m_data.ant_div.mode        = NRF_802154_ANT_DIV_MODE_DISABLED;
+    m_data.ant_div.antenna     = NRF_802154_ANT_DIV_ANTENNA_1;
     m_data.ant_div.toggle_time = NRF_802154_ANT_DIV_TOGGLE_TIME_DEFAULT;
 #endif // ENABLE_ANT_DIVERSITY
 
@@ -574,7 +574,7 @@ nrf_802154_ant_div_antenna_t nrf_802154_pib_ant_div_antenna_get(void)
     return m_data.ant_div.antenna;
 }
 
-void nrf_802154_pib_ant_div_toggle_time_set(uint32_t toggle_time)
+void nrf_802154_pib_ant_div_toggle_time_set(uint8_t toggle_time)
 {
     m_data.ant_div.toggle_time = toggle_time;
 }
@@ -583,6 +583,5 @@ uint32_t nrf_802154_pib_ant_div_toggle_time_get()
 {
     return m_data.ant_div.toggle_time;
 }
-
 
 #endif // ENABLE_ANT_DIVERSITY

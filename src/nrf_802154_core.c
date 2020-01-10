@@ -186,7 +186,6 @@ static void state_set(radio_state_t state)
     request_preconditions_for_state(state);
 }
 
-
 /** Clear flags describing frame being received. */
 static void rx_flags_clear(void)
 {

@@ -37,24 +37,23 @@
 
 #include "nrf_802154_ant_diversity.h"
 #include "nrf_gpio.h"
-#include "nrf_timer.h"
 #include "nrf_802154_peripherals.h"
-#include "nrf_802154_rssi.h"
-#include "rsch/nrf_802154_rsch.h"
-#include "nrf_802154_trx.h"
 #include "nrf_802154_pib.h"
-#include "nrf_802154_debug.h"
-#include "nrf.h"
-#include "nrfx.h"
+#include "nrf_802154_rssi.h"
+#include "nrf_802154_trx.h"
+#include "nrf_timer.h"
+#include "rsch/nrf_802154_rsch.h"
+
+#define ANT_DIV_TIMER NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE
 
 typedef enum
 {
-    AD_STATE_DISABLED,  /// Antenna diversity module is disabled and control of the antenna is ceded.
-    AD_STATE_SLEEP,     /// Antenna diversity module is in sleeping state - either radio is not in receive state,
-                        /// or rssi measurements are finished and timeout or framestart are expected.
-    AD_STATE_TOGGLE,    /// Antenna diversity module is toggling the antenna periodically waiting for preamble.
-    AD_STATE_SETTLE_1,  /// Antenna diversity module is waiting for first RSSI measurement to settle after the frame prestarted event.
-    AD_STATE_SETTLE_2   /// Antenna diversity module is waiting for the second RSSI measurement to settle after the first measurement.
+    AD_STATE_DISABLED,                                /// Antenna diversity module is disabled and control of the antenna is ceded.
+    AD_STATE_SLEEP,                                   /// Antenna diversity module is in sleeping state - either radio is not in receive state,
+    /// or rssi measurements are finished and timeout or framestart are expected.
+    AD_STATE_TOGGLE,                                  /// Antenna diversity module is toggling the antenna periodically waiting for preamble.
+    AD_STATE_SETTLE_1,                                /// Antenna diversity module is waiting for first RSSI measurement to settle after the frame prestarted event.
+    AD_STATE_SETTLE_2                                 /// Antenna diversity module is waiting for the second RSSI measurement to settle after the first measurement.
 } ad_state_t;
 
 static nrf_802154_ant_div_config_t m_ant_div_config = /**< Antenna Diversity configuration. */
@@ -65,28 +64,28 @@ static nrf_802154_ant_div_config_t m_ant_div_config = /**< Antenna Diversity con
 static ad_state_t m_ad_state            = AD_STATE_DISABLED; /// Automatic switcher state machine current state.
 static int8_t     m_prev_rssi           = 0;                 /// First measured rssi, stored for comparison with second measurement.
 static bool       m_comparison_finished = false;             /// Flag indicating that the algorithm has been performed in time.
-                                                             /// If this is set to false during frame reception, the algorithm didn't
-                                                             /// have enough time and current antenna has been selected at random.
+/// If this is set to false during frame reception, the algorithm didn't
+/// have enough time and current antenna has been selected at random.
 
 static void ad_timer_init()
 {
-    nrf_timer_mode_set(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_MODE_TIMER);
-    nrf_timer_bit_width_set(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_BIT_WIDTH_8);
-    nrf_timer_frequency_set(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_FREQ_1MHz);
+    nrf_timer_mode_set(ANT_DIV_TIMER, NRF_TIMER_MODE_TIMER);
+    nrf_timer_bit_width_set(ANT_DIV_TIMER, NRF_TIMER_BIT_WIDTH_8);
+    nrf_timer_frequency_set(ANT_DIV_TIMER, NRF_TIMER_FREQ_1MHz);
 }
 
 void nrf_802154_ant_div_init(void)
 {
     nrf_802154_ant_div_config_t cfg = nrf_802154_ant_div_config_get();
-    
+
     ad_timer_init();
     nrf_gpio_cfg_output(cfg.ant_sel_pin);
 }
 
 bool nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
 {
-    bool status                     = true;
-    nrf_802154_ant_div_config_t cfg = nrf_802154_ant_div_config_get();
+    bool                        status = true;
+    nrf_802154_ant_div_config_t cfg    = nrf_802154_ant_div_config_get();
 
     if ((NRF_802154_ANT_DIV_ANTENNA_1 == antenna) || (NRF_802154_ANT_DIV_ANTENNA_2 == antenna))
     {
@@ -110,7 +109,7 @@ nrf_802154_ant_div_antenna_t nrf_802154_ant_div_antenna_get(void)
 void nrf_802154_ant_div_antenna_toggle()
 {
     nrf_802154_ant_div_config_t cfg = nrf_802154_ant_div_config_get();
-    
+
     nrf_gpio_pin_toggle(cfg.ant_sel_pin);
 }
 
@@ -125,16 +124,16 @@ nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void)
 }
 
 static void ad_timer_rssi_configure()
-{                                                    
-    nrf_timer_shorts_enable(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, 
+{
+    nrf_timer_shorts_enable(ANT_DIV_TIMER,
                             NRF_TIMER_SHORT_COMPARE0_STOP_MASK);
-    nrf_timer_cc_write(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, 
+    nrf_timer_cc_write(ANT_DIV_TIMER,
                        NRF_TIMER_CC_CHANNEL0,
                        nrf_timer_us_to_ticks(RSSI_SETTLE_TIME_US, NRF_TIMER_FREQ_1MHz));
-    nrf_timer_int_enable(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_INT_COMPARE0_MASK);
+    nrf_timer_int_enable(ANT_DIV_TIMER, NRF_TIMER_INT_COMPARE0_MASK);
 
-    nrf_timer_task_trigger(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_TASK_CLEAR);
-    nrf_timer_task_trigger(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_TASK_START);
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_CLEAR);
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_START);
 
     NVIC_SetPriority(NRF_802154_ANT_DIVERSITY_TIMER_IRQN, 1);
     NVIC_ClearPendingIRQ(NRF_802154_ANT_DIVERSITY_TIMER_IRQN);
@@ -143,12 +142,12 @@ static void ad_timer_rssi_configure()
 
 static void ad_timer_rssi_deconfigure()
 {
-    nrf_timer_shorts_disable(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, 
+    nrf_timer_shorts_disable(ANT_DIV_TIMER,
                              NRF_TIMER_SHORT_COMPARE0_STOP_MASK);
-    nrf_timer_int_disable(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_INT_COMPARE0_MASK);
+    nrf_timer_int_disable(ANT_DIV_TIMER, NRF_TIMER_INT_COMPARE0_MASK);
 
     // Anomaly 78: use SHUTDOWN instead of STOP.
-    nrf_timer_task_trigger(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_SHUTDOWN);
 
     NVIC_DisableIRQ(NRF_802154_ANT_DIVERSITY_TIMER_IRQN);
     __DSB();
@@ -156,33 +155,34 @@ static void ad_timer_rssi_deconfigure()
 }
 
 static void ad_timer_toggle_configure()
-{                                                    
-    nrf_timer_shorts_enable(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, 
+{
+    nrf_timer_shorts_enable(ANT_DIV_TIMER,
                             NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK);
 
-    nrf_timer_cc_write(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, 
+    nrf_timer_cc_write(ANT_DIV_TIMER,
                        NRF_TIMER_CC_CHANNEL0,
-                       nrf_timer_us_to_ticks(nrf_802154_pib_ant_div_toggle_time_get(), NRF_TIMER_FREQ_1MHz));
+                       nrf_timer_us_to_ticks(nrf_802154_pib_ant_div_toggle_time_get(),
+                                             NRF_TIMER_FREQ_1MHz));
 
-    nrf_timer_int_enable(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_INT_COMPARE0_MASK);
+    nrf_timer_int_enable(ANT_DIV_TIMER, NRF_TIMER_INT_COMPARE0_MASK);
 
-    nrf_timer_task_trigger(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_TASK_CLEAR);
-    nrf_timer_task_trigger(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_TASK_START);
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_CLEAR);
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_START);
 
     NVIC_SetPriority(NRF_802154_ANT_DIVERSITY_TIMER_IRQN, 1);
     NVIC_ClearPendingIRQ(NRF_802154_ANT_DIVERSITY_TIMER_IRQN);
     NVIC_EnableIRQ(NRF_802154_ANT_DIVERSITY_TIMER_IRQN);
-    
+
 }
 
 static void ad_timer_toggle_deconfigure()
 {
-    nrf_timer_shorts_disable(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, 
+    nrf_timer_shorts_disable(ANT_DIV_TIMER,
                              NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK);
-    nrf_timer_int_disable(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_INT_COMPARE0_MASK);
+    nrf_timer_int_disable(ANT_DIV_TIMER, NRF_TIMER_INT_COMPARE0_MASK);
 
     // Anomaly 78: use SHUTDOWN instead of STOP.
-    nrf_timer_task_trigger(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_TASK_SHUTDOWN);
+    nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_SHUTDOWN);
 
     NVIC_DisableIRQ(NRF_802154_ANT_DIVERSITY_TIMER_IRQN);
     __DSB();
@@ -193,20 +193,21 @@ static void ad_timer_toggle_deconfigure()
  * Measure and correct rssi value.
  * RSSI needs to be settled already after enabling RX or switching antenna,
  * and this function must be called from critical section.
- * 
+ *
  * @return Corrected measured RSSI value or NRF_802154_RSSI_INVALID if measurement failed.
  */
 static int8_t ad_rssi_measure()
 {
     int8_t result = NRF_802154_RSSI_INVALID;
+
     // This function is supposed to be called after detecting frame prestarted event, but before
     // detecting valid frame address. This means that we're currently in critical section, but the
     // timeslot is not yet extended due to detecting valid frame. To avoid invalid timeslot extension
     // due to blocking rssi measurements, antenna check can be aborted here if timeslot is about to end.
-    // Antenna switching takes 200 ns (250 ns with safety margin), while rssi measurement - 250, 
+    // Antenna switching takes 200 ns (250 ns with safety margin), while rssi measurement - 250,
     // which gives total time of 750 ns.
     // 750 ns is less than safety margin, so timeslot us left different than 0 is sufficient.
-    if(!nrf_802154_rsch_timeslot_us_left_get())
+    if (!nrf_802154_rsch_timeslot_us_left_get())
     {
         return result;
     }
@@ -234,7 +235,7 @@ static void ad_rssi_first_measure()
 {
     m_prev_rssi = ad_rssi_measure();
     // If timeslot has ended, switch to sleep state, rx will not take place.
-    if( m_prev_rssi == NRF_802154_RSSI_INVALID)
+    if ( m_prev_rssi == NRF_802154_RSSI_INVALID)
     {
         ad_timer_rssi_deconfigure();
         m_ad_state = AD_STATE_SLEEP;
@@ -249,8 +250,8 @@ static void ad_rssi_first_measure()
 static void ad_rssi_second_measure()
 {
     int8_t rssi_current = ad_rssi_measure();
-    
-    if( rssi_current != NRF_802154_RSSI_INVALID)
+
+    if ( rssi_current != NRF_802154_RSSI_INVALID)
     {
         if (rssi_current < m_prev_rssi)
         {
@@ -267,12 +268,11 @@ static void ad_rssi_second_measure()
 
 void nrf_802154_ant_div_enable_notify()
 {
-    switch(m_ad_state)
+    switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
-            ad_timer_init();
             m_comparison_finished = false;
-            m_ad_state = AD_STATE_SLEEP;
+            m_ad_state            = AD_STATE_SLEEP;
             break;
 
         case AD_STATE_SLEEP:
@@ -289,7 +289,7 @@ void nrf_802154_ant_div_enable_notify()
 
 void nrf_802154_ant_div_disable_notify()
 {
-    switch(m_ad_state)
+    switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
             // Intentionally empty
@@ -297,7 +297,7 @@ void nrf_802154_ant_div_disable_notify()
 
         case AD_STATE_SLEEP:
             m_comparison_finished = false;
-            m_ad_state = AD_STATE_DISABLED;
+            m_ad_state            = AD_STATE_DISABLED;
             break;
 
         case AD_STATE_TOGGLE:
@@ -318,7 +318,7 @@ void nrf_802154_ant_div_disable_notify()
 
 void nrf_802154_ant_div_rx_started_notify()
 {
-    switch(m_ad_state)
+    switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
             // Intentionally empty
@@ -343,7 +343,7 @@ void nrf_802154_ant_div_rx_started_notify()
 
 void nrf_802154_ant_div_rx_aborted_notify()
 {
-    switch(m_ad_state)
+    switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
             // Intentionally empty
@@ -362,7 +362,7 @@ void nrf_802154_ant_div_rx_aborted_notify()
         case AD_STATE_SETTLE_1:
         case AD_STATE_SETTLE_2:
             ad_timer_rssi_deconfigure();
-            m_ad_state = AD_STATE_SLEEP;
+            m_ad_state            = AD_STATE_SLEEP;
             m_comparison_finished = false;
             break;
 
@@ -373,14 +373,14 @@ void nrf_802154_ant_div_rx_aborted_notify()
 
 void nrf_802154_ant_div_preamble_detected_notify()
 {
-    switch(m_ad_state)
+    switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
             // Intentionally empty
             break;
 
         case AD_STATE_SLEEP:
-            // Intentionally empty - after RSSI measurement but before framestart.
+            // Intentionally empty - can be called after RSSI measurement but before framestart.
             break;
 
         case AD_STATE_TOGGLE:
@@ -403,7 +403,7 @@ bool nrf_802154_ant_div_frame_started_notify()
 {
     bool result = false;
 
-    switch(m_ad_state)
+    switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
             result = false;
@@ -416,14 +416,14 @@ bool nrf_802154_ant_div_frame_started_notify()
         case AD_STATE_TOGGLE:
             ad_timer_toggle_deconfigure();
             m_ad_state = AD_STATE_SLEEP;
-            result = false;
+            result     = false;
             break;
 
         case AD_STATE_SETTLE_1:
         case AD_STATE_SETTLE_2:
             ad_timer_rssi_deconfigure();
             m_ad_state = AD_STATE_SLEEP;
-            result = false;
+            result     = false;
             break;
 
         default:
@@ -435,7 +435,7 @@ bool nrf_802154_ant_div_frame_started_notify()
 
 void nrf_802154_ant_div_preamble_timeout_notify()
 {
-    switch(m_ad_state)
+    switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
             // Intentionally empty
@@ -477,7 +477,7 @@ void nrf_802154_ant_div_preamble_timeout_notify()
 
 void NRF_802154_ANT_DIVERSITY_TIMER_IRQHANDLER()
 {
-    switch(m_ad_state)
+    switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
         case AD_STATE_SLEEP:
@@ -485,7 +485,7 @@ void NRF_802154_ANT_DIVERSITY_TIMER_IRQHANDLER()
             break;
 
         case AD_STATE_TOGGLE:
-            nrf_802154_ant_div_antenna_toggle(); 
+            nrf_802154_ant_div_antenna_toggle();
             break;
 
         case AD_STATE_SETTLE_1:
@@ -500,5 +500,5 @@ void NRF_802154_ANT_DIVERSITY_TIMER_IRQHANDLER()
             assert(false);
     }
 
-    nrf_timer_event_clear(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_EVENT_COMPARE0);
+    nrf_timer_event_clear(ANT_DIV_TIMER, NRF_TIMER_EVENT_COMPARE0);
 }

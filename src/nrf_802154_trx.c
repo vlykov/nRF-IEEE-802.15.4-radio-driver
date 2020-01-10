@@ -939,7 +939,8 @@ void nrf_802154_trx_receive_frame(uint8_t                                bcc,
 
     if (allow_helper1_swi)
     {
-#if (NRF_802154_DISABLE_BCC_MATCHING && !defined(ENABLE_ANT_DIVERSITY)) || !defined(NRF_RADIO_EVENT_HELPER1)
+#if (NRF_802154_DISABLE_BCC_MATCHING && !defined(ENABLE_ANT_DIVERSITY)) || \
+        !defined(NRF_RADIO_EVENT_HELPER1)
         assert(false);
 #else
         // The RADIO can't generate interrupt on EVENTS_HELPER1. Path to generate interrupt:

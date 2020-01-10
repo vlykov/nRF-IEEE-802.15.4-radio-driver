@@ -43,15 +43,17 @@
 #define NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN 23
 #endif
 
+#ifndef RSSI_SETTLE_TIME_US
 #define RSSI_SETTLE_TIME_US 16
+#endif
 
 /**
- * @brief Configuration og the antenna diversity module.
- * 
+ * @brief Configuration of the antenna diversity module.
+ *
  */
-typedef struct 
+typedef struct
 {
-    uint8_t          ant_sel_pin; // !< Pin used for antenna selection.
+    uint8_t ant_sel_pin; // !< Pin used for antenna selection.
 } nrf_802154_ant_div_config_t;
 
 /**
@@ -95,7 +97,7 @@ void nrf_802154_ant_div_config_set(nrf_802154_ant_div_config_t ant_div_config);
 
 /**
  * @brief Retrieves the antenna diversity configuration.
- * 
+ *
  * @return Current antenna diversity module configuration.
  */
 nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void);
@@ -127,7 +129,7 @@ void nrf_802154_ant_div_preamble_detected_notify();
 
 /**
  * @brief Notification to be called when frame start is detected during reception.
- * 
+ *
  * @retval true  RSSI measurements have finished and currently selected antenna is optimal for reception.
  * @retval false RSSI measurements have not yet finished and currently selected antenna is random.
  */
