@@ -39,11 +39,11 @@
 
   </target>
 
-<target name="thread_zigbee">
+<target name="rd">
 
-  <jar destfile="sdk_tz_v4.0.0.jar"
+  <jar destfile="ieee_radio_driver_v1.6.0.jar"
       basedir="html/html" 
-      manifest="manifest/MANIFEST.MF.thread_zigbee"
+      manifest="manifest/MANIFEST.MF.rd"
       excludes="*.jar">
     </jar>
   </target>

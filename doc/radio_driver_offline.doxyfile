@@ -32,7 +32,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = "nRF5 SDK for Thread and Zigbee v4.0.0"
+PROJECT_NAME           = "IEEE 802.15.4 Radio Driver Software"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -40,7 +40,7 @@ PROJECT_NAME           = "nRF5 SDK for Thread and Zigbee v4.0.0"
 
 ### EDIT THIS ###
 
-PROJECT_NUMBER         =
+PROJECT_NUMBER         = 1.6.0
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -622,20 +622,9 @@ GENERATE_DEPRECATEDLIST= NO
 # The ENABLED_SECTIONS tag can be used to enable conditional documentation
 # sections, marked by \if <section_label> ... \endif and \cond <section_label>
 # ... \endcond blocks.
-#
-# The section INTERNAL_DOC_WRITERS_HINTS is never enabled. It contains internal 
-# information for tech writers and explains where the information comes from.
-# It is used in .dox files # only. For example:
-# @if INTERNAL_DOC_WRITERS_HINTS
-# Comment for writers that will not get into the output documentation, like:
-# Use script sdk/framework/test_scripts/zigbee_sizes.sh to generate the table.
-# @endif 
-#
-# The section ZBOSS_INTERNAL is never enabled for Nordic docs. It contains internal
-# DSR information related to the ZBOSS stack that is not relevant for Nordic documentation.
 
-ENABLED_SECTIONS       = DOXYGEN_SECTION DOXYGEN_ZCL_SECTION DOXYGEN_SECUR_SECTION DOXYGEN_LL_SECTION DOXYGEN_DEBUG_SECTION DOXYGEN_BDB_SECTION DOXYGEN_HA_SECTION include_ha_ez_mode NORDIC_DOC
-# EDIT THIS: The following sections are not in the list above (and are not visible in the docs): INTERNAL_DOC_WRITERS_HINTS ZBOSS_INTERNAL DOXYGEN_TOUCHLINK include_ns internals_doc
+ENABLED_SECTIONS       = 
+# EDIT THIS: The following sections are not in the list above (and are not visible in the docs):
 
 # The MAX_INITIALIZER_LINES tag determines the maximum number of lines that the
 # initial value of a variable or macro / define can have for it to appear in the
@@ -808,17 +797,7 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = ../../sdk/nrf5/external/zboss/include/zb_mem_config_context.h \
-                         ../../sdk/nrf5/external/zboss/include/ha/custom/zb_zcl_basic_ha_adds.h \
-                         ../../sdk/nrf5/external/zboss/include/ha/custom/zb_zcl_ias_zone_ha_adds.h \
-                         ../../sdk/nrf5/external/zboss/include/ha/custom/zb_zcl_power_config_ha_adds.h \
-                         ../../sdk/nrf5/external/zboss/include/ha/custom/zb_zcl_thermostat_ha_adds.h \
-                         ../../sdk/nrf5/external/zboss/include/ha/custom/zb_ha_custom_dimmable_light.h \
-                         ../../sdk/nrf5/external/zboss/include/custom/zb_comcast_security_sensor.h \
-                         ../../sdk/nrf5/external/zboss/include/ha/zb_comcast_security_control.h \
-                         ../../sdk/nrf5/external/zboss/include/ha/zb_comcast_security_sensor.h \
-                         ../../sdk/nrf5/external/zboss/include/ha/zb_ha_ias_warning_device.h \
-                         ../../sdk/nrf5/external/zboss/include/zcl/zb_zcl_cvc_commands.h \
+EXCLUDE                =
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -855,7 +834,7 @@ EXCLUDE_SYMBOLS        =
 # that contain example code fragments that are included (see the \include
 # command).
 
-EXAMPLE_PATH           = buildfiles\radio_driver_release_notes.txt \
+EXAMPLE_PATH           = buildfiles/radio_driver_release_notes.txt \
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp and
@@ -875,7 +854,7 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             = ../doc/images
+IMAGE_PATH             = images/    \
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
@@ -1388,7 +1367,7 @@ GENERATE_ECLIPSEHELP   = NO
 # The default value is: org.doxygen.Project.
 # This tag requires that the tag GENERATE_ECLIPSEHELP is set to YES.
 
-ECLIPSE_DOC_ID         = sdk_tz_v4.0.0
+ECLIPSE_DOC_ID         = ieee_radio_driver_v1.6.0
 
 # If you want full control over the layout of the generated HTML pages it might
 # be necessary to disable the index and replace it with your own. The
@@ -1996,26 +1975,7 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             = DEBUG \
-                         ZB_CONFIG_NRF52840 \
-                         ZB_ROUTER_ROLE \
-                         ZB_ED_ROLE \
-                         ZB_BDB_MODE \
-                         ZB_ALL_DEVICE_SUPPORT \
-                         ZB_COORDINATOR_ROLE \
-                         ZB_SECURITY \
-                         ZB_CONFIGURABLE_MEM \
-                         ZB_DOCUMENT_HA \
-                         ZB_DOCUMENT_ZCL \
-                         DOXYGEN \
-                         ZB_USE_OSIF_OTA_ROUTINES \
-                         ZB_PACKED_PRE= \
-                         ZB_PACKED_STRUCT= \
-                         ZB_CODE= \
-                         NRF_802154_USE_RAW_API:=1 \
-                         NRF_802154_USE_RAW_API:=0 \
-                         ENABLE_FEM \
-						 ZB_USE_NVRAM
+PREDEFINED             =
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
@@ -2386,6 +2346,6 @@ DOT_CLEANUP            = YES
 
 ### EDIT THIS ###
 
-@INCLUDE = aliases.doxyfile.subtempl
-@INCLUDE = links.doxyfile.subtempl
+@INCLUDE = aliases.doxyfile
+@INCLUDE = links.doxyfile
 @INCLUDE = filelists/radio_driver.doxyfile

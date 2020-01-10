@@ -1,0 +1,8 @@
+### Links
+#"<a href=\"\" target=\"_blank\"></a>"
+
+
+## Nordic - always use https!
+ALIASES += \
+linknordic="<a href=\"https://www.nordicsemi.com\" target=\"_blank\">nordicsemi.com</a>" \
+

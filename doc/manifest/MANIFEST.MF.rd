@@ -4,10 +4,10 @@ Created-By: 1.7.0_55-b13 (Oracle Corporation)
 Bundle-Version: 1.0.0
 Bundle-ManifestVersion: 2
 Bundle-Localization: plugin
-Bundle-Name: nRF5 SDK for Thread and Zigbee
+Bundle-Name: IEEE 802.15.4 Radio Driver Software
 Bundle-Vendor: Nordic Semiconductor ASA
 Eclipse-LazyStart: true
-Bundle-SymbolicName: sdk_tz_v4.0.0; singleton:=true
+Bundle-SymbolicName: ieee_radio_driver_v1.6.0; singleton:=true
 
 
 
