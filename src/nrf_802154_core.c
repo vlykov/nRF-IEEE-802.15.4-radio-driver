@@ -1416,11 +1416,9 @@ static void on_rx_prestarted_timeout(void * p_context)
     (void)in_crit_sect;
 
     #if ENABLE_ANT_DIVERSITY
-        if (NRF_802154_ANT_DIV_MODE_AUTO == nrf_802154_ant_div_mode_get())
-        {
-            nrf_802154_ant_div_preamble_timeout_notify();
-        }
+    nrf_802154_ant_div_preamble_timeout_notify();
     #endif // ENABLE_ANT_DIVERSITY
+
     /* nrf_802154_trx_receive_frame_prestarted boosted preconditions beyond those normally
      * required by current state. Let's restore them now.  */
     request_preconditions_for_state(m_state);
@@ -1467,10 +1465,7 @@ void nrf_802154_trx_receive_frame_prestarted(void)
     }
 
     #if ENABLE_ANT_DIVERSITY
-        if (NRF_802154_ANT_DIV_MODE_AUTO == nrf_802154_ant_div_mode_get())
-        {
-            nrf_802154_ant_div_preamble_detected_notify();
-        }
+    nrf_802154_ant_div_preamble_detected_notify();
     #endif // ENABLE_ANT_DIVERSITY
 
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);

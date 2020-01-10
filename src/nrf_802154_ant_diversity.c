@@ -27,23 +27,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#define NRF_802154_MODULE_ID NRF_802154_MODULE_ID_AD
 
+/**
+ * @file
+ *   This file implements the 802.15.4 antenna diversity module.
+ *
+ */
 #include <assert.h>
 
-#include "../nrf_802154_ant_diversity.h"
+#include "nrf_802154_ant_diversity.h"
+#include "nrf_gpio.h"
 #include "nrf_timer.h"
 #include "nrf_802154_peripherals.h"
 #include "nrf_802154_rssi.h"
 #include "rsch/nrf_802154_rsch.h"
 #include "nrf_802154_trx.h"
-#include "../nrf_802154_pib.h"
-#include "../nrf_802154_debug.h"
+#include "nrf_802154_pib.h"
+#include "nrf_802154_debug.h"
 #include "nrf.h"
 #include "nrfx.h"
 
-// ANT_DIV_TODO
-#define RSSI_SETTLE_TIME_US 16
 typedef enum
 {
     AD_STATE_DISABLED,  /// Antenna diversity module is disabled and control of the antenna is ceded.
@@ -65,6 +68,52 @@ static bool       m_comparison_finished = false;             /// Flag indicating
                                                              /// If this is set to false during frame reception, the algorithm didn't
                                                              /// have enough time and current antenna has been selected at random.
 
+static void ad_timer_init()
+{
+    nrf_timer_mode_set(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_MODE_TIMER);
+    nrf_timer_bit_width_set(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_BIT_WIDTH_8);
+    nrf_timer_frequency_set(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_FREQ_1MHz);
+}
+
+void nrf_802154_ant_div_init(void)
+{
+    nrf_802154_ant_div_config_t cfg = nrf_802154_ant_div_config_get();
+    
+    ad_timer_init();
+    nrf_gpio_cfg_output(cfg.ant_sel_pin);
+}
+
+bool nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
+{
+    bool status                     = true;
+    nrf_802154_ant_div_config_t cfg = nrf_802154_ant_div_config_get();
+
+    if ((NRF_802154_ANT_DIV_ANTENNA_1 == antenna) || (NRF_802154_ANT_DIV_ANTENNA_2 == antenna))
+    {
+        nrf_gpio_pin_write(cfg.ant_sel_pin, antenna);
+    }
+    else
+    {
+        status = false;
+    }
+
+    return status;
+}
+
+nrf_802154_ant_div_antenna_t nrf_802154_ant_div_antenna_get(void)
+{
+    nrf_802154_ant_div_config_t cfg = nrf_802154_ant_div_config_get();
+
+    return nrf_gpio_pin_out_read(cfg.ant_sel_pin);
+}
+
+void nrf_802154_ant_div_antenna_toggle()
+{
+    nrf_802154_ant_div_config_t cfg = nrf_802154_ant_div_config_get();
+    
+    nrf_gpio_pin_toggle(cfg.ant_sel_pin);
+}
+
 void nrf_802154_ant_div_config_set(nrf_802154_ant_div_config_t ant_div_config)
 {
     m_ant_div_config = ant_div_config;
@@ -75,12 +124,6 @@ nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void)
     return m_ant_div_config;
 }
 
-static void ad_timer_init()
-{
-    nrf_timer_mode_set(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_MODE_TIMER);
-    nrf_timer_bit_width_set(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_BIT_WIDTH_8);
-    nrf_timer_frequency_set(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, NRF_TIMER_FREQ_1MHz);
-}
 static void ad_timer_rssi_configure()
 {                                                    
     nrf_timer_shorts_enable(NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE, 
@@ -146,9 +189,13 @@ static void ad_timer_toggle_deconfigure()
     __ISB();
 }
 
-// Measure and correct rssi value.
-// RSSI needs to be settled already after enabling RX or switching antenna, 
-// and this function must be called from critical section. 
+/**
+ * Measure and correct rssi value.
+ * RSSI needs to be settled already after enabling RX or switching antenna,
+ * and this function must be called from critical section.
+ * 
+ * @return Corrected measured RSSI value or NRF_802154_RSSI_INVALID if measurement failed.
+ */
 static int8_t ad_rssi_measure()
 {
     int8_t result = NRF_802154_RSSI_INVALID;

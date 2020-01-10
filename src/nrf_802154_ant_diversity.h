@@ -38,11 +38,21 @@
 #include <stdint.h>
 
 #include "nrf_802154_types.h"
-#include "nrf_802154_ant_diversity_config.h"
 
 #ifndef NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN
 #define NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN 23
 #endif
+
+#define RSSI_SETTLE_TIME_US 16
+
+/**
+ * @brief Configuration og the antenna diversity module.
+ * 
+ */
+typedef struct 
+{
+    uint8_t          ant_sel_pin; // !< Pin used for antenna selection.
+} nrf_802154_ant_div_config_t;
 
 /**
  * @brief Initializes antenna diversity module.
@@ -78,7 +88,6 @@ void nrf_802154_ant_div_antenna_toggle();
  * @brief Sets the antenna diversity configuration.
  *
  * Should not be called after @ref nrf_802154_ant_div_init.
- * @note Implementation of this function is delegated to specific ant_diversity variant.
  *
  * @param[in] ant_div_config  Antenna diversity configuration structure.
  */
@@ -86,86 +95,46 @@ void nrf_802154_ant_div_config_set(nrf_802154_ant_div_config_t ant_div_config);
 
 /**
  * @brief Retrieves the antenna diversity configuration.
- *
- * @note Implementation of this function is delegated to specific ant_diversity variant.
  * 
  * @return Current antenna diversity module configuration.
  */
 nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void);
 
 /**
- * @brief Starts toggling the antenna periodically.
- * 
- * @note Implementation depends on the antenna diversity variant used.
- * 
- * @retval true  Sweep started successfully.
- * @retval false Error while starting sweep.
- */
-bool nrf_8021514_ant_div_sweep_start();
-
-/**
- * @brief Terminates the periodic antenna toggling.
- * 
- * @note Implementation depends on the antenna diversity variant used.
- * 
- * @retval true  Sweep terminated successfully.
- * @retval false Error while terminating sweep.
- */
-bool nrf_8021514_ant_div_sweep_stop();
-
-/**
- * @brief Check whether the antenna is currently toggling periodically.
- * 
- * @note Implementation depends on the antenna diversity variant used.
- * 
- * @retval true  Antenna is currently toggling.
- * @retval false Antenna is not currently toggling.
- */
-bool nrf_8021514_ant_div_sweep_is_running();
-
-/**
  * @brief Notification to be called when antenna diversity auto mode is enabled.
- * 
- * @note Implementation is defined by antenna diversity automatic mode variant.
  */
 void nrf_802154_ant_div_enable_notify();
+
 /**
  * @brief Notification to be called when antenna diversity auto mode is disabled.
- * 
- * @note Implementation is defined by antenna diversity automatic mode variant.
  */
 void nrf_802154_ant_div_disable_notify();
+
 /**
  * @brief Notification to be called when radio rx is started.
- * 
- * @note Implementation is defined by antenna diversity automatic mode variant.
  */
 void nrf_802154_ant_div_rx_started_notify();
+
 /**
  * @brief Notification to be called when radio rx is aborted.
- * 
- * @note Implementation is defined by antenna diversity automatic mode variant.
  */
 void nrf_802154_ant_div_rx_aborted_notify();
+
 /**
  * @brief Notification to be called when preamble is detected.
- * 
- * @note Implementation is defined by antenna diversity automatic mode variant.
  */
 void nrf_802154_ant_div_preamble_detected_notify();
+
 /**
  * @brief Notification to be called when frame start is detected during reception.
- * 
- * @note Implementation is defined by antenna diversity automatic mode variant.
  * 
  * @retval true  RSSI measurements have finished and currently selected antenna is optimal for reception.
  * @retval false RSSI measurements have not yet finished and currently selected antenna is random.
  */
 bool nrf_802154_ant_div_frame_started_notify();
+
 /**
  * @brief Notification to be called when timeout expires after preamble detection.
- * 
- * @note Implementation is defined by antenna diversity automatic mode variant.
  */
 void nrf_802154_ant_div_preamble_timeout_notify();
 

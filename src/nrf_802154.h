@@ -50,7 +50,7 @@
 #endif
 
 #if ENABLE_ANT_DIVERSITY
-#include "ant_diversity/nrf_802154_ant_diversity.h"
+#include "nrf_802154_ant_diversity.h"
 #endif // ENABLE_ANT_DIVERSITY
 
 #ifdef __cplusplus
