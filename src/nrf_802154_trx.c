@@ -676,19 +676,19 @@ void nrf_802154_trx_disable(void)
 static void rx_antenna_update(void)
 {
     bool                      result = true;
-    nrf_802154_ant_div_mode_t mode   = nrf_802154_pib_ant_div_mode_get();
+    nrf_802154_ant_diversity_mode_t mode   = nrf_802154_pib_ant_diversity_mode_get();
 
     switch (mode)
     {
-        case NRF_802154_ANT_DIV_MODE_DISABLED:
+        case NRF_802154_ANT_DIVERSITY_MODE_DISABLED:
             break;
 
-        case NRF_802154_ANT_DIV_MODE_MANUAL:
-            result = nrf_802154_ant_div_antenna_set(nrf_802154_pib_ant_div_antenna_get());
+        case NRF_802154_ANT_DIVERSITY_MODE_MANUAL:
+            result = nrf_802154_ant_diversity_antenna_set(nrf_802154_pib_ant_diversity_antenna_get());
             break;
 
-        case NRF_802154_ANT_DIV_MODE_AUTO:
-            nrf_802154_ant_div_rx_started_notify();
+        case NRF_802154_ANT_DIVERSITY_MODE_AUTO:
+            nrf_802154_ant_diversity_rx_started_notify();
             break;
 
         default:
@@ -710,18 +710,18 @@ static void rx_antenna_update(void)
  */
 static void tx_antenna_update(void)
 {
-    bool                      result = true;
-    nrf_802154_ant_div_mode_t mode   = nrf_802154_pib_ant_div_mode_get();
+    bool                            result = true;
+    nrf_802154_ant_diversity_mode_t mode   = nrf_802154_pib_ant_diversity_mode_get();
 
     switch (mode)
     {
-        case NRF_802154_ANT_DIV_MODE_DISABLED:
+        case NRF_802154_ANT_DIVERSITY_MODE_DISABLED:
             /* Intentionally empty. */
             break;
 
-        case NRF_802154_ANT_DIV_MODE_MANUAL:
-        case NRF_802154_ANT_DIV_MODE_AUTO:
-            result = nrf_802154_ant_div_antenna_set(NRF_802154_ANT_DIV_ANTENNA_1);
+        case NRF_802154_ANT_DIVERSITY_MODE_MANUAL:
+        case NRF_802154_ANT_DIVERSITY_MODE_AUTO:
+            result = nrf_802154_ant_diversity_antenna_set(NRF_802154_ANT_DIVERSITY_ANTENNA_1);
             break;
 
         default:

@@ -59,9 +59,9 @@ typedef enum
     AD_STATE_SETTLE_2                                 /// Antenna diversity module is waiting for the second RSSI measurement to settle after the first measurement.
 } ad_state_t;
 
-static nrf_802154_ant_div_config_t m_ant_div_config = /**< Antenna Diversity configuration. */
+static nrf_802154_ant_diversity_config_t m_ant_div_config = /**< Antenna Diversity configuration. */
 {
-    .ant_sel_pin            = NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN,
+    .ant_sel_pin            = NRF_802154_ANT_DIVERSITY_ANT_SEL_PIN_DEFAULT,
 };
 
 static ad_state_t m_ad_state            = AD_STATE_DISABLED; /// Automatic switcher state machine current state.
@@ -83,7 +83,7 @@ static void ad_ppi_and_gpiote_init()
     nrf_gpiote_task_configure(NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL,
                               m_ant_div_config.ant_sel_pin, 
                               (nrf_gpiote_polarity_t)GPIOTE_CONFIG_POLARITY_Toggle,
-                              (nrf_gpiote_outinit_t) (nrf_802154_ant_div_antenna_get() ? 
+                              (nrf_gpiote_outinit_t) (nrf_802154_ant_diversity_antenna_get() ? 
                                                       NRF_GPIOTE_INITIAL_VALUE_HIGH : 
                                                       NRF_GPIOTE_INITIAL_VALUE_LOW));
 
@@ -96,26 +96,23 @@ static void ad_ppi_and_gpiote_init()
 }
 #endif // ANT_DIVERSITY_PPI
 
-void nrf_802154_ant_div_init(void)
+void nrf_802154_ant_diversity_init(void)
 {
-    nrf_802154_ant_div_config_t cfg = nrf_802154_ant_div_config_get();
-
     ad_timer_init();
 #if ANT_DIVERSITY_PPI
     ad_ppi_and_gpiote_init();
 #endif // ANT_DIVERSITY_PPI
 
-    nrf_gpio_cfg_output(cfg.ant_sel_pin);
+    nrf_gpio_cfg_output(m_ant_div_config.ant_sel_pin);
 }
 
-bool nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
+bool nrf_802154_ant_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t antenna)
 {
     bool                        status = true;
-    nrf_802154_ant_div_config_t cfg    = nrf_802154_ant_div_config_get();
 
-    if ((NRF_802154_ANT_DIV_ANTENNA_1 == antenna) || (NRF_802154_ANT_DIV_ANTENNA_2 == antenna))
+    if ((NRF_802154_ANT_DIVERSITY_ANTENNA_1 == antenna) || (NRF_802154_ANT_DIVERSITY_ANTENNA_2 == antenna))
     {
-        nrf_gpio_pin_write(cfg.ant_sel_pin, antenna);
+        nrf_gpio_pin_write(m_ant_div_config.ant_sel_pin, antenna);
     }
     else
     {
@@ -125,26 +122,22 @@ bool nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
     return status;
 }
 
-nrf_802154_ant_div_antenna_t nrf_802154_ant_div_antenna_get(void)
+nrf_802154_ant_diversity_antenna_t nrf_802154_ant_diversity_antenna_get(void)
 {
-    nrf_802154_ant_div_config_t cfg = nrf_802154_ant_div_config_get();
-
-    return nrf_gpio_pin_out_read(cfg.ant_sel_pin);
+    return nrf_gpio_pin_out_read(m_ant_div_config.ant_sel_pin);
 }
 
-void nrf_802154_ant_div_antenna_toggle()
+void nrf_802154_ant_diversity_antenna_toggle()
 {
-    nrf_802154_ant_div_config_t cfg = nrf_802154_ant_div_config_get();
-
-    nrf_gpio_pin_toggle(cfg.ant_sel_pin);
+    nrf_gpio_pin_toggle(m_ant_div_config.ant_sel_pin);
 }
 
-void nrf_802154_ant_div_config_set(nrf_802154_ant_div_config_t ant_div_config)
+void nrf_802154_ant_diversity_config_set(nrf_802154_ant_diversity_config_t ant_diversity_config)
 {
-    m_ant_div_config = ant_div_config;
+    m_ant_div_config = ant_diversity_config;
 }
 
-nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void)
+nrf_802154_ant_diversity_config_t nrf_802154_ant_diversity_config_get(void)
 {
     return m_ant_div_config;
 }
@@ -190,7 +183,7 @@ static void ad_timer_toggle_configure()
 
     nrf_timer_cc_write(ANT_DIV_TIMER,
                        NRF_TIMER_CC_CHANNEL0,
-                       nrf_timer_us_to_ticks(nrf_802154_pib_ant_div_toggle_time_get(),
+                       nrf_timer_us_to_ticks(nrf_802154_pib_ant_diversity_toggle_time_get(),
                                              NRF_TIMER_FREQ_1MHz));
 
 #if ANT_DIVERSITY_SW
@@ -286,7 +279,7 @@ static void ad_rssi_first_measure()
         m_ad_state = AD_STATE_SLEEP;
         return;
     }
-    nrf_802154_ant_div_antenna_toggle();
+    nrf_802154_ant_diversity_antenna_toggle();
     ad_timer_rssi_configure();
     m_ad_state = AD_STATE_SETTLE_2;
 
@@ -303,7 +296,7 @@ static void ad_rssi_second_measure()
     {
         if (rssi_current < m_prev_rssi)
         {
-            nrf_802154_ant_div_antenna_toggle();
+            nrf_802154_ant_diversity_antenna_toggle();
         }
         m_comparison_finished = true;
     }
@@ -314,7 +307,7 @@ static void ad_rssi_second_measure()
     m_ad_state = AD_STATE_SLEEP;
 }
 
-void nrf_802154_ant_div_enable_notify()
+void nrf_802154_ant_diversity_enable_notify()
 {
     switch (m_ad_state)
     {
@@ -335,7 +328,7 @@ void nrf_802154_ant_div_enable_notify()
     }
 }
 
-void nrf_802154_ant_div_disable_notify()
+void nrf_802154_ant_diversity_disable_notify()
 {
     switch (m_ad_state)
     {
@@ -364,7 +357,7 @@ void nrf_802154_ant_div_disable_notify()
     }
 }
 
-void nrf_802154_ant_div_rx_started_notify()
+void nrf_802154_ant_diversity_rx_started_notify()
 {
     switch (m_ad_state)
     {
@@ -389,7 +382,7 @@ void nrf_802154_ant_div_rx_started_notify()
     }
 }
 
-void nrf_802154_ant_div_rx_aborted_notify()
+void nrf_802154_ant_diversity_rx_aborted_notify()
 {
     switch (m_ad_state)
     {
@@ -419,7 +412,7 @@ void nrf_802154_ant_div_rx_aborted_notify()
     }
 }
 
-void nrf_802154_ant_div_preamble_detected_notify()
+void nrf_802154_ant_diversity_preamble_detected_notify()
 {
     switch (m_ad_state)
     {
@@ -447,7 +440,7 @@ void nrf_802154_ant_div_preamble_detected_notify()
     }
 }
 
-bool nrf_802154_ant_div_frame_started_notify()
+bool nrf_802154_ant_diversity_frame_started_notify()
 {
     bool result = false;
 
@@ -481,7 +474,7 @@ bool nrf_802154_ant_div_frame_started_notify()
     return result;
 }
 
-void nrf_802154_ant_div_preamble_timeout_notify()
+void nrf_802154_ant_diversity_preamble_timeout_notify()
 {
     switch (m_ad_state)
     {
@@ -533,7 +526,7 @@ void NRF_802154_ANT_DIVERSITY_TIMER_IRQHANDLER()
             break;
 
         case AD_STATE_TOGGLE:
-            nrf_802154_ant_div_antenna_toggle();
+            nrf_802154_ant_diversity_antenna_toggle();
             break;
 
         case AD_STATE_SETTLE_1:

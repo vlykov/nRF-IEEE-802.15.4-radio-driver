@@ -189,40 +189,40 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg);
  * @retval true  Antenna diversity mode set successfully.
  * @retval false Invalid mode passed as argument.
  */
-bool nrf_802154_ant_div_mode_set(nrf_802154_ant_div_mode_t mode);
+bool nrf_802154_ant_diversity_mode_set(nrf_802154_ant_diversity_mode_t mode);
 
 /**
  * @brief Gets current antenna diversity mode.
  *
  * @return Current antenna diversity mode.
  */
-nrf_802154_ant_div_mode_t nrf_802154_ant_div_mode_get(void);
+nrf_802154_ant_diversity_mode_t nrf_802154_ant_diversity_mode_get(void);
 
 /**
  * @brief Manually selects the antenna to be used.
  *
  * For antenna to be switched, antenna diversity mode needs
- * to be @ref NRF_802154_ANT_DIV_MODE_MANUAL. Otherwise, antenna will
- * be only switched after @ref NRF_802154_ANT_DIV_MODE_MANUAL is set.
+ * to be @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL. Otherwise, antenna will
+ * be only switched after @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL is set.
  *
  * @param[in] antenna Antenna to be used.
  *
  * @retval true  Antenna set successfully.
  * @retval false Invalid antenna passed as argument.
  */
-bool nrf_802154_antenna_set(nrf_802154_ant_div_antenna_t antenna);
+bool nrf_802154_antenna_set(nrf_802154_ant_diversity_antenna_t antenna);
 
 /**
  * @brief Gets currently used antenna.
  *
  * @note The antenna read by this function is currently used antenna only if
- * antenna diversity mode is set to @ref NRF_802154_ANT_DIV_MODE_MANUAL. Otherwise,
+ * antenna diversity mode is set to @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL. Otherwise,
  * currently used antenna may be different.
- * @sa nrf_802154_ant_div_mode_set
+ * @sa nrf_802154_ant_diversity_mode_set
  *
  * @return Currently used antenna.
  */
-nrf_802154_ant_div_antenna_t nrf_802154_antenna_get(void);
+nrf_802154_ant_diversity_antenna_t nrf_802154_antenna_get(void);
 
 /**
  * @brief Sets antenna diversity configuration.
@@ -232,30 +232,30 @@ nrf_802154_ant_div_antenna_t nrf_802154_antenna_get(void);
  *
  * @param[in] config Configuration of antenna diversity module to be set.
  */
-void nrf_802154_antenna_config_set(nrf_802154_ant_div_config_t config);
+void nrf_802154_antenna_config_set(nrf_802154_ant_diversity_config_t config);
 
 /**
  * @brief Gets current antenna diversity configuration.
  *
  * @return Configuration of antenna diversity module.
  */
-nrf_802154_ant_div_config_t nrf_802154_antenna_config_get(void);
+nrf_802154_ant_diversity_config_t nrf_802154_antenna_config_get(void);
 
 /**
  * @brief Sets the antenna toggle time in automatic mode.
  *
- * See @ref nrf_802154_ant_div_mode_set.
+ * See @ref nrf_802154_ant_diversity_mode_set.
  *
  * @param[in] toggle_time  Time between switching antennas in us.
  */
-void nrf_802154_ant_div_toggle_time_set(uint8_t toggle_time);
+void nrf_802154_ant_diversity_toggle_time_set(uint8_t toggle_time);
 
 /**
  * @brief Reads the current antenna toggle time in automatic mode.
  *
  * @return Current time between switching antennas in us.
  */
-uint32_t nrf_802154_ant_div_toggle_time_get();
+uint32_t nrf_802154_ant_diversity_toggle_time_get();
 
 /**
  * @brief Initializes antenna diversity module.

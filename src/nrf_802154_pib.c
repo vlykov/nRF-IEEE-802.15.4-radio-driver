@@ -81,10 +81,10 @@ typedef struct
 #if ENABLE_ANT_DIVERSITY
 typedef struct
 {
-    nrf_802154_ant_div_mode_t    mode;        // < Mode of antenna diversity.
-    nrf_802154_ant_div_antenna_t antenna;     // < Antenna selected - only used in manual mode.
-    uint8_t                      toggle_time; // < Time between antenna switches in automatic mode [us].
-} nrf_802154_pib_ant_div_t;
+    nrf_802154_ant_diversity_mode_t    mode;        // < Mode of antenna diversity.
+    nrf_802154_ant_diversity_antenna_t antenna;     // < Antenna selected - only used in manual mode.
+    uint8_t                            toggle_time; // < Time between antenna switches in automatic mode [us].
+} nrf_802154_pib_ant_diversity_t;
 
 #endif  // ENABLE_ANT_DIVERSITY
 
@@ -110,7 +110,7 @@ typedef struct
 
 #endif
 #if ENABLE_ANT_DIVERSITY
-    nrf_802154_pib_ant_div_t ant_div; ///< Antenna diversity related fields.
+    nrf_802154_pib_ant_diversity_t ant_div; ///< Antenna diversity related fields.
 
 #endif  // ENABLE_ANT_DIVERSITY
 } nrf_802154_pib_data_t;
@@ -272,9 +272,9 @@ void nrf_802154_pib_init(void)
 #endif // NRF_802154_IFS_ENABLED
 
 #if ENABLE_ANT_DIVERSITY
-    m_data.ant_div.mode        = NRF_802154_ANT_DIV_MODE_DISABLED;
-    m_data.ant_div.antenna     = NRF_802154_ANT_DIV_ANTENNA_1;
-    m_data.ant_div.toggle_time = NRF_802154_ANT_DIV_TOGGLE_TIME_DEFAULT;
+    m_data.ant_div.mode        = NRF_802154_ANT_DIVERSITY_MODE_DISABLED;
+    m_data.ant_div.antenna     = NRF_802154_ANT_DIVERSITY_ANTENNA_1;
+    m_data.ant_div.toggle_time = NRF_802154_ANT_DIVERSITY_TOGGLE_TIME_DEFAULT;
 #endif // ENABLE_ANT_DIVERSITY
 
 }
@@ -519,20 +519,20 @@ void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period)
 #endif // NRF_802154_IFS_ENABLED
 
 #if ENABLE_ANT_DIVERSITY
-bool nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
+bool nrf_802154_pib_ant_diversity_mode_set(nrf_802154_ant_diversity_mode_t mode)
 {
     bool result = true;
 
     switch (mode)
     {
-        case NRF_802154_ANT_DIV_MODE_DISABLED:
-        case NRF_802154_ANT_DIV_MODE_MANUAL:
-            nrf_802154_ant_div_disable_notify();
+        case NRF_802154_ANT_DIVERSITY_MODE_DISABLED:
+        case NRF_802154_ANT_DIVERSITY_MODE_MANUAL:
+            nrf_802154_ant_diversity_disable_notify();
             m_data.ant_div.mode = mode;
             break;
 
-        case NRF_802154_ANT_DIV_MODE_AUTO:
-            nrf_802154_ant_div_enable_notify();
+        case NRF_802154_ANT_DIVERSITY_MODE_AUTO:
+            nrf_802154_ant_diversity_enable_notify();
             m_data.ant_div.mode = mode;
             break;
 
@@ -544,20 +544,20 @@ bool nrf_802154_pib_ant_div_mode_set(nrf_802154_ant_div_mode_t mode)
     return result;
 }
 
-nrf_802154_ant_div_mode_t nrf_802154_pib_ant_div_mode_get(void)
+nrf_802154_ant_diversity_mode_t nrf_802154_pib_ant_diversity_mode_get(void)
 {
     return m_data.ant_div.mode;
 }
 
-bool nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
+bool nrf_802154_pib_ant_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t antenna)
 {
     bool result = true;
 
     switch (antenna)
     {
         /* Fall-through.*/
-        case NRF_802154_ANT_DIV_ANTENNA_1:
-        case NRF_802154_ANT_DIV_ANTENNA_2:
+        case NRF_802154_ANT_DIVERSITY_ANTENNA_1:
+        case NRF_802154_ANT_DIVERSITY_ANTENNA_2:
             m_data.ant_div.antenna = antenna;
             break;
 
@@ -569,17 +569,17 @@ bool nrf_802154_pib_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna)
     return result;
 }
 
-nrf_802154_ant_div_antenna_t nrf_802154_pib_ant_div_antenna_get(void)
+nrf_802154_ant_diversity_antenna_t nrf_802154_pib_ant_diversity_antenna_get(void)
 {
     return m_data.ant_div.antenna;
 }
 
-void nrf_802154_pib_ant_div_toggle_time_set(uint8_t toggle_time)
+void nrf_802154_pib_ant_diversity_toggle_time_set(uint8_t toggle_time)
 {
     m_data.ant_div.toggle_time = toggle_time;
 }
 
-uint32_t nrf_802154_pib_ant_div_toggle_time_get()
+uint32_t nrf_802154_pib_ant_diversity_toggle_time_get()
 {
     return m_data.ant_div.toggle_time;
 }

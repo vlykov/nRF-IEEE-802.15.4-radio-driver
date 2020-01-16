@@ -831,7 +831,7 @@ static bool current_operation_terminate(nrf_802154_term_t term_lvl,
 
 #if ENABLE_ANT_DIVERSITY
                 /* Notify antenna diversity module that RX has been aborted. */
-                nrf_802154_ant_div_rx_aborted_notify();
+                nrf_802154_ant_diversity_rx_aborted_notify();
 #endif // ENABLE_ANT_DIVERSITY
 
                 /* We might have boosted preconditions (to support coex) above level
@@ -1415,7 +1415,7 @@ static void on_rx_prestarted_timeout(void * p_context)
     (void)in_crit_sect;
 
     #if ENABLE_ANT_DIVERSITY
-    nrf_802154_ant_div_preamble_timeout_notify();
+    nrf_802154_ant_diversity_preamble_timeout_notify();
     #endif // ENABLE_ANT_DIVERSITY
 
     /* nrf_802154_trx_receive_frame_prestarted boosted preconditions beyond those normally
@@ -1441,7 +1441,7 @@ void nrf_802154_trx_receive_frame_prestarted(void)
 #endif
 
     #if ENABLE_ANT_DIVERSITY
-    nrf_802154_ant_div_preamble_detected_notify();
+    nrf_802154_ant_diversity_preamble_detected_notify();
     #endif // ENABLE_ANT_DIVERSITY
 
     if (nrf_802154_pib_coex_rx_request_mode_get() ==
@@ -1499,7 +1499,7 @@ void nrf_802154_trx_receive_frame_started(void)
     /* If antenna diversity is enabled, rx_prestarted_timer would be started even
        in different coex rx request modes than NRF_802154_COEX_RX_REQUEST_MODE_ENERGY_DETECTION */
     nrf_802154_timer_sched_remove(&m_rx_prestarted_timer, NULL);
-    nrf_802154_ant_div_frame_started_notify();
+    nrf_802154_ant_diversity_frame_started_notify();
 #endif // ENABLE_ANT_DIVERSITY
 
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);

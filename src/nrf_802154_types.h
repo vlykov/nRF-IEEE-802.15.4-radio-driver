@@ -209,28 +209,27 @@ typedef uint8_t nrf_802154_ifs_mode_t;
  * @brief Mode of the antenna diversity module.
  *
  * Possible values:
- * - @ref NRF_802154_ANT_DIV_MODE_DISABLED,
- * - @ref NRF_802154_ANT_DIV_MODE_MANUAL
+ * - @ref NRF_802154_ANT_DIVERSITY_MODE_DISABLED,
+ * - @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL
  */
-typedef uint8_t nrf_802154_ant_div_mode_t;
+typedef uint8_t nrf_802154_ant_diversity_mode_t;
 
-#define NRF_802154_ANT_DIV_MODE_DISABLED 0x00 // !< Antenna diversity is disabled - Antenna will not be controlled by ant_div module.
-                                              // !< Upon entering this mode, antenna 1 will be selected.
-#define NRF_802154_ANT_DIV_MODE_MANUAL   0x01 // !< Antenna is selected manually
-#define NRF_802154_ANT_DIV_MODE_AUTO     0x02 // !< Antenna is selected automatically based on RSSI.
+#define NRF_802154_ANT_DIVERSITY_MODE_DISABLED 0x00 // !< Antenna diversity is disabled - Antenna will not be controlled by ant_diversity module.
+                                               // !< Upon entering this mode, antenna 1 will be selected.
+#define NRF_802154_ANT_DIVERSITY_MODE_MANUAL   0x01 // !< Antenna is selected manually
+#define NRF_802154_ANT_DIVERSITY_MODE_AUTO     0x02 // !< Antenna is selected automatically based on RSSI.
 
 /**
  * @brief Available antennas
  *
  * Possible values:
- * - @ref NRF_802154_ANT_DIV_ANTENNA_1,
- * - @ref NRF_802154_ANT_DIV_ANTENNA_2
+ * - @ref NRF_802154_ANT_DIVERSITY_ANTENNA_1,
+ * - @ref NRF_802154_ANT_DIVERSITY_ANTENNA_2
  */
-typedef uint8_t nrf_802154_ant_div_antenna_t;
+typedef uint8_t nrf_802154_ant_diversity_antenna_t;
 
-#define NRF_802154_ANT_DIV_ANTENNA_1    0 // !< First antenna
-#define NRF_802154_ANT_DIV_ANTENNA_2    1 // !< Second antenna
-#define NRF_802154_ANT_DIV_ANTENNA_NONE 2 // !< No antenna - used for storing RSSI results if no RSSI has been measured.
+#define NRF_802154_ANT_DIVERSITY_ANTENNA_1    0 // !< First antenna
+#define NRF_802154_ANT_DIVERSITY_ANTENNA_2    1 // !< Second antenna
 
 /**
  * @brief Type of structure holding statistic counters.

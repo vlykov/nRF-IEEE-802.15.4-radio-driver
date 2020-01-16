@@ -39,8 +39,8 @@
 
 #include "nrf_802154_types.h"
 
-#ifndef NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN
-#define NRF_802154_ANT_DIV_ANT_SEL_DEFAULT_PIN 23
+#ifndef NRF_802154_ANT_DIVERSITY_ANT_SEL_PIN_DEFAULT
+#define NRF_802154_ANT_DIVERSITY_ANT_SEL_PIN_DEFAULT 23
 #endif
 
 #ifndef RSSI_SETTLE_TIME_US
@@ -54,15 +54,15 @@
 typedef struct
 {
     uint8_t ant_sel_pin;            // !< Pin used for antenna selection.
-} nrf_802154_ant_div_config_t;
+} nrf_802154_ant_diversity_config_t;
 
 /**
  * @brief Initializes antenna diversity module.
  *
- * If pinout other than default is to be used, @ref nrf_802154_ant_div_set_config
+ * If pinout other than default is to be used, @ref nrf_802154_ant_diversity_config_set
  * should be called before this function.
  */
-void nrf_802154_ant_div_init(void);
+void nrf_802154_ant_diversity_init(void);
 
 /**
  * @brief Selects an antenna to use.
@@ -72,60 +72,60 @@ void nrf_802154_ant_div_init(void);
  * @retval true  Antenna switched successfully.
  * @retval false Invalid antenna passed to the function.
  */
-bool nrf_802154_ant_div_antenna_set(nrf_802154_ant_div_antenna_t antenna);
+bool nrf_802154_ant_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t antenna);
 
 /**
  * @brief Gets currently used antenna.
  *
  * @return Currently used antenna.
  */
-nrf_802154_ant_div_antenna_t nrf_802154_ant_div_antenna_get(void);
+nrf_802154_ant_diversity_antenna_t nrf_802154_ant_diversity_antenna_get(void);
 
 /**
  * @brief Switches the antenna currently in use.
  */
-void nrf_802154_ant_div_antenna_toggle();
+void nrf_802154_ant_diversity_antenna_toggle();
 
 /**
  * @brief Sets the antenna diversity configuration.
  *
- * Should not be called after @ref nrf_802154_ant_div_init.
+ * Should not be called after @ref nrf_802154_ant_diversity_init.
  *
- * @param[in] ant_div_config  Antenna diversity configuration structure.
+ * @param[in] ant_diversity_config  Antenna diversity configuration structure.
  */
-void nrf_802154_ant_div_config_set(nrf_802154_ant_div_config_t ant_div_config);
+void nrf_802154_ant_diversity_config_set(nrf_802154_ant_diversity_config_t ant_diversity_config);
 
 /**
  * @brief Retrieves the antenna diversity configuration.
  *
  * @return Current antenna diversity module configuration.
  */
-nrf_802154_ant_div_config_t nrf_802154_ant_div_config_get(void);
+nrf_802154_ant_diversity_config_t nrf_802154_ant_diversity_config_get(void);
 
 /**
  * @brief Notification to be called when antenna diversity auto mode is enabled.
  */
-void nrf_802154_ant_div_enable_notify();
+void nrf_802154_ant_diversity_enable_notify();
 
 /**
  * @brief Notification to be called when antenna diversity auto mode is disabled.
  */
-void nrf_802154_ant_div_disable_notify();
+void nrf_802154_ant_diversity_disable_notify();
 
 /**
  * @brief Notification to be called when radio rx is started.
  */
-void nrf_802154_ant_div_rx_started_notify();
+void nrf_802154_ant_diversity_rx_started_notify();
 
 /**
  * @brief Notification to be called when radio rx is aborted.
  */
-void nrf_802154_ant_div_rx_aborted_notify();
+void nrf_802154_ant_diversity_rx_aborted_notify();
 
 /**
  * @brief Notification to be called when preamble is detected.
  */
-void nrf_802154_ant_div_preamble_detected_notify();
+void nrf_802154_ant_diversity_preamble_detected_notify();
 
 /**
  * @brief Notification to be called when frame start is detected during reception.
@@ -133,11 +133,11 @@ void nrf_802154_ant_div_preamble_detected_notify();
  * @retval true  RSSI measurements have finished and currently selected antenna is optimal for reception.
  * @retval false RSSI measurements have not yet finished and currently selected antenna is random.
  */
-bool nrf_802154_ant_div_frame_started_notify();
+bool nrf_802154_ant_diversity_frame_started_notify();
 
 /**
  * @brief Notification to be called when timeout expires after preamble detection.
  */
-void nrf_802154_ant_div_preamble_timeout_notify();
+void nrf_802154_ant_diversity_preamble_timeout_notify();
 
 #endif // NRF_802154_ANT_DIV_H
