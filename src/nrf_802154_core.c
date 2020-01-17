@@ -970,7 +970,7 @@ static void rx_init(bool disabled_was_triggered)
     // Configure the timer coordinator to get a timestamp of the END event which
     // fires several cycles after CRCOK or CRCERROR events.
     nrf_802154_timer_coord_timestamp_prepare(
-        (uint32_t)nrf_radio_event_address_get(NRF_RADIO_EVENT_END));
+        nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_END));
 #else
     // Configure the timer coordinator to get a timestamp of the CRCOK event.
     nrf_802154_timer_coord_timestamp_prepare(nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_CRCOK));
@@ -1661,7 +1661,7 @@ void nrf_802154_trx_receive_frame_crcerror(void)
     // Configure the timer coordinator to get a timestamp of the END event which
     // fires several cycles after CRCOK or CRCERROR events.
     nrf_802154_timer_coord_timestamp_prepare(
-        (uint32_t)nrf_radio_event_address_get(NRF_RADIO_EVENT_END));
+        nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_END));
 #endif
 
 #else
@@ -1973,7 +1973,7 @@ void nrf_802154_trx_transmit_frame_transmitted(void)
         // Configure the timer coordinator to get a timestamp of the END event which
         // fires several cycles after CRCOK or CRCERROR events.
         nrf_802154_timer_coord_timestamp_prepare(
-            (uint32_t)nrf_radio_event_address_get(NRF_RADIO_EVENT_END));
+            nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_END));
 #else
         // Configure the timer coordinator to get a timestamp of the CRCOK event.
         nrf_802154_timer_coord_timestamp_prepare(nrf_radio_event_address_get(NRF_RADIO, NRF_RADIO_EVENT_CRCOK));

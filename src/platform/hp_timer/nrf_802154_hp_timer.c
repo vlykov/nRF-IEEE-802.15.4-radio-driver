@@ -104,7 +104,7 @@ void nrf_802154_hp_timer_stop(void)
 
 uint32_t nrf_802154_hp_timer_sync_task_get(void)
 {
-    return (uint32_t)nrf_timer_task_address_get(TIMER, TIMER_CC_SYNC_TASK);
+    return nrf_timer_task_address_get(TIMER, TIMER_CC_SYNC_TASK);
 }
 
 void nrf_802154_hp_timer_sync_prepare(void)
@@ -133,7 +133,7 @@ bool nrf_802154_hp_timer_sync_time_get(uint32_t * p_timestamp)
 
 uint32_t nrf_802154_hp_timer_timestamp_task_get(void)
 {
-    return (uint32_t)nrf_timer_task_address_get(TIMER, TIMER_CC_EVT_TASK);
+    return nrf_timer_task_address_get(TIMER, TIMER_CC_EVT_TASK);
 }
 
 uint32_t nrf_802154_hp_timer_timestamp_get(void)

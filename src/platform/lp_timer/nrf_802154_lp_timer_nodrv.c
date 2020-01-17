@@ -549,7 +549,7 @@ void nrf_802154_lp_timer_sync_stop(void)
 
 uint32_t nrf_802154_lp_timer_sync_event_get(void)
 {
-    return (uint32_t)nrf_rtc_event_address_get(NRF_802154_RTC_INSTANCE,
+    return nrf_rtc_event_address_get(NRF_802154_RTC_INSTANCE,
                                                m_cmp_ch[SYNC_CHANNEL].event);
 }
 

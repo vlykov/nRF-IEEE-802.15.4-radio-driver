@@ -1314,7 +1314,7 @@ static inline void wait_until_radio_is_disabled(void)
     // have changed state already before entering this function due to ISR processing delays.
     for (uint32_t i = 0; i < MAX_RXRAMPDOWN_CYCLES; i++)
     {
-        if (nrf_radio_state_get() == NRF_RADIO_STATE_DISABLED)
+        if (nrf_radio_state_get(NRF_RADIO) == NRF_RADIO_STATE_DISABLED)
         {
             radio_is_disabled = true;
             break;
