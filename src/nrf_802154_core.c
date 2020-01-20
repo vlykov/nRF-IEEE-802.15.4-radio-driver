@@ -1509,7 +1509,7 @@ void nrf_802154_trx_receive_frame_started(void)
         default:
             break;
     }
-    
+
 #if ENABLE_ANT_DIVERSITY
     /* If antenna diversity is enabled, rx_prestarted_timer would be started even
        in different coex rx request modes than NRF_802154_COEX_RX_REQUEST_MODE_ENERGY_DETECTION */
@@ -1821,6 +1821,9 @@ void nrf_802154_trx_receive_frame_received(void)
         nrf_802154_stat_timestamp_write(last_rx_end_timestamp, ts);
 #endif
 
+#if ENABLE_ANT_DIVERSITY
+        nrf_802154_ant_diversity_frame_received_notify();
+#endif // ENABLE_ANT_DIVERSITY
         bool send_ack = false;
 
         if (m_flags.frame_filtered &&

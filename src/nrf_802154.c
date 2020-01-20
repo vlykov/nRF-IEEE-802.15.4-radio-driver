@@ -310,6 +310,11 @@ void nrf_802154_antenna_config_set(nrf_802154_ant_diversity_config_t config)
 
 }
 
+nrf_802154_ant_diversity_antenna_t nrf_802154_last_rx_antenna_get(void)
+{
+    return nrf_802154_ant_diversity_last_rx_antenna_get();
+}
+
 void nrf_802154_ant_diversity_toggle_time_set(uint8_t toggle_time)
 {
     nrf_802154_pib_ant_diversity_toggle_time_set(toggle_time);

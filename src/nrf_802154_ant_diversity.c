@@ -64,11 +64,13 @@ static nrf_802154_ant_diversity_config_t m_ant_div_config = /**< Antenna Diversi
     .ant_sel_pin            = NRF_802154_ANT_DIVERSITY_ANT_SEL_PIN_DEFAULT,
 };
 
-static ad_state_t m_ad_state            = AD_STATE_DISABLED; /// Automatic switcher state machine current state.
-static int8_t     m_prev_rssi           = 0;                 /// First measured rssi, stored for comparison with second measurement.
-static bool       m_comparison_finished = false;             /// Flag indicating that the algorithm has been performed in time.
-/// If this is set to false during frame reception, the algorithm didn't
-/// have enough time and current antenna has been selected at random.
+static ad_state_t                         m_ad_state              = AD_STATE_DISABLED;                     /// Automatic switcher state machine current state.
+static int8_t                             m_prev_rssi             = 0;                                     /// First measured rssi, stored for comparison with second measurement.
+static bool                               m_comparison_finished   = false;                                 /// Flag indicating that the algorithm has been performed in time.
+                                                                                                           /// If this is set to false during frame reception, the algorithm didn't
+                                                                                                           /// have enough time and current antenna has been selected at random.
+static nrf_802154_ant_diversity_antenna_t m_last_selected_antenna = NRF_802154_ANT_DIVERSITY_ANTENNA_NONE; /// Last antenna successfully used for reception.
+
 
 static void ad_timer_init()
 {
@@ -125,6 +127,11 @@ bool nrf_802154_ant_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t ant
 nrf_802154_ant_diversity_antenna_t nrf_802154_ant_diversity_antenna_get(void)
 {
     return nrf_gpio_pin_out_read(m_ant_div_config.ant_sel_pin);
+}
+
+nrf_802154_ant_diversity_antenna_t nrf_802154_ant_diversity_last_rx_antenna_get(void)
+{
+    return m_last_selected_antenna;
 }
 
 void nrf_802154_ant_diversity_antenna_toggle()
@@ -472,6 +479,36 @@ bool nrf_802154_ant_diversity_frame_started_notify()
     }
 
     return result;
+}
+
+void nrf_802154_ant_diversity_frame_received_notify()
+{
+    switch (m_ad_state)
+    {
+        case AD_STATE_DISABLED:
+            m_last_selected_antenna = NRF_802154_ANT_DIVERSITY_ANTENNA_NONE;
+            break;
+
+        case AD_STATE_SLEEP:
+            if (m_comparison_finished)
+            {
+                m_last_selected_antenna = nrf_802154_ant_diversity_antenna_get();
+            }
+            else
+            {
+                m_last_selected_antenna = NRF_802154_ANT_DIVERSITY_ANTENNA_NONE;
+            }
+            break;
+            
+        case AD_STATE_TOGGLE:
+        case AD_STATE_SETTLE_1:
+        case AD_STATE_SETTLE_2:
+            assert(false);
+            break;
+
+        default:
+            assert(false);
+    }
 }
 
 void nrf_802154_ant_diversity_preamble_timeout_notify()

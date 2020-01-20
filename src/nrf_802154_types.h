@@ -228,8 +228,9 @@ typedef uint8_t nrf_802154_ant_diversity_mode_t;
  */
 typedef uint8_t nrf_802154_ant_diversity_antenna_t;
 
-#define NRF_802154_ANT_DIVERSITY_ANTENNA_1    0 // !< First antenna
-#define NRF_802154_ANT_DIVERSITY_ANTENNA_2    1 // !< Second antenna
+#define NRF_802154_ANT_DIVERSITY_ANTENNA_1    0x00 // !< First antenna
+#define NRF_802154_ANT_DIVERSITY_ANTENNA_2    0x01 // !< Second antenna
+#define NRF_802154_ANT_DIVERSITY_ANTENNA_NONE 0x02 // !< Used to indicate that antenna for the last reception was not selected via antenna diversity algorithm.
 
 /**
  * @brief Type of structure holding statistic counters.
