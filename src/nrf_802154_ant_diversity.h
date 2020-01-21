@@ -67,6 +67,12 @@ void nrf_802154_ant_diversity_init(void);
 /**
  * @brief Selects an antenna to use.
  *
+ * @note This function has no effect while antenna diversity module is currently
+ * toggling antenna in PPI variant - that is:
+ *  - Antenna diversity is in PPI variant and auto mode is enabled
+ *  - rx is enabled
+ *  - no PPDU is currently being received
+ * 
  * @param[in] antenna  Antenna to be used.
  *
  * @retval true  Antenna switched successfully.
@@ -96,6 +102,12 @@ nrf_802154_ant_diversity_antenna_t nrf_802154_ant_diversity_last_rx_antenna_get(
 
 /**
  * @brief Switches the antenna currently in use.
+ * 
+ * @note This function has no effect while antenna diversity module is currently
+ * toggling antenna in PPI variant - that is:
+ *  - Antenna diversity is in PPI variant and auto mode is enabled
+ *  - rx is enabled
+ *  - no PPDU is currently being received
  */
 void nrf_802154_ant_diversity_antenna_toggle();
 

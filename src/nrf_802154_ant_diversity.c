@@ -126,6 +126,14 @@ bool nrf_802154_ant_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t ant
 
 nrf_802154_ant_diversity_antenna_t nrf_802154_ant_diversity_antenna_get(void)
 {
+#if ANT_DIV_PPI
+    // While toggling via PPI, GPIOTE is responsible for ant_sel pin
+    // Different register has to be used for reading the pin state.
+    if (AD_STATE_TOGGLE == m_ad_state)
+    {
+        return nrf_gpio_pin_read(m_ant_div_config.ant_sel_pin);
+    }
+#endif // ANT_DIV_PPI   
     return nrf_gpio_pin_out_read(m_ant_div_config.ant_sel_pin);
 }
 
@@ -222,7 +230,7 @@ static void ad_timer_toggle_deconfigure()
 #elif ANT_DIVERSITY_PPI
     // Set GPIO output pin value to the same as currently set by GPIOTE module
     // This prevents pin switching after control of the pin is ceded by GPIOTE
-    nrf_gpio_pin_write(m_ant_div_config.ant_sel_pin, nrf_gpio_pin_read(m_ant_div_config.ant_sel_pin));
+    nrf_gpio_pin_write(m_ant_div_config.ant_sel_pin, nrf_802154_ant_diversity_antenna_get());
     nrf_gpiote_task_disable(NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL);
     nrf_ppi_channel_disable(ANT_DIV_PPI);
 #endif
