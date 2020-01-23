@@ -33,9 +33,12 @@
  *   This file implements the 802.15.4 antenna diversity module.
  *
  */
+#define NRF_802154_MODULE_ID NRF_802154_MODULE_ID_AD
+
 #include <assert.h>
 
 #include "nrf_802154_ant_diversity.h"
+#include "nrf_802154_debug.h"
 #include "nrf_gpio.h"
 #include "nrf_802154_peripherals.h"
 #include "nrf_802154_pib.h"
@@ -324,6 +327,7 @@ static void ad_rssi_second_measure()
 
 void nrf_802154_ant_diversity_enable_notify()
 {
+    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -341,10 +345,12 @@ void nrf_802154_ant_diversity_enable_notify()
         default:
             assert(false);
     }
+    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 
 void nrf_802154_ant_diversity_disable_notify()
 {
+    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -370,10 +376,12 @@ void nrf_802154_ant_diversity_disable_notify()
         default:
             assert(false);
     }
+    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 
 void nrf_802154_ant_diversity_rx_started_notify()
 {
+    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -395,10 +403,12 @@ void nrf_802154_ant_diversity_rx_started_notify()
         default:
             assert(false);
     }
+    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 
 void nrf_802154_ant_diversity_rx_aborted_notify()
 {
+    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -425,10 +435,12 @@ void nrf_802154_ant_diversity_rx_aborted_notify()
         default:
             assert(false);
     }
+    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 
 void nrf_802154_ant_diversity_preamble_detected_notify()
 {
+    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -453,10 +465,12 @@ void nrf_802154_ant_diversity_preamble_detected_notify()
         default:
             assert(false);
     }
+    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 
 bool nrf_802154_ant_diversity_frame_started_notify()
 {
+    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
     bool result = false;
 
     switch (m_ad_state)
@@ -486,11 +500,13 @@ bool nrf_802154_ant_diversity_frame_started_notify()
             assert(false);
     }
 
+    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
     return result;
 }
 
 void nrf_802154_ant_diversity_frame_received_notify()
 {
+    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -517,10 +533,12 @@ void nrf_802154_ant_diversity_frame_received_notify()
         default:
             assert(false);
     }
+    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 
 void nrf_802154_ant_diversity_preamble_timeout_notify()
 {
+    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -559,10 +577,12 @@ void nrf_802154_ant_diversity_preamble_timeout_notify()
         default:
             assert(false);
     }
+    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 
 void NRF_802154_ANT_DIVERSITY_TIMER_IRQHANDLER()
 {
+    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -587,4 +607,5 @@ void NRF_802154_ANT_DIVERSITY_TIMER_IRQHANDLER()
     }
 
     nrf_timer_event_clear(ANT_DIV_TIMER, NRF_TIMER_EVENT_COMPARE0);
+    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
