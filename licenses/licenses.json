@@ -1,0 +1,12 @@
+{
+    "plugins_folder" : "",
+    "git_cache" : "licenses/git_cache.json",
+    "ignored_list" : "licenses/ignored_list.csv",
+    "licenses" : {
+        "common" : {
+            },
+        "project" : {
+            "./licenses/bsd-3-clause-template.txt" : "licenses/public_file_list.csv"
+            }
+        }
+}

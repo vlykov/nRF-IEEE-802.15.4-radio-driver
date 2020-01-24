@@ -1,0 +1,11 @@
+./external/*
+./licenses/*
+./*.md
+./*.json
+./*.yml
+./*.cfg
+./*.packsc
+./*.js
+./*.html
+./.gitignore
+./LICENSE
