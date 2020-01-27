@@ -150,9 +150,9 @@ extern "C" {
                                                                          NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL)
 
 #define NRF_802154_ANT_DIVERSITY_PPI_CHANNELS_USED_MASK    (1 << \
-    NRF_802154_PPI_TIMER_COMPARE_TO_ANTENNA_TOGGLE)
+                                                            NRF_802154_PPI_TIMER_COMPARE_TO_ANTENNA_TOGGLE)
 #define NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNELS_USED_MASK (1 << \
-    NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL)
+                                                            NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL)
 
 #endif // ANT_DIVERSITY_PPI
 

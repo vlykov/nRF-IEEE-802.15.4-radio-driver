@@ -1,4 +1,4 @@
-/* Copyright (c) 2019, Nordic Semiconductor ASA
+/* Copyright (c) 2020, Nordic Semiconductor ASA
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,7 @@ typedef enum
     AD_STATE_DISABLED,                                      /// Antenna diversity module is disabled and control of the antenna is ceded.
     AD_STATE_SLEEP,                                         /// Antenna diversity module is in sleeping state - either radio is not in receive state,
     /// or rssi measurements are finished and timeout or framestart are expected.
-    AD_STATE_TOGGLE,                                        /// Antenna diversity module is toggling the antenna periodically waiting for preamble.
+    AD_STATE_TOGGLE,                                        /// Antenna diversity module is toggling the antenna periodically while waiting for preamble.
     AD_STATE_SETTLE_1,                                      /// Antenna diversity module is waiting for first RSSI measurement to settle after the frame prestarted event.
     AD_STATE_SETTLE_2                                       /// Antenna diversity module is waiting for the second RSSI measurement to settle after the first measurement.
 } ad_state_t;
@@ -70,10 +70,9 @@ static nrf_802154_ant_diversity_config_t m_ant_div_config = /**< Antenna Diversi
 static ad_state_t m_ad_state            = AD_STATE_DISABLED; /// Automatic switcher state machine current state.
 static int8_t     m_prev_rssi           = 0;                 /// First measured rssi, stored for comparison with second measurement.
 static bool       m_comparison_finished = false;             /// Flag indicating that the algorithm has been performed in time.
-/// If this is set to false during frame reception, the algorithm didn't
-/// have enough time and current antenna has been selected at random.
+/// If this is set to false during frame reception, the algorithm didn't have enough time and current antenna has been selected at random.
 static nrf_802154_ant_diversity_antenna_t m_last_selected_antenna =
-    NRF_802154_ANT_DIVERSITY_ANTENNA_NONE; /// Last antenna successfully used for reception.
+    NRF_802154_ANT_DIVERSITY_ANTENNA_NONE;                   /// Last antenna successfully used for reception.
 
 static void ad_timer_init()
 {

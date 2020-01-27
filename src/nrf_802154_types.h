@@ -210,7 +210,8 @@ typedef uint8_t nrf_802154_ifs_mode_t;
  *
  * Possible values:
  * - @ref NRF_802154_ANT_DIVERSITY_MODE_DISABLED,
- * - @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL
+ * - @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL,
+ * - @ref NRF_802154_ANT_DIVERSITY_MODE_AUTO
  */
 typedef uint8_t nrf_802154_ant_diversity_mode_t;
 
@@ -224,7 +225,8 @@ typedef uint8_t nrf_802154_ant_diversity_mode_t;
  *
  * Possible values:
  * - @ref NRF_802154_ANT_DIVERSITY_ANTENNA_1,
- * - @ref NRF_802154_ANT_DIVERSITY_ANTENNA_2
+ * - @ref NRF_802154_ANT_DIVERSITY_ANTENNA_2,
+ * - @ref NRF_802154_ANT_DIVERSITY_ANTENNA_NONE
  */
 typedef uint8_t nrf_802154_ant_diversity_antenna_t;
 

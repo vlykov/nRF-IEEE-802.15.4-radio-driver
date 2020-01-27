@@ -180,7 +180,7 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg);
 
 #if ENABLE_ANT_DIVERSITY
 /**
- * @brief Sets the antenna diversity mode
+ * @brief Sets the antenna diversity mode.
  *
  * @note This function should only be called before starting trx or during sleep periods.
  *
