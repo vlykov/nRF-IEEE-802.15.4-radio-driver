@@ -291,7 +291,8 @@ bool nrf_802154_antenna_set(nrf_802154_ant_diversity_antenna_t antenna)
 {
     bool result = nrf_802154_pib_ant_diversity_antenna_set(antenna);
 
-    if ((result) && (NRF_802154_ANT_DIVERSITY_MODE_MANUAL == nrf_802154_pib_ant_diversity_mode_get()))
+    if ((result) &&
+        (NRF_802154_ANT_DIVERSITY_MODE_MANUAL == nrf_802154_pib_ant_diversity_mode_get()))
     {
         nrf_802154_request_antenna_update();
     }

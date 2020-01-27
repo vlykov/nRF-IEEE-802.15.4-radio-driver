@@ -184,7 +184,7 @@ extern "C" {
  * Setting this flag disables NRF_RADIO_EVENT_BCMATCH handling, and therefore the address filtering
  * during the frame reception. With this flag set to 1, the address filtering is done after
  * receiving a frame, during NRF_RADIO_EVENT_END handling.
- * 
+ *
  * @note This option is incompatible with PPI variant of antenna diversity. If set to 1, make sure to
  * use SW variant of antenna diversity, if any.
  *

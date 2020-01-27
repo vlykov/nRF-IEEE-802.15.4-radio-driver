@@ -1417,7 +1417,7 @@ static void on_rx_prestarted_timeout(void * p_context)
     #if ENABLE_ANT_DIVERSITY
     nrf_802154_ant_diversity_preamble_timeout_notify();
 
-    /** 
+    /**
      * If timer is still running here, it means that timer handling has been preempted by HELPER1
      * radio event after removing the timer from scheduler, but before handling this callback.
      * In that case, process the timeout as usual, but notify antenna diversity module that another
@@ -1430,10 +1430,10 @@ static void on_rx_prestarted_timeout(void * p_context)
     #endif // ENABLE_ANT_DIVERSITY
 
     /* If nrf_802154_trx_receive_frame_prestarted boosted preconditions beyond those normally
-     * required by current state, they need to be restored now.  
+     * required by current state, they need to be restored now.
      */
     if (nrf_802154_pib_coex_rx_request_mode_get() ==
-    NRF_802154_COEX_RX_REQUEST_MODE_ENERGY_DETECTION)
+        NRF_802154_COEX_RX_REQUEST_MODE_ENERGY_DETECTION)
     {
         request_preconditions_for_state(m_state);
     }
@@ -1455,7 +1455,7 @@ void nrf_802154_trx_receive_frame_prestarted(void)
     nrf_802154_stat_counter_increment(received_energy_events);
 #endif
 
-bool rx_timeout_should_be_started = false;
+    bool rx_timeout_should_be_started = false;
 
 #if ENABLE_ANT_DIVERSITY
     nrf_802154_ant_diversity_preamble_detected_notify();
@@ -1464,7 +1464,7 @@ bool rx_timeout_should_be_started = false;
 #endif // ENABLE_ANT_DIVERSITY
 
     if (nrf_802154_pib_coex_rx_request_mode_get() ==
-    NRF_802154_COEX_RX_REQUEST_MODE_ENERGY_DETECTION)
+        NRF_802154_COEX_RX_REQUEST_MODE_ENERGY_DETECTION)
     {
         // Request boosted preconditions for receive
         nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_RX);
@@ -1491,7 +1491,7 @@ bool rx_timeout_should_be_started = false;
 
         nrf_802154_timer_sched_add(&m_rx_prestarted_timer, true);
     }
-    
+
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 

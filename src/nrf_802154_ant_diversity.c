@@ -54,26 +54,26 @@
 
 typedef enum
 {
-    AD_STATE_DISABLED,                                /// Antenna diversity module is disabled and control of the antenna is ceded.
-    AD_STATE_SLEEP,                                   /// Antenna diversity module is in sleeping state - either radio is not in receive state,
+    AD_STATE_DISABLED,                                      /// Antenna diversity module is disabled and control of the antenna is ceded.
+    AD_STATE_SLEEP,                                         /// Antenna diversity module is in sleeping state - either radio is not in receive state,
     /// or rssi measurements are finished and timeout or framestart are expected.
-    AD_STATE_TOGGLE,                                  /// Antenna diversity module is toggling the antenna periodically waiting for preamble.
-    AD_STATE_SETTLE_1,                                /// Antenna diversity module is waiting for first RSSI measurement to settle after the frame prestarted event.
-    AD_STATE_SETTLE_2                                 /// Antenna diversity module is waiting for the second RSSI measurement to settle after the first measurement.
+    AD_STATE_TOGGLE,                                        /// Antenna diversity module is toggling the antenna periodically waiting for preamble.
+    AD_STATE_SETTLE_1,                                      /// Antenna diversity module is waiting for first RSSI measurement to settle after the frame prestarted event.
+    AD_STATE_SETTLE_2                                       /// Antenna diversity module is waiting for the second RSSI measurement to settle after the first measurement.
 } ad_state_t;
 
 static nrf_802154_ant_diversity_config_t m_ant_div_config = /**< Antenna Diversity configuration. */
 {
-    .ant_sel_pin            = NRF_802154_ANT_DIVERSITY_ANT_SEL_PIN_DEFAULT,
+    .ant_sel_pin = NRF_802154_ANT_DIVERSITY_ANT_SEL_PIN_DEFAULT,
 };
 
-static ad_state_t                         m_ad_state              = AD_STATE_DISABLED;                     /// Automatic switcher state machine current state.
-static int8_t                             m_prev_rssi             = 0;                                     /// First measured rssi, stored for comparison with second measurement.
-static bool                               m_comparison_finished   = false;                                 /// Flag indicating that the algorithm has been performed in time.
-                                                                                                           /// If this is set to false during frame reception, the algorithm didn't
-                                                                                                           /// have enough time and current antenna has been selected at random.
-static nrf_802154_ant_diversity_antenna_t m_last_selected_antenna = NRF_802154_ANT_DIVERSITY_ANTENNA_NONE; /// Last antenna successfully used for reception.
-
+static ad_state_t m_ad_state            = AD_STATE_DISABLED; /// Automatic switcher state machine current state.
+static int8_t     m_prev_rssi           = 0;                 /// First measured rssi, stored for comparison with second measurement.
+static bool       m_comparison_finished = false;             /// Flag indicating that the algorithm has been performed in time.
+/// If this is set to false during frame reception, the algorithm didn't
+/// have enough time and current antenna has been selected at random.
+static nrf_802154_ant_diversity_antenna_t m_last_selected_antenna =
+    NRF_802154_ANT_DIVERSITY_ANTENNA_NONE; /// Last antenna successfully used for reception.
 
 static void ad_timer_init()
 {
@@ -86,19 +86,20 @@ static void ad_timer_init()
 static void ad_ppi_and_gpiote_init()
 {
     nrf_gpiote_task_configure(NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL,
-                              m_ant_div_config.ant_sel_pin, 
+                              m_ant_div_config.ant_sel_pin,
                               (nrf_gpiote_polarity_t)GPIOTE_CONFIG_POLARITY_Toggle,
-                              (nrf_gpiote_outinit_t) (nrf_802154_ant_diversity_antenna_get() ? 
-                                                      NRF_GPIOTE_INITIAL_VALUE_HIGH : 
-                                                      NRF_GPIOTE_INITIAL_VALUE_LOW));
+                              (nrf_gpiote_outinit_t)(nrf_802154_ant_diversity_antenna_get() ?
+                                                     NRF_GPIOTE_INITIAL_VALUE_HIGH :
+                                                     NRF_GPIOTE_INITIAL_VALUE_LOW));
 
     nrf_ppi_channel_endpoint_setup(ANT_DIV_PPI,
-                                    (uint32_t)nrf_timer_event_address_get(
-                                        ANT_DIV_TIMER,
-                                        NRF_TIMER_EVENT_COMPARE0),
-                                    (uint32_t)nrf_gpiote_task_addr_get(
-                                        NRF_802154_ANT_DIVERSITY_GPIOTE_TASK));
+                                   (uint32_t)nrf_timer_event_address_get(
+                                       ANT_DIV_TIMER,
+                                       NRF_TIMER_EVENT_COMPARE0),
+                                   (uint32_t)nrf_gpiote_task_addr_get(
+                                       NRF_802154_ANT_DIVERSITY_GPIOTE_TASK));
 }
+
 #endif // ANT_DIVERSITY_PPI
 
 void nrf_802154_ant_diversity_init(void)
@@ -113,9 +114,10 @@ void nrf_802154_ant_diversity_init(void)
 
 bool nrf_802154_ant_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t antenna)
 {
-    bool                        status = true;
+    bool status = true;
 
-    if ((NRF_802154_ANT_DIVERSITY_ANTENNA_1 == antenna) || (NRF_802154_ANT_DIVERSITY_ANTENNA_2 == antenna))
+    if ((NRF_802154_ANT_DIVERSITY_ANTENNA_1 == antenna) ||
+        (NRF_802154_ANT_DIVERSITY_ANTENNA_2 == antenna))
     {
         nrf_gpio_pin_write(m_ant_div_config.ant_sel_pin, antenna);
     }
@@ -136,7 +138,7 @@ nrf_802154_ant_diversity_antenna_t nrf_802154_ant_diversity_antenna_get(void)
     {
         return nrf_gpio_pin_read(m_ant_div_config.ant_sel_pin);
     }
-#endif // ANT_DIV_PPI   
+#endif // ANT_DIV_PPI
     return nrf_gpio_pin_out_read(m_ant_div_config.ant_sel_pin);
 }
 
@@ -213,7 +215,7 @@ static void ad_timer_toggle_configure()
 #elif ANT_DIVERSITY_PPI
     nrf_gpiote_task_enable(NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL);
     nrf_ppi_channel_enable(ANT_DIV_PPI);
-#else 
+#else
     assert(false);
 #endif
 
@@ -307,7 +309,7 @@ static void ad_rssi_second_measure()
 {
     // Anomaly 78: SHUTDOWN has to be triggered manually here, as no short to SHUTDOWN is present
     nrf_timer_task_trigger(ANT_DIV_TIMER, NRF_TIMER_TASK_SHUTDOWN);
-    
+
     int8_t rssi_current = ad_rssi_measure();
 
     if ( rssi_current != NRF_802154_RSSI_INVALID)
@@ -328,6 +330,7 @@ static void ad_rssi_second_measure()
 void nrf_802154_ant_diversity_enable_notify()
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -351,6 +354,7 @@ void nrf_802154_ant_diversity_enable_notify()
 void nrf_802154_ant_diversity_disable_notify()
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -382,6 +386,7 @@ void nrf_802154_ant_diversity_disable_notify()
 void nrf_802154_ant_diversity_rx_started_notify()
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -409,6 +414,7 @@ void nrf_802154_ant_diversity_rx_started_notify()
 void nrf_802154_ant_diversity_rx_aborted_notify()
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -441,6 +447,7 @@ void nrf_802154_ant_diversity_rx_aborted_notify()
 void nrf_802154_ant_diversity_preamble_detected_notify()
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -507,6 +514,7 @@ bool nrf_802154_ant_diversity_frame_started_notify()
 void nrf_802154_ant_diversity_frame_received_notify()
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -523,7 +531,7 @@ void nrf_802154_ant_diversity_frame_received_notify()
                 m_last_selected_antenna = NRF_802154_ANT_DIVERSITY_ANTENNA_NONE;
             }
             break;
-            
+
         case AD_STATE_TOGGLE:
         case AD_STATE_SETTLE_1:
         case AD_STATE_SETTLE_2:
@@ -539,6 +547,7 @@ void nrf_802154_ant_diversity_frame_received_notify()
 void nrf_802154_ant_diversity_preamble_timeout_notify()
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:
@@ -583,6 +592,7 @@ void nrf_802154_ant_diversity_preamble_timeout_notify()
 void NRF_802154_ANT_DIVERSITY_TIMER_IRQHANDLER()
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
     switch (m_ad_state)
     {
         case AD_STATE_DISABLED:

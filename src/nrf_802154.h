@@ -226,13 +226,13 @@ nrf_802154_ant_diversity_antenna_t nrf_802154_antenna_get(void);
 
 /**
  * @brief Gets which antenna was selected as best for the last reception.
- * 
+ *
  * @note In three cases @ref NRF_802154_ANT_DIVERSITY_ANTENNA_NONE may be returned:
  *  - No frame was received yet.
  *  - Last frame was not received with antenna diversity auto mode enabled.
  *  - RSSI measurements didn't have enough time to finish during last frame reception
  *    and antenna was selected at random.
- * 
+ *
  * @return Antenna selected during last successful reception in automatic mode.
  */
 nrf_802154_ant_diversity_antenna_t nrf_802154_last_rx_antenna_get(void);
