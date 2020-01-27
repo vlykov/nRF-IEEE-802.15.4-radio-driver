@@ -154,13 +154,6 @@ static uint32_t m_listening_start_hp_timestamp;
 
 #endif
 
-#if ENABLE_ANT_DIVERSITY
-/** @brief Best antenna for current reception, based on RSSI measurement
- *  @note NRF_802154_ANT_DIV_ANTENNA_NONE indicates that no RSSI measurement has been performed yet.
- */
-//ANT_DIV_TODO
-// static nrf_802154_ant_div_antenna_t m_rssi_best_antenna = NRF_802154_ANT_DIV_ANTENNA_NONE;
-#endif // ENABLE_ANT_DIVERSITY
 /***************************************************************************************************
  * @section Common core operations
  **************************************************************************************************/
