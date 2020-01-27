@@ -1416,6 +1416,17 @@ static void on_rx_prestarted_timeout(void * p_context)
 
     #if ENABLE_ANT_DIVERSITY
     nrf_802154_ant_diversity_preamble_timeout_notify();
+
+    /** 
+     * If timer is still running here, it means that timer handling has been preempted by HELPER1
+     * radio event after removing the timer from scheduler, but before handling this callback.
+     * In that case, process the timeout as usual, but notify antenna diversity module that another
+     * preamble was detected in order to repeat RSSI measurements.
+     */
+    if (nrf_802154_timer_sched_is_running(&m_rx_prestarted_timer))
+    {
+        nrf_802154_ant_diversity_preamble_detected_notify();
+    }
     #endif // ENABLE_ANT_DIVERSITY
 
     /* If nrf_802154_trx_receive_frame_prestarted boosted preconditions beyond those normally
