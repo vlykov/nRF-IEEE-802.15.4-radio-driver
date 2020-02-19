@@ -106,6 +106,76 @@ extern "C" {
 #define NRF_802154_COUNTER_TIMER_INSTANCE \
     NRFX_CONCAT_2(NRF_TIMER, NRF_802154_COUNTER_TIMER_INSTANCE_NO)
 
+#if ENABLE_ANT_DIVERSITY
+
+/**
+ * @brief Default pin used for toggling the antenna.
+ */
+#ifndef NRF_802154_ANT_DIVERSITY_ANT_SEL_PIN_DEFAULT
+#define NRF_802154_ANT_DIVERSITY_ANT_SEL_PIN_DEFAULT 23
+#endif
+
+/**
+ * @def NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO
+ *
+ * Number of the timer instance used for detecting when PSDU is being received.
+ */
+#ifndef NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO
+#define NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO 3
+#endif
+
+/**
+ * @def NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE
+ *
+ * The timer instance used by the driver for toggling the antenna and delaying RSSI measurements
+ * for antenna diversity.
+ *
+ */
+#define NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE \
+    NRFX_CONCAT_2(NRF_TIMER, NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO)
+
+#define NRF_802154_ANT_DIVERSITY_TIMER_IRQHANDLER \
+    NRFX_CONCAT_3(TIMER, NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO, _IRQHandler)
+
+#define NRF_802154_ANT_DIVERSITY_TIMER_IRQN \
+    NRFX_CONCAT_3(TIMER, NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO, _IRQn)
+
+#define NRF_802154_ANT_DIVERSITY_TIMER_MASK (1 << NRF_802154_ANT_DIVERSITY_TIMER_INSTANCE_NO)
+
+#if ANT_DIVERSITY_PPI
+
+#ifndef NRF_802154_PPI_TIMER_COMPARE_TO_ANTENNA_TOGGLE
+#define NRF_802154_PPI_TIMER_COMPARE_TO_ANTENNA_TOGGLE NRF_PPI_CHANNEL12
+#endif
+
+#ifndef NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL
+#define NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL            4
+#endif
+
+#define NRF_802154_ANT_DIVERSITY_GPIOTE_TASK               NRFX_CONCAT_2(NRF_GPIOTE_TASKS_OUT_, \
+                                                                         NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL)
+
+#define NRF_802154_ANT_DIVERSITY_PPI_CHANNELS_USED_MASK    (1 << \
+                                                            NRF_802154_PPI_TIMER_COMPARE_TO_ANTENNA_TOGGLE)
+#define NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNELS_USED_MASK (1 << \
+                                                            NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNEL)
+
+#endif // ANT_DIVERSITY_PPI
+
+#else  // ENABLE_ANT_DIVERSITY
+
+#define NRF_802154_ANT_DIVERSITY_TIMER_MASK 0
+
+#endif // ENABLE_ANT_DIVERSITY
+
+#ifndef NRF_802154_ANT_DIVERSITY_PPI_CHANNELS_USED_MASK
+#define NRF_802154_ANT_DIVERSITY_PPI_CHANNELS_USED_MASK 0
+#endif
+
+#ifndef NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNELS_USED_MASK
+#define NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNELS_USED_MASK 0
+#endif
+
 /**
  * @def NRF_802154_SWI_EGU_INSTANCE_NO
  *
@@ -451,7 +521,8 @@ extern "C" {
 #ifndef NRF_802154_TIMERS_USED_MASK
 #define NRF_802154_TIMERS_USED_MASK ((1 << NRF_802154_HIGH_PRECISION_TIMER_INSTANCE_NO) | \
                                      (1 << NRF_802154_TIMER_INSTANCE_NO) |                \
-                                     (1 << NRF_802154_COUNTER_TIMER_INSTANCE_NO))
+                                     (1 << NRF_802154_COUNTER_TIMER_INSTANCE_NO) |        \
+                                     NRF_802154_ANT_DIVERSITY_TIMER_MASK)
 #endif // NRF_802154_TIMERS_USED_MASK
 
 /**
@@ -488,8 +559,9 @@ extern "C" {
  * Bit mask of GPIOTE peripherals used by the 802.15.4 driver.
  */
 #ifndef NRF_802154_GPIOTE_CHANNELS_USED_MASK
-#define NRF_802154_GPIOTE_CHANNELS_USED_MASK (NRF_802154_FEM_GPIOTE_CHANNELS_USED_MASK | \
-                                              NRF_802154_DEBUG_GPIOTE_CHANNELS_USED_MASK)
+#define NRF_802154_GPIOTE_CHANNELS_USED_MASK (NRF_802154_FEM_GPIOTE_CHANNELS_USED_MASK |   \
+                                              NRF_802154_DEBUG_GPIOTE_CHANNELS_USED_MASK | \
+                                              NRF_802154_ANT_DIVERSITY_GPIOTE_CHANNELS_USED_MASK)
 #endif // NRF_802154_GPIOTE_CHANNELS_USED_MASK
 
 /**
@@ -509,7 +581,8 @@ extern "C" {
                                            NRF_802154_DISABLE_BCC_MATCHING_PPI_CHANNELS_USED_MASK | \
                                            NRF_802154_TIMESTAMP_PPI_CHANNELS_USED_MASK |            \
                                            NRF_802154_FEM_PPI_CHANNELS_USED_MASK |                  \
-                                           NRF_802154_DEBUG_PPI_CHANNELS_USED_MASK)
+                                           NRF_802154_DEBUG_PPI_CHANNELS_USED_MASK |                \
+                                           NRF_802154_ANT_DIVERSITY_PPI_CHANNELS_USED_MASK)
 #endif // NRF_802154_PPI_CHANNELS_USED_MASK
 
 /**

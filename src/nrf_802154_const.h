@@ -105,6 +105,8 @@
 
 #define PHR_OFFSET                   0                                            ///< Offset of the PHY header in a frame.
 
+#define RSSI_SETTLE_TIME_US          15                                           ///< Time required for RSSI measurements to be valid after signal level change.
+
 #define SECURITY_ENABLED_OFFSET      1                                            ///< Byte containing the Security Enabled bit.
 #define SECURITY_ENABLED_BIT         0x08                                         ///< Bits containing the Security Enabled field.
 #define SECURITY_LEVEL_MASK          0x07                                         ///< Mask of bits containing the Security level field.

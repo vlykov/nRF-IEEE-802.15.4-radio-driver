@@ -46,7 +46,11 @@
 #include "nrf_802154_utils.h"
 #include "fal/nrf_802154_fal.h"
 
-#define CSMACA_BE_MAXIMUM 8 ///< The maximum allowed CSMA-CA backoff exponent (BE) that results from the implementation
+#if ENABLE_ANT_DIVERSITY
+#include "nrf_802154_ant_diversity.h"
+#endif // ENABLE_ANT_DIVERSITY
+
+#define CSMACA_BE_MAXIMUM 8  ///< The maximum allowed CSMA-CA backoff exponent (BE) that results from the implementation
 
 typedef struct
 {
@@ -74,6 +78,15 @@ typedef struct
 
 #endif  // NRF_802154_IFS_ENABLED
 
+#if ENABLE_ANT_DIVERSITY
+typedef struct
+{
+    nrf_802154_ant_diversity_mode_t    mode;    // < Mode of antenna diversity.
+    nrf_802154_ant_diversity_antenna_t antenna; // < Antenna selected - only used in manual mode.
+} nrf_802154_pib_ant_diversity_t;
+
+#endif  // ENABLE_ANT_DIVERSITY
+
 typedef struct
 {
     int8_t                  tx_power;                             ///< Transmit power.
@@ -95,6 +108,10 @@ typedef struct
     nrf_802154_pib_ifs_t ifs; ///< IFS-related fields.
 
 #endif
+#if ENABLE_ANT_DIVERSITY
+    nrf_802154_pib_ant_diversity_t ant_div; ///< Antenna diversity related fields.
+
+#endif  // ENABLE_ANT_DIVERSITY
 } nrf_802154_pib_data_t;
 
 // Static variables.
@@ -252,6 +269,12 @@ void nrf_802154_pib_init(void)
     m_data.ifs.min_lifs_period_us = MIN_LIFS_PERIOD_US;
     m_data.ifs.mode               = NRF_802154_IFS_MODE_DISABLED;
 #endif // NRF_802154_IFS_ENABLED
+
+#if ENABLE_ANT_DIVERSITY
+    m_data.ant_div.mode    = NRF_802154_ANT_DIVERSITY_MODE_DISABLED;
+    m_data.ant_div.antenna = NRF_802154_ANT_DIVERSITY_DEFAULT_ANTENNA;
+#endif // ENABLE_ANT_DIVERSITY
+
 }
 
 bool nrf_802154_pib_promiscuous_get(void)
@@ -492,3 +515,60 @@ void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period)
 }
 
 #endif // NRF_802154_IFS_ENABLED
+
+#if ENABLE_ANT_DIVERSITY
+bool nrf_802154_pib_ant_diversity_mode_set(nrf_802154_ant_diversity_mode_t mode)
+{
+    bool result = true;
+
+    switch (mode)
+    {
+        case NRF_802154_ANT_DIVERSITY_MODE_DISABLED:
+        case NRF_802154_ANT_DIVERSITY_MODE_MANUAL:
+            nrf_802154_ant_diversity_disable_notify();
+            m_data.ant_div.mode = mode;
+            break;
+
+        case NRF_802154_ANT_DIVERSITY_MODE_AUTO:
+            nrf_802154_ant_diversity_enable_notify();
+            m_data.ant_div.mode = mode;
+            break;
+
+        default:
+            result = false;
+            break;
+    }
+
+    return result;
+}
+
+nrf_802154_ant_diversity_mode_t nrf_802154_pib_ant_diversity_mode_get(void)
+{
+    return m_data.ant_div.mode;
+}
+
+bool nrf_802154_pib_ant_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t antenna)
+{
+    bool result = true;
+
+    switch (antenna)
+    {
+        case NRF_802154_ANT_DIVERSITY_ANTENNA_1:
+        case NRF_802154_ANT_DIVERSITY_ANTENNA_2:
+            m_data.ant_div.antenna = antenna;
+            break;
+
+        default:
+            result = false;
+            break;
+    }
+
+    return result;
+}
+
+nrf_802154_ant_diversity_antenna_t nrf_802154_pib_ant_diversity_antenna_get(void)
+{
+    return m_data.ant_div.antenna;
+}
+
+#endif // ENABLE_ANT_DIVERSITY

@@ -185,9 +185,17 @@ extern "C" {
  * during the frame reception. With this flag set to 1, the address filtering is done after
  * receiving a frame, during NRF_RADIO_EVENT_END handling.
  *
+ * @note This option is incompatible with PPI variant of antenna diversity. If set to 1, make sure to
+ * use SW variant of antenna diversity, if any.
+ *
  */
 #ifndef NRF_802154_DISABLE_BCC_MATCHING
 #define NRF_802154_DISABLE_BCC_MATCHING 0
+#endif
+
+#if (NRF_802154_DISABLE_BCC_MATCHING) && (ENABLE_ANT_DIVERSITY)
+#error NRF_802154_DISABLE_BCC_MATCHING option is incompatible with antenna diversity. \
+    Please disable antenna diversity or set NRF_802154_DISABLE_BCC_MATCHING to 0.
 #endif
 
 /**
@@ -507,9 +515,26 @@ extern "C" {
 #endif
 
 /**
- *@}
- **/
+ * @}
+ * @defgroup nrf_802154_ant_diversity Antenna diversity feature configuration
+ * @{
+ */
 
+/**
+ * @def NRF_802154_ANT_DIVERSITY_TOGGLE_TIME_DEFAULT
+ *
+ * Defines default time in microseconds between antenna toggles when waiting for preamble in
+ * antenna diversity automatic mode.
+ * Should not be longer than preamble length (frame loss may occur in border instances), and cannot be
+ * longer than 255 us.
+ */
+#ifndef NRF_802154_ANT_DIVERSITY_TOGGLE_TIME_DEFAULT
+#define NRF_802154_ANT_DIVERSITY_TOGGLE_TIME_DEFAULT 40
+#endif
+
+/**
+ * @}
+ */
 #ifdef __cplusplus
 }
 #endif

@@ -319,6 +319,52 @@ uint16_t nrf_802154_pib_ifs_min_lifs_period_get(void);
 void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period);
 #endif // NRF_802154_IFS_ENABLED
 
+#if ENABLE_ANT_DIVERSITY
+/**
+ * @brief Sets the antenna diversity mode.
+ *
+ * @param[in] mode Antenna diversity mode to be set.
+ *
+ * @retval true  Antenna diversity mode set successfully.
+ * @retval false Invalid antenna diversity mode passed as argument.
+ */
+bool nrf_802154_pib_ant_diversity_mode_set(nrf_802154_ant_diversity_mode_t mode);
+
+/**
+ * @brief Gets the antenna diversity mode.
+ *
+ * @return Current antenna diversity mode.
+ */
+nrf_802154_ant_diversity_mode_t nrf_802154_pib_ant_diversity_mode_get(void);
+
+/**
+ * @brief Selects antenna to be used.
+ *
+ * @note Takes effect only if antenna diversity mode is set to
+ * @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL.
+ * See @ref nrf_802154_pib_ant_diversity_mode_set.
+ *
+ * @param[in] antenna  Antenna to be selected.
+ *
+ * @retval true  Antenna selected successfully.
+ * @retval false Invalid antenna passed as argument.
+ */
+bool nrf_802154_pib_ant_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t antenna);
+
+/**
+ * @brief Reads the currently used antenna.
+ *
+ * @note The antenna read by this function is currently used antenna only if
+ * antenna diversity mode is set to @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL. Otherwise,
+ * currently used antenna may be different.
+ * @sa nrf_802154_pib_ant_diversity_mode_set
+ *
+ * @return Currently selected antenna.
+ */
+nrf_802154_ant_diversity_antenna_t nrf_802154_pib_ant_diversity_antenna_get();
+
+#endif // ENABLE_ANT_DIVERSITY
+
 #ifdef __cplusplus
 }
 #endif

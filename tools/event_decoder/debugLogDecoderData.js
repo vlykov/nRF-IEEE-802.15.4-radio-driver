@@ -92,6 +92,10 @@ var debugLogDecoderModules = [
             {id: 1, text: "TIMESLOT_REQUEST", paramType: "uint"},
             {id: 2, text: "TIMESLOT_REQUEST_RESULT", paramType: "uint"},
         ]
+    },
+    {
+        id: 12,
+        name: "ANT_DIVERSITY"
     }
 ];
 

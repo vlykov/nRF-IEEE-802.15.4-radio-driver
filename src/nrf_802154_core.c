@@ -74,6 +74,9 @@
 #include "platform/hp_timer/nrf_802154_hp_timer.h"
 
 #include "nrf_802154_core_hooks.h"
+#if ENABLE_ANT_DIVERSITY
+#include "nrf_802154_ant_diversity.h"
+#endif // ENABLE_ANT_DIVERSITY
 
 /// Delay before first check of received frame: 24 bits is PHY header and MAC Frame Control field.
 #define BCC_INIT                    (3 * 8)
@@ -822,6 +825,11 @@ static bool current_operation_terminate(nrf_802154_term_t term_lvl,
                  * have already been called. We need to stop counting timeout. */
                 nrf_802154_timer_sched_remove(&m_rx_prestarted_timer, NULL);
 
+#if ENABLE_ANT_DIVERSITY
+                /* Notify antenna diversity module that RX has been aborted. */
+                nrf_802154_ant_diversity_rx_aborted_notify();
+#endif // ENABLE_ANT_DIVERSITY
+
                 /* We might have boosted preconditions (to support coex) above level
                  * normally requested for current state by request_preconditions_for_state(m_state).
                  * When current operation is terminated we request preconditions back
@@ -1402,10 +1410,29 @@ static void on_rx_prestarted_timeout(void * p_context)
     assert(in_crit_sect);
     (void)in_crit_sect;
 
-    /* nrf_802154_trx_receive_frame_prestarted boosted preconditions beyond those normally
-     * required by current state. Let's restore them now.  */
-    request_preconditions_for_state(m_state);
+#if ENABLE_ANT_DIVERSITY
+    nrf_802154_ant_diversity_preamble_timeout_notify();
 
+    /**
+     * If timer is still running here, it means that timer handling has been preempted by HELPER1
+     * radio event after removing the timer from scheduler, but before handling this callback.
+     * In that case, process the timeout as usual, but notify antenna diversity module that another
+     * preamble was detected in order to repeat RSSI measurements.
+     */
+    if (nrf_802154_timer_sched_is_running(&m_rx_prestarted_timer))
+    {
+        nrf_802154_ant_diversity_preamble_detected_notify();
+    }
+#endif // ENABLE_ANT_DIVERSITY
+
+    /* If nrf_802154_trx_receive_frame_prestarted boosted preconditions beyond those normally
+     * required by current state, they need to be restored now.
+     */
+    if (nrf_802154_pib_coex_rx_request_mode_get() ==
+        NRF_802154_COEX_RX_REQUEST_MODE_ENERGY_DETECTION)
+    {
+        request_preconditions_for_state(m_state);
+    }
     nrf_802154_critical_section_exit();
 }
 
@@ -1413,28 +1440,46 @@ void nrf_802154_trx_receive_frame_prestarted(void)
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
 
-    assert(m_state == RADIO_STATE_RX);
+// Antenna diversity uses this function for detecting possible preamble on air.
+// Do not assert even if notifications mask would not allow for calling this function.
+#if !defined(ENABLE_ANT_DIVERSITY)
     assert((m_trx_receive_frame_notifications_mask & TRX_RECEIVE_NOTIFICATION_PRESTARTED) != 0U);
+#endif
+    assert(m_state == RADIO_STATE_RX);
 
 #if (NRF_802154_STATS_COUNT_ENERGY_DETECTED_EVENTS)
     nrf_802154_stat_counter_increment(received_energy_events);
 #endif
 
+    bool rx_timeout_should_be_started = false;
+
+#if ENABLE_ANT_DIVERSITY
+    nrf_802154_ant_diversity_preamble_detected_notify();
+    // Antenna diversity module should be notified if framestart doesn't come.
+    rx_timeout_should_be_started = true;
+#endif // ENABLE_ANT_DIVERSITY
+
     if (nrf_802154_pib_coex_rx_request_mode_get() ==
         NRF_802154_COEX_RX_REQUEST_MODE_ENERGY_DETECTION)
     {
-        /* Code below serves one main purpose: boosting preconditions for receive.
-         * This handler might not be followed by nrf_802154_trx_receive_frame_started.
-         * That's why we need to revert boosted precondition if nrf_802154_trx_receive_frame_started
-         * doesn't come. We use timer for this purpose.
-         */
+        // Request boosted preconditions for receive
+        nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_RX);
+        // Boosted preconditions should be reverted if the framestart doesn't come.
+        rx_timeout_should_be_started = true;
+    }
+
+    /*
+     * This handler might not be followed by nrf_802154_trx_receive_frame_started. The timer
+     * below is used for timing out if the framestart doesn't come.
+     * There are two reasons for that: reverting boosted preconditions and notifying antenna diversity
+     * module.
+     */
+    if (rx_timeout_should_be_started)
+    {
 
         uint32_t now = nrf_802154_timer_sched_time_get();
 
         nrf_802154_timer_sched_remove(&m_rx_prestarted_timer, NULL);
-
-        /* Request boosted preconditions */
-        nrf_802154_rsch_crit_sect_prio_request(RSCH_PRIO_RX);
 
         m_rx_prestarted_timer.t0       = now;
         m_rx_prestarted_timer.dt       = PRESTARTED_TIMER_TIMEOUT_US;
@@ -1471,6 +1516,13 @@ void nrf_802154_trx_receive_frame_started(void)
         default:
             break;
     }
+
+#if ENABLE_ANT_DIVERSITY
+    /* If antenna diversity is enabled, rx_prestarted_timer would be started even
+       in different coex rx request modes than NRF_802154_COEX_RX_REQUEST_MODE_ENERGY_DETECTION */
+    nrf_802154_timer_sched_remove(&m_rx_prestarted_timer, NULL);
+    nrf_802154_ant_diversity_frame_started_notify();
+#endif // ENABLE_ANT_DIVERSITY
 
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
@@ -1776,6 +1828,9 @@ void nrf_802154_trx_receive_frame_received(void)
         nrf_802154_stat_timestamp_write(last_rx_end_timestamp, ts);
 #endif
 
+#if ENABLE_ANT_DIVERSITY
+        nrf_802154_ant_diversity_frame_received_notify();
+#endif // ENABLE_ANT_DIVERSITY
         bool send_ack = false;
 
         if (m_flags.frame_filtered &&
@@ -2712,3 +2767,27 @@ bool nrf_802154_core_last_rssi_measurement_get(int8_t * p_rssi)
 
     return result;
 }
+
+#if ENABLE_ANT_DIVERSITY
+bool nrf_802154_core_antenna_update(void)
+{
+    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
+    bool result = critical_section_enter_and_verify_timeslot_length();
+
+    if (result)
+    {
+        if (timeslot_is_granted())
+        {
+            nrf_802154_trx_antenna_update();
+        }
+
+        nrf_802154_critical_section_exit();
+    }
+
+    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
+
+    return result;
+}
+
+#endif // ENABLE_ANT_DIVERSITY

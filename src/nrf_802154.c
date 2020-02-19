@@ -75,6 +75,10 @@
 #include "fem/nrf_fem_protocol_api.h"
 #endif
 
+#if ENABLE_ANT_DIVERSITY
+#include "nrf_802154_ant_diversity.h"
+#endif // ENABLE_ANT_DIVERSITY
+
 #define RAW_LENGTH_OFFSET  0
 #define RAW_PAYLOAD_OFFSET 1
 
@@ -268,6 +272,65 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg)
 }
 
 #endif // ENABLE_FEM
+
+#if ENABLE_ANT_DIVERSITY
+bool nrf_802154_antenna_diversity_mode_set(nrf_802154_ant_diversity_mode_t mode)
+{
+    bool result = nrf_802154_pib_ant_diversity_mode_set(mode);
+
+    if (result)
+    {
+        nrf_802154_request_antenna_update();
+    }
+
+    return result;
+}
+
+nrf_802154_ant_diversity_mode_t nrf_802154_antenna_diversity_mode_get(void)
+{
+    return nrf_802154_pib_ant_diversity_mode_get();
+}
+
+bool nrf_802154_antenna_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t antenna)
+{
+    bool result = nrf_802154_pib_ant_diversity_antenna_set(antenna);
+
+    if ((result) &&
+        (NRF_802154_ANT_DIVERSITY_MODE_MANUAL == nrf_802154_pib_ant_diversity_mode_get()))
+    {
+        nrf_802154_request_antenna_update();
+    }
+
+    return result;
+}
+
+nrf_802154_ant_diversity_antenna_t nrf_802154_antenna_diversity_antenna_get(void)
+{
+    return nrf_802154_pib_ant_diversity_antenna_get();
+}
+
+void nrf_802154_antenna_diversity_config_set(nrf_802154_ant_diversity_config_t config)
+{
+    nrf_802154_ant_diversity_config_set(config);
+
+}
+
+nrf_802154_ant_diversity_antenna_t nrf_802154_antenna_diversity_last_rx_best_antenna_get(void)
+{
+    return nrf_802154_ant_diversity_last_rx_best_antenna_get();
+}
+
+nrf_802154_ant_diversity_config_t nrf_802154_antenna_diversity_config_get(void)
+{
+    return nrf_802154_ant_diversity_config_get();
+}
+
+void nrf_802154_antenna_diversity_init(void)
+{
+    nrf_802154_ant_diversity_init();
+}
+
+#endif // ENABLE_ANT_DIVERSITY
 
 nrf_802154_state_t nrf_802154_state_get(void)
 {

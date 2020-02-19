@@ -149,6 +149,16 @@ void nrf_802154_trx_enable(void);
  */
 void nrf_802154_trx_disable(void);
 
+#if ENABLE_ANT_DIVERSITY
+/**
+ * @brief Updates currently used antenna.
+ *
+ * This function sets the antenna to be used based on PIB configuration and TRX state.
+ * See @ref nrf_802154_pib_ant_diversity_mode_set, @ref nrf_802154_pib_ant_diversity_antenna_set.
+ */
+void nrf_802154_trx_antenna_update(void);
+#endif // ENABLE_ANT_DIVERSITY
+
 /**@brief Sets radio channel to use.
  *
  * @param[in] channel   Channel number to set (11-26).

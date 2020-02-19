@@ -206,6 +206,51 @@ typedef uint8_t nrf_802154_ifs_mode_t;
 #define NRF_802154_IFS_MODE_ALWAYS             0x02 // !< Interframe spacing is always inserted.
 
 /**
+ * @brief Mode of the antenna diversity module.
+ *
+ * Possible values:
+ * - @ref NRF_802154_ANT_DIVERSITY_MODE_DISABLED,
+ * - @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL,
+ * - @ref NRF_802154_ANT_DIVERSITY_MODE_AUTO
+ */
+typedef uint8_t nrf_802154_ant_diversity_mode_t;
+
+#define NRF_802154_ANT_DIVERSITY_MODE_DISABLED 0x00 // !< Antenna diversity is disabled - Antenna will not be controlled by ant_diversity module. While in this mode, current antenna is unspecified.
+#define NRF_802154_ANT_DIVERSITY_MODE_MANUAL   0x01 // !< Antenna is selected manually
+#define NRF_802154_ANT_DIVERSITY_MODE_AUTO     0x02 // !< Antenna is selected automatically based on RSSI.
+
+/**
+ * @brief Available antennas
+ *
+ * Possible values:
+ * - @ref NRF_802154_ANT_DIVERSITY_ANTENNA_1,
+ * - @ref NRF_802154_ANT_DIVERSITY_ANTENNA_2,
+ * - @ref NRF_802154_ANT_DIVERSITY_ANTENNA_NONE
+ */
+typedef uint8_t nrf_802154_ant_diversity_antenna_t;
+
+#define NRF_802154_ANT_DIVERSITY_ANTENNA_1    0x00 // !< First antenna
+#define NRF_802154_ANT_DIVERSITY_ANTENNA_2    0x01 // !< Second antenna
+#define NRF_802154_ANT_DIVERSITY_ANTENNA_NONE 0x02 // !< Used to indicate that antenna for the last reception was not selected via antenna diversity algorithm.
+
+/**
+ * Default antenna used in cases where no antenna was specified.
+ */
+#ifndef NRF_802154_ANT_DIVERSITY_DEFAULT_ANTENNA
+#define NRF_802154_ANT_DIVERSITY_DEFAULT_ANTENNA NRF_802154_ANT_DIVERSITY_ANTENNA_1
+#endif
+
+/**
+ * @brief Configuration of the antenna diversity module.
+ *
+ */
+typedef struct
+{
+    uint8_t ant_sel_pin; // !< Pin used for antenna selection. Should not be changed after calling @ref nrf_802154_ant_diversity_init.
+    uint8_t toggle_time; // !< Time between antenna switches in automatic mode [us].
+} nrf_802154_ant_diversity_config_t;
+
+/**
  * @brief Type of structure holding statistic counters.
  *
  * This structure holds counters of @c uint32_t type only.

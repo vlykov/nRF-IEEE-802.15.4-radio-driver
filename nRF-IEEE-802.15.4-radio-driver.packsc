@@ -466,6 +466,34 @@
         ]
     },
 
+    "ant_diversity": {
+        "_class": "nRF_drv_radio_802_15_4",
+        "_description": "This option enables antenna diversity.",
+        "_defines": [
+            "ENABLE_ANT_DIVERSITY"
+        ],
+        "_headers" : [
+            "src/nrf_802154_ant_diversity.h"
+        ],
+        "_files" : [
+            "src/nrf_802154_ant_diversity.c"
+        ],
+        "_variants" : [
+            {
+                "_defines": [
+                    "ANT_DIVERSITY_SW"
+                ],
+                "_name" : "sw"
+            },
+            {
+                "_defines": [
+                    "ANT_DIVERSITY_PPI"
+                ],
+                "_name" : "ppi"
+            }
+        ]
+    },
+
     "debug_log": {
         "_class": "nRF_drv_radio_802_15_4",
         "_description": "This option provides an array containing events logged by the driver.",

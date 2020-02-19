@@ -81,6 +81,9 @@ typedef enum
     REQ_TYPE_CCA_CFG_UPDATE,
     REQ_TYPE_RSSI_MEASURE,
     REQ_TYPE_RSSI_GET,
+#if ENABLE_ANT_DIVERSITY
+    REQ_TYPE_ANTENNA_UPDATE,
+#endif // ENABLE_ANT_DIVERSITY
 } nrf_802154_req_type_t;
 
 /// Request data in request queue.
@@ -168,7 +171,14 @@ typedef struct
             int8_t * p_rssi;   ///< RSSI measurement result.
             bool   * p_result; ///< RSSI measurement status.
         } rssi_get;            ///< Details of the getter that retrieves the RSSI measurement result.
-    } data;                    ///< Request data depending on its type.
+
+#if ENABLE_ANT_DIVERSITY
+        struct
+        {
+            bool * p_result; ///< Antenna update request result.
+        } antenna_update;    ///< Antenna update request details.
+#endif  // ENABLE_ANT_DIVERSITY
+    } data;                  ///< Request data depending on its type.
 } nrf_802154_req_data_t;
 
 /**@brief Instance of a requests queue */
@@ -435,6 +445,25 @@ static void swi_buffer_free(uint8_t * p_data, bool * p_result)
     req_exit();
 }
 
+#if ENABLE_ANT_DIVERSITY
+/**
+ * @brief Notifies the core module that the next higher layer has requested an antenna change.
+ *
+ * @param[out] p_result Pointer where the result to be returned by
+ *                      nrf_802154_request_antenna_update should be written by the swi handler.
+ */
+static void swi_antenna_update(bool * p_result)
+{
+    nrf_802154_req_data_t * p_slot = req_enter();
+
+    p_slot->type                         = REQ_TYPE_ANTENNA_UPDATE;
+    p_slot->data.antenna_update.p_result = p_result;
+
+    req_exit();
+}
+
+#endif // ENABLE_ANT_DIVERSITY
+
 /**
  * @brief Notifies the core module that the next higher layer has requested a channel change.
  *
@@ -580,6 +609,14 @@ bool nrf_802154_request_buffer_free(uint8_t * p_data)
     REQUEST_FUNCTION(nrf_802154_core_notify_buffer_free, swi_buffer_free, p_data)
 }
 
+#if ENABLE_ANT_DIVERSITY
+bool nrf_802154_request_antenna_update(void)
+{
+    REQUEST_FUNCTION_NO_ARGS(nrf_802154_core_antenna_update, swi_antenna_update)
+}
+
+#endif // ENABLE_ANT_DIVERSITY
+
 bool nrf_802154_request_channel_update(void)
 {
     REQUEST_FUNCTION_NO_ARGS(nrf_802154_core_channel_update, swi_channel_update)
@@ -679,6 +716,12 @@ static void irq_handler_req_event(void)
                 *(p_slot->data.rssi_get.p_result) =
                     nrf_802154_core_last_rssi_measurement_get(p_slot->data.rssi_get.p_rssi);
                 break;
+
+#if ENABLE_ANT_DIVERSITY
+            case REQ_TYPE_ANTENNA_UPDATE:
+                *(p_slot->data.antenna_update.p_result) = nrf_802154_core_antenna_update();
+                break;
+#endif // ENABLE_ANT_DIVERSITY
 
             default:
                 assert(false);
