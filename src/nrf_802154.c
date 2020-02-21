@@ -274,9 +274,9 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg)
 #endif // ENABLE_FEM
 
 #if ENABLE_ANT_DIVERSITY
-bool nrf_802154_antenna_diversity_mode_set(nrf_802154_ant_diversity_mode_t mode)
+bool nrf_802154_antenna_diversity_rx_mode_set(nrf_802154_ant_diversity_mode_t mode)
 {
-    bool result = nrf_802154_pib_ant_diversity_mode_set(mode);
+    bool result = nrf_802154_pib_ant_diversity_rx_mode_set(mode);
 
     if (result)
     {
@@ -286,17 +286,16 @@ bool nrf_802154_antenna_diversity_mode_set(nrf_802154_ant_diversity_mode_t mode)
     return result;
 }
 
-nrf_802154_ant_diversity_mode_t nrf_802154_antenna_diversity_mode_get(void)
+nrf_802154_ant_diversity_mode_t nrf_802154_antenna_diversity_rx_mode_get(void)
 {
-    return nrf_802154_pib_ant_diversity_mode_get();
+    return nrf_802154_pib_ant_diversity_rx_mode_get();
 }
 
-bool nrf_802154_antenna_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t antenna)
+bool nrf_802154_antenna_diversity_tx_mode_set(nrf_802154_ant_diversity_mode_t mode)
 {
-    bool result = nrf_802154_pib_ant_diversity_antenna_set(antenna);
+    bool result = nrf_802154_pib_ant_diversity_tx_mode_set(mode);
 
-    if ((result) &&
-        (NRF_802154_ANT_DIVERSITY_MODE_MANUAL == nrf_802154_pib_ant_diversity_mode_get()))
+    if (result)
     {
         nrf_802154_request_antenna_update();
     }
@@ -304,9 +303,45 @@ bool nrf_802154_antenna_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t
     return result;
 }
 
-nrf_802154_ant_diversity_antenna_t nrf_802154_antenna_diversity_antenna_get(void)
+nrf_802154_ant_diversity_mode_t nrf_802154_antenna_diversity_tx_mode_get(void)
 {
-    return nrf_802154_pib_ant_diversity_antenna_get();
+    return nrf_802154_pib_ant_diversity_tx_mode_get();
+}
+
+bool nrf_802154_antenna_diversity_rx_antenna_set(nrf_802154_ant_diversity_antenna_t antenna)
+{
+    bool result = nrf_802154_pib_ant_diversity_rx_antenna_set(antenna);
+
+    if ((result) &&
+        (NRF_802154_ANT_DIVERSITY_MODE_MANUAL == nrf_802154_pib_ant_diversity_rx_mode_get()))
+    {
+        nrf_802154_request_antenna_update();
+    }
+
+    return result;
+}
+
+nrf_802154_ant_diversity_antenna_t nrf_802154_antenna_diversity_rx_antenna_get(void)
+{
+    return nrf_802154_pib_ant_diversity_rx_antenna_get();
+}
+
+bool nrf_802154_antenna_diversity_tx_antenna_set(nrf_802154_ant_diversity_antenna_t antenna)
+{
+    bool result = nrf_802154_pib_ant_diversity_tx_antenna_set(antenna);
+
+    if ((result) &&
+        (NRF_802154_ANT_DIVERSITY_MODE_MANUAL == nrf_802154_pib_ant_diversity_tx_mode_get()))
+    {
+        nrf_802154_request_antenna_update();
+    }
+
+    return result;
+}
+
+nrf_802154_ant_diversity_antenna_t nrf_802154_antenna_diversity_tx_antenna_get(void)
+{
+    return nrf_802154_pib_ant_diversity_tx_antenna_get();
 }
 
 void nrf_802154_antenna_diversity_config_set(nrf_802154_ant_diversity_config_t config)

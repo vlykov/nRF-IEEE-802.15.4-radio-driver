@@ -109,7 +109,8 @@ typedef struct
 
 #endif
 #if ENABLE_ANT_DIVERSITY
-    nrf_802154_pib_ant_diversity_t ant_div; ///< Antenna diversity related fields.
+    nrf_802154_pib_ant_diversity_t ant_div_rx; ///< Antenna diversity related fields - rx configuration.
+    nrf_802154_pib_ant_diversity_t ant_div_tx; ///< Antenna diversity related fields - tx configuration, auto mode not supported.
 
 #endif  // ENABLE_ANT_DIVERSITY
 } nrf_802154_pib_data_t;
@@ -271,8 +272,10 @@ void nrf_802154_pib_init(void)
 #endif // NRF_802154_IFS_ENABLED
 
 #if ENABLE_ANT_DIVERSITY
-    m_data.ant_div.mode    = NRF_802154_ANT_DIVERSITY_MODE_DISABLED;
-    m_data.ant_div.antenna = NRF_802154_ANT_DIVERSITY_DEFAULT_ANTENNA;
+    m_data.ant_div_rx.mode    = NRF_802154_ANT_DIVERSITY_MODE_DISABLED;
+    m_data.ant_div_rx.antenna = NRF_802154_ANT_DIVERSITY_DEFAULT_ANTENNA;
+    m_data.ant_div_tx.mode    = NRF_802154_ANT_DIVERSITY_MODE_DISABLED;
+    m_data.ant_div_tx.antenna = NRF_802154_ANT_DIVERSITY_DEFAULT_ANTENNA;
 #endif // ENABLE_ANT_DIVERSITY
 
 }
@@ -517,7 +520,7 @@ void nrf_802154_pib_ifs_min_lifs_period_set(uint16_t period)
 #endif // NRF_802154_IFS_ENABLED
 
 #if ENABLE_ANT_DIVERSITY
-bool nrf_802154_pib_ant_diversity_mode_set(nrf_802154_ant_diversity_mode_t mode)
+bool nrf_802154_pib_ant_diversity_rx_mode_set(nrf_802154_ant_diversity_mode_t mode)
 {
     bool result = true;
 
@@ -526,12 +529,12 @@ bool nrf_802154_pib_ant_diversity_mode_set(nrf_802154_ant_diversity_mode_t mode)
         case NRF_802154_ANT_DIVERSITY_MODE_DISABLED:
         case NRF_802154_ANT_DIVERSITY_MODE_MANUAL:
             nrf_802154_ant_diversity_disable_notify();
-            m_data.ant_div.mode = mode;
+            m_data.ant_div_rx.mode = mode;
             break;
 
         case NRF_802154_ANT_DIVERSITY_MODE_AUTO:
             nrf_802154_ant_diversity_enable_notify();
-            m_data.ant_div.mode = mode;
+            m_data.ant_div_rx.mode = mode;
             break;
 
         default:
@@ -542,12 +545,37 @@ bool nrf_802154_pib_ant_diversity_mode_set(nrf_802154_ant_diversity_mode_t mode)
     return result;
 }
 
-nrf_802154_ant_diversity_mode_t nrf_802154_pib_ant_diversity_mode_get(void)
+nrf_802154_ant_diversity_mode_t nrf_802154_pib_ant_diversity_rx_mode_get(void)
 {
-    return m_data.ant_div.mode;
+    return m_data.ant_div_rx.mode;
 }
 
-bool nrf_802154_pib_ant_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t antenna)
+bool nrf_802154_pib_ant_diversity_tx_mode_set(nrf_802154_ant_diversity_mode_t mode)
+{
+    bool result = true;
+
+    switch (mode)
+    {
+        case NRF_802154_ANT_DIVERSITY_MODE_DISABLED:
+        case NRF_802154_ANT_DIVERSITY_MODE_MANUAL:
+            m_data.ant_div_tx.mode = mode;
+            break;
+
+        case NRF_802154_ANT_DIVERSITY_MODE_AUTO:
+        default:
+            result = false;
+            break;
+    }
+
+    return result;
+}
+
+nrf_802154_ant_diversity_mode_t nrf_802154_pib_ant_diversity_tx_mode_get(void)
+{
+    return m_data.ant_div_tx.mode;
+}
+
+bool nrf_802154_pib_ant_diversity_rx_antenna_set(nrf_802154_ant_diversity_antenna_t antenna)
 {
     bool result = true;
 
@@ -555,7 +583,7 @@ bool nrf_802154_pib_ant_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t
     {
         case NRF_802154_ANT_DIVERSITY_ANTENNA_1:
         case NRF_802154_ANT_DIVERSITY_ANTENNA_2:
-            m_data.ant_div.antenna = antenna;
+            m_data.ant_div_rx.antenna = antenna;
             break;
 
         default:
@@ -566,9 +594,33 @@ bool nrf_802154_pib_ant_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t
     return result;
 }
 
-nrf_802154_ant_diversity_antenna_t nrf_802154_pib_ant_diversity_antenna_get(void)
+nrf_802154_ant_diversity_antenna_t nrf_802154_pib_ant_diversity_rx_antenna_get(void)
 {
-    return m_data.ant_div.antenna;
+    return m_data.ant_div_rx.antenna;
+}
+
+bool nrf_802154_pib_ant_diversity_tx_antenna_set(nrf_802154_ant_diversity_antenna_t antenna)
+{
+    bool result = true;
+
+    switch (antenna)
+    {
+        case NRF_802154_ANT_DIVERSITY_ANTENNA_1:
+        case NRF_802154_ANT_DIVERSITY_ANTENNA_2:
+            m_data.ant_div_tx.antenna = antenna;
+            break;
+
+        default:
+            result = false;
+            break;
+    }
+
+    return result;
+}
+
+nrf_802154_ant_diversity_antenna_t nrf_802154_pib_ant_diversity_tx_antenna_get(void)
+{
+    return m_data.ant_div_tx.antenna;
 }
 
 #endif // ENABLE_ANT_DIVERSITY

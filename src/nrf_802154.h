@@ -176,28 +176,48 @@ void nrf_802154_fem_control_cfg_get(nrf_802154_fem_control_cfg_t * p_cfg);
 
 #if ENABLE_ANT_DIVERSITY
 /**
- * @brief Sets the antenna diversity mode.
+ * @brief Sets the antenna diversity rx mode.
  *
  * @note This function should not be called while reception or transmission are currently ongoing.
  *
- * @param[in] mode Antenna diversity mode to be set.
+ * @param[in] mode Antenna diversity rx mode to be set.
  *
- * @retval true  Antenna diversity mode set successfully.
+ * @retval true  Antenna diversity rx mode set successfully.
  * @retval false Invalid mode passed as argument.
  */
-bool nrf_802154_antenna_diversity_mode_set(nrf_802154_ant_diversity_mode_t mode);
+bool nrf_802154_antenna_diversity_rx_mode_set(nrf_802154_ant_diversity_mode_t mode);
 
 /**
- * @brief Gets current antenna diversity mode.
+ * @brief Gets current antenna diversity rx mode.
  *
- * @return Current antenna diversity mode.
+ * @return Current antenna diversity mode for rx.
  */
-nrf_802154_ant_diversity_mode_t nrf_802154_antenna_diversity_mode_get(void);
+nrf_802154_ant_diversity_mode_t nrf_802154_antenna_diversity_rx_mode_get(void);
 
 /**
- * @brief Manually selects the antenna to be used.
+ * @brief Sets the antenna diversity tx mode.
  *
- * For antenna to be switched, antenna diversity mode needs
+ * @note This function should not be called while reception or transmission are currently ongoing.
+ * @note NRF_802154_ANT_DIVERSITY_MODE_AUTO is not supported for transmission.
+ *
+ * @param[in] mode Antenna diversity tx mode to be set.
+ *
+ * @retval true  Antenna diversity tx mode set successfully.
+ * @retval false Invalid mode passed as argument.
+ */
+bool nrf_802154_antenna_diversity_tx_mode_set(nrf_802154_ant_diversity_mode_t mode);
+
+/**
+ * @brief Gets current antenna diversity tx mode.
+ *
+ * @return Current antenna diversity mode for tx.
+ */
+nrf_802154_ant_diversity_mode_t nrf_802154_antenna_diversity_tx_mode_get(void);
+
+/**
+ * @brief Manually selects the antenna to be used for rx.
+ *
+ * For antenna to be switched, antenna diversity rx mode needs
  * to be @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL. Otherwise, antenna will
  * be only switched after @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL is set.
  *
@@ -206,19 +226,45 @@ nrf_802154_ant_diversity_mode_t nrf_802154_antenna_diversity_mode_get(void);
  * @retval true  Antenna set successfully.
  * @retval false Invalid antenna passed as argument.
  */
-bool nrf_802154_antenna_diversity_antenna_set(nrf_802154_ant_diversity_antenna_t antenna);
+bool nrf_802154_antenna_diversity_rx_antenna_set(nrf_802154_ant_diversity_antenna_t antenna);
 
 /**
- * @brief Gets currently used antenna.
+ * @brief Gets antenna currently used for rx.
  *
- * @note The antenna read by this function is currently used antenna only if
- * antenna diversity mode is set to @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL. Otherwise,
+ * @note The antenna read by this function is currently used rx antenna only if
+ * antenna diversity rx mode is set to @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL. Otherwise,
  * currently used antenna may be different.
  * @sa nrf_802154_ant_diversity_mode_set
  *
  * @return Currently used antenna.
  */
-nrf_802154_ant_diversity_antenna_t nrf_802154_antenna_diversity_antenna_get(void);
+nrf_802154_ant_diversity_antenna_t nrf_802154_antenna_diversity_rx_antenna_get(void);
+
+/**
+ * @brief Manually selects the antenna to be used for tx.
+ *
+ * For antenna to be switched, antenna diversity tx mode needs
+ * to be @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL. Otherwise, antenna will
+ * be only switched after @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL is set.
+ *
+ * @param[in] antenna Antenna to be used.
+ *
+ * @retval true  Antenna set successfully.
+ * @retval false Invalid antenna passed as argument.
+ */
+bool nrf_802154_antenna_diversity_tx_antenna_set(nrf_802154_ant_diversity_antenna_t antenna);
+
+/**
+ * @brief Gets antenna currently used for tx.
+ *
+ * @note The antenna read by this function is currently used tx antenna only if
+ * antenna diversity tx mode is set to @ref NRF_802154_ANT_DIVERSITY_MODE_MANUAL. Otherwise,
+ * currently used antenna may be different.
+ * @sa nrf_802154_ant_diversity_mode_set
+ *
+ * @return Currently used antenna.
+ */
+nrf_802154_ant_diversity_antenna_t nrf_802154_antenna_diversity_tx_antenna_get(void);
 
 /**
  * @brief Gets which antenna was selected as best for the last reception.

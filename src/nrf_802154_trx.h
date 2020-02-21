@@ -154,7 +154,8 @@ void nrf_802154_trx_disable(void);
  * @brief Updates currently used antenna.
  *
  * This function sets the antenna to be used based on PIB configuration and TRX state.
- * See @ref nrf_802154_pib_ant_diversity_mode_set, @ref nrf_802154_pib_ant_diversity_antenna_set.
+ * See @ref nrf_802154_pib_ant_diversity_rx_mode_set, @ref nrf_802154_pib_ant_diversity_rx_antenna_set,
+ * @ref nrf_802154_pib_ant_diversity_tx_mode_set, @ref nrf_802154_pib_ant_diversity_tx_antenna_set.
  */
 void nrf_802154_trx_antenna_update(void);
 #endif // ENABLE_ANT_DIVERSITY

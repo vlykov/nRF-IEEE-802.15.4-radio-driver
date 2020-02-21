@@ -217,7 +217,7 @@ typedef uint8_t nrf_802154_ant_diversity_mode_t;
 
 #define NRF_802154_ANT_DIVERSITY_MODE_DISABLED 0x00 // !< Antenna diversity is disabled - Antenna will not be controlled by ant_diversity module. While in this mode, current antenna is unspecified.
 #define NRF_802154_ANT_DIVERSITY_MODE_MANUAL   0x01 // !< Antenna is selected manually
-#define NRF_802154_ANT_DIVERSITY_MODE_AUTO     0x02 // !< Antenna is selected automatically based on RSSI.
+#define NRF_802154_ANT_DIVERSITY_MODE_AUTO     0x02 // !< Antenna is selected automatically based on RSSI - not supported for transmission.
 
 /**
  * @brief Available antennas
