@@ -1623,7 +1623,106 @@ void nrf_802154_trx_go_idle_finished(void)
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 
-static void on_bad_ack(void);
+static bool ack_match_check_version_not_2(const uint8_t * p_tx_data, const uint8_t * p_ack_data)
+{
+    // Frame Version != 2
+
+    // Check: Phy length
+    if (p_ack_data[PHR_OFFSET] != IMM_ACK_LENGTH)
+    {
+        return false;
+    }
+
+    // Check if Frame version is 0 or 1.
+    switch (p_ack_data[FRAME_VERSION_OFFSET] & FRAME_VERSION_MASK)
+    {
+        case FRAME_VERSION_0:
+        case FRAME_VERSION_1:
+            break;
+
+        default:
+            return false;
+    }
+
+    // Check: Sequence number match
+    if (p_ack_data[DSN_OFFSET] != p_tx_data[DSN_OFFSET])
+    {
+        return false;
+    }
+
+    return true;
+}
+
+static bool ack_match_check_version_2(const uint8_t * p_tx_data, const uint8_t * p_ack_data)
+{
+    if ((p_ack_data[FRAME_VERSION_OFFSET] & FRAME_VERSION_MASK) != FRAME_VERSION_2)
+    {
+        return false;
+    }
+
+    // Transmitted frame was Version 2
+    // For frame version 2 sequence number bit may be suppressed and its check fails.
+    // Verify ACK frame using its destination address.
+    nrf_802154_frame_parser_mhr_data_t tx_mhr_data;
+    nrf_802154_frame_parser_mhr_data_t ack_mhr_data;
+    bool                               parse_result;
+
+    parse_result = nrf_802154_frame_parser_mhr_parse(p_tx_data, &tx_mhr_data);
+    assert(parse_result);
+    parse_result = nrf_802154_frame_parser_mhr_parse(p_ack_data, &ack_mhr_data);
+
+    if (!parse_result ||
+        (tx_mhr_data.p_src_addr == NULL) ||
+        (ack_mhr_data.p_dst_addr == NULL) ||
+        (tx_mhr_data.src_addr_size != ack_mhr_data.dst_addr_size) ||
+        (0 != memcmp(tx_mhr_data.p_src_addr,
+                     ack_mhr_data.p_dst_addr,
+                     tx_mhr_data.src_addr_size)))
+    {
+        // Mismatch
+        return false;
+    }
+
+    return true;
+}
+
+static bool ack_match_check(const uint8_t * p_tx_data, const uint8_t * p_ack_data)
+{
+    if ((p_tx_data == NULL) || (p_ack_data == NULL))
+    {
+        return false;
+    }
+
+    // Check: Frame Control Field -> Frame type
+    if ((p_ack_data[FRAME_TYPE_OFFSET] & FRAME_TYPE_MASK) != FRAME_TYPE_ACK)
+    {
+        return false; // This is not an ACK frame
+    }
+
+    // Check: Frame Control Field -> Frame version
+    if ((p_tx_data[FRAME_VERSION_OFFSET] & FRAME_VERSION_MASK) == FRAME_VERSION_2)
+    {
+        return ack_match_check_version_2(p_tx_data, p_ack_data);
+    }
+
+    return ack_match_check_version_not_2(p_tx_data, p_ack_data);
+}
+
+static void on_bad_ack(nrf_802154_tx_error_t error)
+{
+    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
+    /* We received either: 1) Not an ACK frame or 2) ACK frame which does not match, or
+     * 3) ACK frame which matches, but has invalid CRC.
+     * The exact reason is being passed as input parameter. */
+    state_set(RADIO_STATE_RX);
+
+    rx_init(true);
+
+    transmit_failed_notify_and_nesting_allow(error);
+
+    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
+}
 
 #if NRF_802154_TOTAL_TIMES_MEASUREMENT_ENABLED
 static void update_total_times_on_receive_end(uint32_t listening_start_hp_timestamp,
@@ -1746,7 +1845,18 @@ void nrf_802154_trx_receive_ack_crcerror(void)
                                       mp_current_rx_buffer->data[PHR_OFFSET]);
 #endif
 
-    on_bad_ack();
+#if NRF_802154_ACK_WRONG_FCS_ENABLED
+    uint8_t * p_ack_data = mp_current_rx_buffer->data;
+
+    if (ack_match_check(mp_tx_data, p_ack_data))
+    {
+        on_bad_ack(NRF_802154_TX_ERROR_INVALID_ACK_FCS);
+    }
+    else
+#endif
+    {
+        on_bad_ack(NRF_802154_TX_ERROR_INVALID_ACK);
+    }
 
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
@@ -2061,105 +2171,6 @@ void nrf_802154_trx_transmit_frame_transmitted(void)
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
 }
 
-static bool ack_match_check_version_not_2(const uint8_t * p_tx_data, const uint8_t * p_ack_data)
-{
-    // Frame Version != 2
-
-    // Check: Phy length
-    if (p_ack_data[PHR_OFFSET] != IMM_ACK_LENGTH)
-    {
-        return false;
-    }
-
-    // Check if Frame version is 0 or 1.
-    switch (p_ack_data[FRAME_VERSION_OFFSET] & FRAME_VERSION_MASK)
-    {
-        case FRAME_VERSION_0:
-        case FRAME_VERSION_1:
-            break;
-
-        default:
-            return false;
-    }
-
-    // Check: Sequence number match
-    if (p_ack_data[DSN_OFFSET] != p_tx_data[DSN_OFFSET])
-    {
-        return false;
-    }
-
-    return true;
-}
-
-static bool ack_match_check_version_2(const uint8_t * p_tx_data, const uint8_t * p_ack_data)
-{
-    if ((p_ack_data[FRAME_VERSION_OFFSET] & FRAME_VERSION_MASK) != FRAME_VERSION_2)
-    {
-        return false;
-    }
-
-    // Transmitted frame was Version 2
-    // For frame version 2 sequence number bit may be suppressed and its check fails.
-    // Verify ACK frame using its destination address.
-    nrf_802154_frame_parser_mhr_data_t tx_mhr_data;
-    nrf_802154_frame_parser_mhr_data_t ack_mhr_data;
-    bool                               parse_result;
-
-    parse_result = nrf_802154_frame_parser_mhr_parse(p_tx_data, &tx_mhr_data);
-    assert(parse_result);
-    parse_result = nrf_802154_frame_parser_mhr_parse(p_ack_data, &ack_mhr_data);
-
-    if (!parse_result ||
-        (tx_mhr_data.p_src_addr == NULL) ||
-        (ack_mhr_data.p_dst_addr == NULL) ||
-        (tx_mhr_data.src_addr_size != ack_mhr_data.dst_addr_size) ||
-        (0 != memcmp(tx_mhr_data.p_src_addr,
-                     ack_mhr_data.p_dst_addr,
-                     tx_mhr_data.src_addr_size)))
-    {
-        // Mismatch
-        return false;
-    }
-
-    return true;
-}
-
-static bool ack_match_check(const uint8_t * p_tx_data, const uint8_t * p_ack_data)
-{
-    if ((p_tx_data == NULL) || (p_ack_data == NULL))
-    {
-        return false;
-    }
-
-    // Check: Frame Control Field -> Frame type
-    if ((p_ack_data[FRAME_TYPE_OFFSET] & FRAME_TYPE_MASK) != FRAME_TYPE_ACK)
-    {
-        return false; // This is not an ACK frame
-    }
-
-    // Check: Frame Control Field -> Frame version
-    if ((p_tx_data[FRAME_VERSION_OFFSET] & FRAME_VERSION_MASK) == FRAME_VERSION_2)
-    {
-        return ack_match_check_version_2(p_tx_data, p_ack_data);
-    }
-
-    return ack_match_check_version_not_2(p_tx_data, p_ack_data);
-}
-
-static void on_bad_ack(void)
-{
-    nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
-
-    // We received either a frame with incorrect CRC or not an ACK frame or not matching ACK
-    state_set(RADIO_STATE_RX);
-
-    rx_init(true);
-
-    transmit_failed_notify_and_nesting_allow(NRF_802154_TX_ERROR_INVALID_ACK);
-
-    nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);
-}
-
 void nrf_802154_trx_receive_ack_received(void)
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
@@ -2196,7 +2207,7 @@ void nrf_802154_trx_receive_ack_received(void)
     }
     else
     {
-        on_bad_ack();
+        on_bad_ack(NRF_802154_TX_ERROR_INVALID_ACK);
     }
 
     nrf_802154_log_function_exit(NRF_802154_LOG_VERBOSITY_LOW);

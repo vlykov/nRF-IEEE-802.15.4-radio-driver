@@ -242,6 +242,16 @@ extern "C" {
 #endif
 
 /**
+ * @def NRF_802154_ACK_WRONG_FCS_ENABLED
+ *
+ * If the radio driver should notify about valid ACKs with invalid FCS.
+ *
+ */
+#ifndef NRF_802154_ACK_WRONG_FCS_ENABLED
+#define NRF_802154_ACK_WRONG_FCS_ENABLED 0
+#endif
+
+/**
  * @}
  * @defgroup nrf_802154_config_clock Clock driver configuration
  * @{

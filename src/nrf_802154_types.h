@@ -69,6 +69,7 @@ typedef uint8_t nrf_802154_tx_error_t;
 #define NRF_802154_TX_ERROR_NO_ACK          0x05 // !< ACK frame was not received during the timeout period.
 #define NRF_802154_TX_ERROR_ABORTED         0x06 // !< Procedure was aborted by another operation.
 #define NRF_802154_TX_ERROR_TIMESLOT_DENIED 0x07 // !< Transmission did not start due to a denied timeslot request.
+#define NRF_802154_TX_ERROR_INVALID_ACK_FCS 0x08 // !< Received ACK frame is valid, but has wrong FCS.
 
 /**
  * @brief Possible errors during the frame reception.
