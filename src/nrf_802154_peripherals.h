@@ -232,7 +232,7 @@ extern "C" {
  */
 #ifndef NRF_802154_RTC_INSTANCE_NO
 
-#ifdef NRF52811_XXAA
+#if defined(NRF52811_XXAA) || defined(NRF52820_XXAA)
 #define NRF_802154_RTC_INSTANCE_NO 0
 #else
 #define NRF_802154_RTC_INSTANCE_NO 2
