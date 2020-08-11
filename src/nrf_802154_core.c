@@ -1385,8 +1385,6 @@ void nrf_802154_trx_receive_ack_started(void)
 
 static void on_rx_prestarted_timeout(void * p_context)
 {
-    bool in_crit_sect;
-
     (void)p_context;
 
     /* If we were in critical section this handler would not be called.
@@ -1401,11 +1399,15 @@ static void on_rx_prestarted_timeout(void * p_context)
      * - The only related interrupt that can preempt this handler while it owns critical section
      * is from raal timeslot margin, which will fail to enter critical section and schedule
      * priority change to be called by nrf_802154_critical_section_exit.
+     *
+     * Critical section is entered forcefully here nonetheless, due to a rare issue with
+     * nrf_802154_critical_section_exit being preempted before the nested critical section counter
+     * could be decremented. Allowing for critical section nesting here resolves the problem.
+     * TODO: After the bug is fixed, change to nrf_802154_critical_section_enter and check if
+     * critical section was successfully entered.
      */
 
-    in_crit_sect = nrf_802154_critical_section_enter();
-    assert(in_crit_sect);
-    (void)in_crit_sect;
+    nrf_802154_critical_section_forcefully_enter();
 
     #if ENABLE_ANT_DIVERSITY
     nrf_802154_ant_diversity_preamble_timeout_notify();
